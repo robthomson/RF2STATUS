@@ -284,8 +284,8 @@ local function paint(widget)
 		end			
 		
 	   if environment.board == "XES" or environment.board == "X20" or environment.board == "X20S" or environment.board == "X20PRO" then	
-			colSpacing = 5	
-			fullBoxW = w/3
+			colSpacing = 4	
+			fullBoxW = 262
 			fullBoxH = h/2
 			textOFFSET = 10	
 		end
@@ -333,14 +333,15 @@ local function paint(widget)
 		
 		lcd.drawFilledRectangle(col1X, row1Y, boxW, boxH) 									-- col 1 row 1 1x1	
 		lcd.drawFilledRectangle(col1X, row2Y+(colSpacing/2), boxW, boxHs) 					-- col 1 row 2 1x1			
-		lcd.drawFilledRectangle(col1X, (row2Y+boxHs+colSpacing)+(colSpacing/2), boxWs, boxHs) 					-- col 1 row 2 1x1	
-		lcd.drawFilledRectangle(col1X+boxWs+colSpacing, (row2Y+boxHs+colSpacing)+(colSpacing/2), boxWs, boxHs) 					-- col 1 row 2 1x1	
+		
+		lcd.drawFilledRectangle(col1X, (row2Y+boxHs+colSpacing)+(colSpacing), boxWs, boxHs) 					-- col 1 row 2 1x1	
+		lcd.drawFilledRectangle(col1X+boxWs+colSpacing, (row2Y+boxHs+colSpacing)+(colSpacing), boxWs, boxHs) 					-- col 1 row 2 1x1	
 		
 		lcd.drawFilledRectangle(col2X+(colSpacing/2), row1Y, boxW, boxH) 					-- col 2 row 1 1x1	
 		lcd.drawFilledRectangle(col2X+(colSpacing/2), row2Y+(colSpacing/2), boxW, boxH) 	-- col 2 row 2 1x1			
 
-		lcd.drawFilledRectangle(col3X+(colSpacing/2), row1Y, boxW, boxH) 					-- col 2 row 1 1x1	
-		lcd.drawFilledRectangle(col3X+(colSpacing/2), row2Y+(colSpacing/2), boxW, boxH) 	-- col 2 row 2 1x1			
+		lcd.drawFilledRectangle(col3X+(colSpacing), row1Y, boxW, boxH) 					-- col 2 row 1 1x1	
+		lcd.drawFilledRectangle(col3X+(colSpacing), row2Y+(colSpacing/2), boxW, boxH) 	-- col 2 row 2 1x1			
 
 
 
@@ -1195,7 +1196,7 @@ function getSensors()
 				if system.getSource("Rx Curr") ~= nil then
 					current = system.getSource("Rx Curr"):stringValue()
 					if current ~= nil then
-						current = sensorMakeNumber(current)		
+						current = sensorMakeNumber(current)/10		
 					else
 						current = 0
 					end
