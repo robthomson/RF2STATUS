@@ -7,17 +7,19 @@ set crsf_gps_sats_reuse = MCU_TEMP
 
 
 local environment = system.getVersion()
-local sensors = {"refresh","voltage","rpm","current","temp_esc","temp_mcu","fuel","mah","rssi","fm","govmode"}
+local oldsensors = {"refresh","voltage","rpm","current","temp_esc","temp_mcu","fuel","mah","rssi","fm","govmode"}
+local sensors
 local gfx_model
 local audioAlertCounter = 0
 local voltageLowCounter = 0
 local linkUP = 0 
 local refresh = true
+local isInConfiguration = false
+local widgetTable = {fmsrc=1,lwvltge=2170,lowfuel=20,alertint=5,alrthptc=0,maxmin=1,title=1}
 
 local function create(widget)
 
 	gfx_model = lcd.loadBitmap(model.bitmap()) 
-
 
     rssiSensor = system.getSource("RSSI")
     if not rssiSensor then
@@ -32,11 +34,12 @@ local function create(widget)
             end
         end
     end
-
-	return {fmsrc=1,lwvltge=2170,lowfuel=20,alertint=5,alrthptc=0,maxmin=1,title=1}
+	return widgetTable
 end
 
 local function configure(widget)
+
+	isInConfiguration = true
 
 	--[[
     -- IDLE UP
@@ -100,8 +103,8 @@ local function configure(widget)
 		function(newValue) widget.maxmin = newValue end
 		)
 
-
-
+	
+	return widgetTable
 
 end
 
@@ -136,7 +139,13 @@ end
 local function paint(widget)
 
 
+		if isInConfiguration == true then
+			isInConfiguration = false
+		end
+			
+	
 		if type(widget) ~= 'table' then
+			
 		
 			local w, h = lcd.getWindowSize()
 			colSpacing = 5	
@@ -190,7 +199,7 @@ local function paint(widget)
 			lcd.drawText((w/2)-tsizeW/2,(h/2)-tsizeH/2 , str)		
 		    return
 		end
-
+		
 
 		if widget.fmsrc == nil then
 			return
@@ -1124,7 +1133,6 @@ local function paint(widget)
 			end	
 		end
 
-
 end
 
 
@@ -1135,6 +1143,11 @@ end
 
 
 function getSensors()
+
+	if isInConfiguration == true then
+		return oldsensors
+	end
+
 
 	
 	if environment.simulation == true then
@@ -1339,47 +1352,56 @@ function getSensors()
 	end
 	
 	-- set flag to refresh screen or not
-	if sensors.voltage ~= voltage then
+
+	if oldsensors.voltage ~= voltage then
 				refresh = true
 	end
-	if sensors.rpm ~= rpm then
+	if oldsensors.rpm ~= rpm then
 				refresh = true
 	end	
-	if sensors.current ~= current then
+	if oldsensors.current ~= current then
 				refresh = true
 	end		
-	if sensors.temp_esc ~= temp_esc then
+	if oldsensors.temp_esc ~= temp_esc then
 				refresh = true
 	end	
-	if sensors.temp_mcu ~= temp_mcu then
+	if oldsensors.temp_mcu ~= temp_mcu then
 				refresh = true
 	end	
-	if sensors.govmode ~= govmode then
+	if oldsensors.govmode ~= govmode then
 				refresh = true
 	end		
-	if sensors.fuel ~= fuel then
+	if oldsensors.fuel ~= fuel then
 				refresh = true
 	end	
-	if sensors.mah ~= mah then
+	if oldsensors.mah ~= mah then
 				refresh = true
 	end	
-	if sensors.rssi ~= rssi then
+	if oldsensors.rssi ~= rssi then
 				refresh = true
 	end	
-	if sensors.fm ~= CURRENT_FLIGHT_MODE then
+	if oldsensors.fm ~= CURRENT_FLIGHT_MODE then
 				refresh = true
 	end
+
+	ret = {fm=fm,govmode=govmode,voltage=voltage,rpm=rpm,current=current,temp_esc=temp_esc,temp_mcu=temp_mcu,fuel=fuel,mah=mah,rssi=rssi}
+	oldsensors = ret
 	
-	return {fm=fm,govmode=govmode,voltage=voltage,rpm=rpm,current=current,temp_esc=temp_esc,temp_mcu=temp_mcu,fuel=fuel,mah=mah,rssi=rssi}
+	return ret
 	
 end
 
 function sensorMakeNumber(x)
+			if x == nil or x == "" then
+				x = 0
+			end	
+			
 			x = string.gsub(x,"%D+","")
 			x = tonumber(x)	
-			if x == nil then
+			if x == nil or x == "" then
 				x = 0
-			end
+			end		
+
 			return x
 end
 
@@ -1417,6 +1439,7 @@ end
 local function wakeup(widget)
 
 
+	refresh = false
 	sensors = getSensors()	
 	
 	linkUP = getRSSI()
