@@ -1124,7 +1124,7 @@ local function paint(widget)
 		
 				if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >=  widget.alertint then
 					audioAlertCounter = os.clock()			
-					system.playFile("/scripts/rf2status/sounds/lwvltge.wav")
+					system.playFile("/scripts/rf2status/sounds/lowvoltage.wav")
 					
 					if widget.alrthptc == 1 then
 							system.playHaptic("- . -")
@@ -1323,8 +1323,35 @@ function getSensors()
 				else
 					mah = 0
 				end		
-				if system.getSource("Mode") ~= nil then
-					govmode = system.getSource("Mode"):stringValue()
+				if system.getSource({category=CATEGORY_TELEMETRY_SENSOR, appId=0x5450}) ~= nil then
+					govId = system.getSource({category=CATEGORY_TELEMETRY_SENSOR, appId=0x5450}):stringValue()
+					govId = sensorMakeNumber(govId)
+					--print(govId)
+					if govId == 0 then
+						govmode =  "OFF"
+					elseif govId == 1 then
+						govmode = "IDLE"
+					elseif govId == 2 then
+						govmode = "SPOOLUP"
+					elseif govId == 3 then
+						govmode = "RECOVERY"
+					elseif govId == 4 then
+						govmode = "ACTIVE"
+					elseif govId == 5 then
+						govmode = "THR-OFF"
+					elseif govId == 6 then
+						govmode = "LOST-HS"
+					elseif govId == 7 then
+						govmode = "SPOOLUP"
+					elseif govId == 8 then
+						govmode = "BAILOUT"
+					elseif govId == 100 then
+						govmode = "DISABLED"
+					elseif govId == 101 then
+						govmode = "DISARMED"
+					else 
+						govmode = "UNKNOWN"
+					end				
 				else
 					govmode = ''
 				end					
