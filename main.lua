@@ -6,18 +6,18 @@ set crsf_gps_sats_reuse = MCU_TEMP
 ]]--
 
 
-local environment=system.getVersion()
+local environment = system.getVersion()
 local sensors = {"refresh","voltage","rpm","current","temp_esc","temp_mcu","fuel","mah","rssi","fm","govmode"}
 local gfx_model
 local audioAlertCounter = 0
 local voltageLowCounter = 0
 local linkUP = 0 
-
+local refresh = true
 
 local function create(widget)
 
 	gfx_model = lcd.loadBitmap(model.bitmap()) 
-	sensors = getSensors(sensors)
+
 
     rssiSensor = system.getSource("RSSI")
     if not rssiSensor then
@@ -134,6 +134,7 @@ function screenSmallError()
 end
 
 local function paint(widget)
+
 
 		if type(widget) ~= 'table' then
 		
@@ -1050,7 +1051,7 @@ local function paint(widget)
 		lcd.drawBitmap(col1X, row1Y, gfx_model, boxW, boxH)
 		
 		
-		if getRSSI() == 0 then
+		if getRSSI() == 0 and environment.simulation ~= true then
 
 			lcd.font(FONT_STD)
 			str = "NO DATA"			
@@ -1133,9 +1134,9 @@ end
 
 
 
-function getSensors(oldvalues)
+function getSensors()
 
-	--[[
+	
 	if environment.simulation == true then
 		-- we are running simulation
 			tv = math.random(1164, 2274)
@@ -1150,11 +1151,8 @@ function getSensors(oldvalues)
 			fm = 'DISABLED'
 			--fm = system.getSource({category=CATEGORY_FLIGHT, member=FLIGHT_CURRENT_MODE}):stringValue()
 			rssi = math.random(90,100)		
-			refresh = true
-	elseif getRSSI() ~= 0 then		
-	]]--
-
-	if linkUP ~= 0 then
+	--elseif getRSSI() ~= 0 then		
+	elseif linkUP ~= 0 then
 			if system.getSource("Rx RSSI1") ~= nil then
 				-- we are running crsf
 				if system.getSource("Rx Batt") ~= nil then
@@ -1338,43 +1336,41 @@ function getSensors(oldvalues)
 			govmode = '-'
 			fm = '-'
 			rssi = linkUP
-			refresh = false		
 	end
-	
 	
 	-- set flag to refresh screen or not
-	if oldvalues.voltage ~= voltage then
+	if sensors.voltage ~= voltage then
 				refresh = true
 	end
-	if oldvalues.rpm ~= rpm then
+	if sensors.rpm ~= rpm then
 				refresh = true
 	end	
-	if oldvalues.current ~= current then
+	if sensors.current ~= current then
 				refresh = true
 	end		
-	if oldvalues.temp_esc ~= temp_esc then
+	if sensors.temp_esc ~= temp_esc then
 				refresh = true
 	end	
-	if oldvalues.temp_mcu ~= temp_mcu then
+	if sensors.temp_mcu ~= temp_mcu then
 				refresh = true
 	end	
-	if oldvalues.govmode ~= govmode then
+	if sensors.govmode ~= govmode then
 				refresh = true
 	end		
-	if oldvalues.fuel ~= fuel then
+	if sensors.fuel ~= fuel then
 				refresh = true
 	end	
-	if oldvalues.mah ~= mah then
+	if sensors.mah ~= mah then
 				refresh = true
 	end	
-	if oldvalues.rssi ~= rssi then
+	if sensors.rssi ~= rssi then
 				refresh = true
 	end	
-	if oldvalues.fm ~= CURRENT_FLIGHT_MODE then
+	if sensors.fm ~= CURRENT_FLIGHT_MODE then
 				refresh = true
-	end	
+	end
 	
-	return {refresh=refresh,fm=fm,govmode=govmode,voltage=voltage,rpm=rpm,current=current,temp_esc=temp_esc,temp_mcu=temp_mcu,fuel=fuel,mah=mah,rssi=rssi}
+	return {fm=fm,govmode=govmode,voltage=voltage,rpm=rpm,current=current,temp_esc=temp_esc,temp_mcu=temp_mcu,fuel=fuel,mah=mah,rssi=rssi}
 	
 end
 
@@ -1420,11 +1416,12 @@ end
 
 local function wakeup(widget)
 
-	sensors = getSensors(sensors)	
+
+	sensors = getSensors()	
 	
 	linkUP = getRSSI()
 
-	if sensors.refresh == true then
+	if refresh == true then
 		lcd.invalidate()
 	end
 	
