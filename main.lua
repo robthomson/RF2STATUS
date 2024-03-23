@@ -20,20 +20,11 @@ local widgetTable = {fmsrc=1,lwvltge=2170,lowfuel=20,alertint=5,alrthptc=0,maxmi
 local function create(widget)
 
 	gfx_model = lcd.loadBitmap(model.bitmap()) 
+	rssiSensor = getRssiSensor()
 
-    rssiSensor = system.getSource("RSSI")
-    if not rssiSensor then
-        rssiSensor = system.getSource("RSSI 2.4G")
-        if not rssiSensor then
-            rssiSensor = system.getSource("RSSI 900M")
-            if not rssiSensor then
-                rssiSensor = system.getSource("Rx RSSI1")
-                if not rssiSensor then
-                    rssiSensor = system.getSource("Rx RSSI2")
-                end
-            end
-        end
-    end
+	
+	
+	
 	return widgetTable
 end
 
@@ -106,6 +97,16 @@ local function configure(widget)
 	
 	return widgetTable
 
+end
+
+function getRssiSensor()
+    local rssiNames = {"RSSI", "RSSI 2.4G", "RSSI 900M", "Rx RSSI1", "Rx RSSI2"}
+    for i,name in ipairs(rssiNames) do
+        rssiSensor = system.getSource(name)
+        if rssiSensor then
+            return rssiSensor
+        end
+    end
 end
 
 
@@ -229,38 +230,34 @@ local function paint(widget)
 
 		local w, h = lcd.getWindowSize()
 		
-		--[[
-		print("Board: " .. environment.board)
-		print("Width: " .. w)
-		print("Height: " .. h)
-		]]--
+		
 
 		if environment.board == "V20" or environment.board == "XES" or environment.board == "X20" or environment.board == "X20S" or environment.board == "X20PRO" then
-					if w ~= 784 or h ~= 294 then
+					if w ~= 784 and h ~= 294 then
 					screenSmallError()
 					return
 				end
 		end
 		if environment.board == "X18" or environment.board == "X18S" then
-					if w ~= 472 or h ~= 191 then
+					if w ~= 472 and h ~= 191 then
 					screenSmallError()
 					return
 				end
 		end
 		if environment.board == "X14" or environment.board == "X14S" then
-					if w ~= 630 or h ~= 236 then
+					if w ~= 630 and h ~= 236 then
 					screenSmallError()
 					return
 				end
 		end
 		if environment.board == "TWXLITE" or environment.board == "TWXLITES" then
-					if w ~= 472 or h ~= 191 then
+					if w ~= 472 and h ~= 191 then
 					screenSmallError()
 					return
 				end
 		end
 		if environment.board == "X10EXPRESS" then
-					if w ~= 472 or h ~= 158 then
+					if w ~= 472 and h ~= 158 then
 					screenSmallError()
 					return
 				end
@@ -331,7 +328,9 @@ local function paint(widget)
 		row2Y = fullBoxH		
 		row3Y = fullBoxH*2		
 		
-		lcd.drawFilledRectangle(col1X, row1Y, boxW, boxH) 									-- col 1 row 1 1x1	
+		lcd.drawFilledRectangle(col1X, row1Y, boxW, boxHs) 									-- col 1 row 1 1x1	
+		lcd.drawFilledRectangle(col1X, row1Y+colSpacing+boxHs+(colSpacing/3), boxW, boxHs) 									-- col 1 row 1 1x1	
+
 		lcd.drawFilledRectangle(col1X, row2Y+(colSpacing/2), boxW, boxHs) 					-- col 1 row 2 1x1			
 		
 		lcd.drawFilledRectangle(col1X, (row2Y+boxHs+colSpacing)+(colSpacing), boxWs, boxHs) 					-- col 1 row 2 1x1	
@@ -801,7 +800,7 @@ local function paint(widget)
 			tsizeW, tsizeH = lcd.getTextSize(str)
 			offsetX = boxW/2-tsizeW/2
 			offsetY = (boxHs/2)+colSpacing - tsizeH/2
-			lcd.drawText(col1X+(colSpacing/2) + offsetX, row2Y + offsetY, str)
+			lcd.drawText(col1X+(colSpacing/2) + offsetX, row1Y + boxHs + offsetY, str)
 			if widget.title == 1 then
 			if lcd.themeColor(1) == 251666692 then
 				-- dark theme
@@ -813,7 +812,7 @@ local function paint(widget)
 				lcd.font(FONT_XS)
 				str = "GOVERNOR"
 				tsizeW,tsizeH= lcd.getTextSize(str)
-				lcd.drawText(col1X+(colSpacing/2) + (boxW / 2)-tsizeW/2, row2Y+(boxH/2-colSpacing-tsizeH), str)	
+				lcd.drawText(col1X+(colSpacing/2) + (boxW / 2)-tsizeW/2, row1Y+(boxH/2-colSpacing-tsizeH)+ boxHs, str)	
 		
 				if lcd.themeColor(1) == 251666692 then
 					-- dark theme
@@ -831,7 +830,7 @@ local function paint(widget)
 			tsizeW, tsizeH = lcd.getTextSize(str)
 			offsetX = boxW/2-tsizeW/2
 			offsetY = (boxHs/2)+colSpacing - tsizeH/2
-			lcd.drawText(col1X+(colSpacing/2) + offsetX, row2Y + offsetY, str)
+			lcd.drawText(col1X+(colSpacing/2) + offsetX, row1Y + boxHs + offsetY, str)
 			if widget.title == 1 then
 				if lcd.themeColor(1) == 251666692 then
 					-- dark theme
@@ -843,7 +842,7 @@ local function paint(widget)
 				lcd.font(FONT_XS)
 				str = "FLIGHT MODE"
 				tsizeW,tsizeH= lcd.getTextSize(str)
-				lcd.drawText(col1X+(colSpacing/2) + (boxW / 2)-tsizeW/2, row2Y+(boxH/2-colSpacing-tsizeH), str)	
+				lcd.drawText(col1X+(colSpacing/2) + (boxW / 2)-tsizeW/2, row1Y+(boxH/2-colSpacing-tsizeH)+ boxHs, str)	
 		
 				if lcd.themeColor(1) == 251666692 then
 					-- dark theme
@@ -854,6 +853,106 @@ local function paint(widget)
 				end			
 				lcd.font(FONT_XXL)
 			end				
+		end
+
+		--  RSSI
+		lcd.font(FONT_STD)
+		if sensors.rssi ~= nil then
+			str = "" .. sensors.rssi .. "%"
+		else
+			str = "0"			
+		end
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		offsetX = boxW/2+(colSpacing*2)-tsizeW/2
+		offsetY = (boxHs+boxHs/2)+colSpacing - tsizeH/2
+		lcd.drawText(col1X+(colSpacing/2) + offsetX, row1Y + boxHs + offsetY, str)
+		if widget.title == 1 then
+		if lcd.themeColor(1) == 251666692 then
+			-- dark theme
+			lcd.color(lcd.RGB(255, 255, 255,1))
+		else
+			-- light theme
+			lcd.color(lcd.RGB(90, 90, 90))
+		end	
+			lcd.font(FONT_XS)
+			str = "RSSI"
+			tsizeW,tsizeH= lcd.getTextSize(str)
+			lcd.drawText(col1X+(colSpacing/2) + boxW/2-tsizeW/2, row2Y+(boxHs-colSpacing-tsizeH), str)	
+	
+			if lcd.themeColor(1) == 251666692 then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255,1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end			
+			lcd.font(FONT_XXL)
+		end			
+		if widget.maxmin == 1  and sensors.rssi ~= nil then
+
+			if linkUP ~= 0 then		
+				if sensors.govmode == 'SPOOLUP' then
+					rssiNearlyActive = 1
+				end
+
+				if sensors.govmode == 'IDLE' then
+						sensorTempRSSIMin = 0
+						sensorTempRSSIMax = 0
+				end				
+				
+				if sensors.govmode == 'ACTIVE' then			
+					if rssiNearlyActive == 1 then
+						sensorTempRSSIMin = sensors.rssi
+						sensorTempRSSIMax = sensors.rssi
+						rssiNearlyActive = 0
+					end				
+					if sensors.rssi < sensorTempRSSIMin then
+						sensorTempRSSIMin = sensors.rssi
+					end
+					if sensors.rssi > sensorTempRSSIMax then
+						sensorTempRSSIMax = sensors.rssi
+					end	
+				end	
+			else
+				sensorTempRSSIMax = 0
+				sensorTempRSSIMin = 0
+			end
+			
+			if lcd.themeColor(1) == 251666692 then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255,1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end	
+			lcd.font(FONT_XS)
+			
+			if sensorTempRSSIMin == 0 or sensorTempRSSIMin == nil then
+				str = "-"
+			else	
+				str = sensorTempRSSIMin .. "%"
+			end	
+			
+			tsizeW,tsizeH= lcd.getTextSize(str)
+			lcd.drawText(col1X+(colSpacing*2), row2Y+(boxHs+-colSpacing-tsizeH), str)	
+
+			if sensorTempRSSIMax == 0 or sensorTempRSSIMax == nil then
+				str = "-  "
+			else	
+				str = sensorTempRSSIMax .. "%"
+			end	
+
+			tsizeW,tsizeH= lcd.getTextSize(str)
+			lcd.drawText((col1X+boxW)-tsizeW, row2Y+(boxHs+-colSpacing-tsizeH), str)
+					
+			if lcd.themeColor(1) == 251666692 then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255,1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end			
+			lcd.font(FONT_XXL)			
 		end
 
 		-- TEMP ESC
@@ -1058,7 +1157,7 @@ local function paint(widget)
 		end
 		
 		-- IMAGE
-		lcd.drawBitmap(col1X, row1Y, gfx_model, boxW, boxH)
+		lcd.drawBitmap(col1X, row1Y-boxHs/3, gfx_model, boxW, boxH-boxHs/2)
 		
 		
 		if getRSSI() == 0 and environment.simulation ~= true then
@@ -1484,7 +1583,7 @@ end
 
 
 local function init()
-  system.registerWidget({key="rf2st1", name="RF2 Flight Status", create=create, configure=configure,paint=paint, wakeup=wakeup,read=read, write=write})
+  system.registerWidget({key="rf2st12", name="RF2 Flight Status", create=create, configure=configure,paint=paint, wakeup=wakeup,read=read, write=write})
 end
 
 return {init=init}
