@@ -15,7 +15,7 @@ local voltageLowCounter = 0
 local linkUP = 0 
 local refresh = true
 local isInConfiguration = false
-local widgetTable = {fmsrc=1,lwvltge=2170,lowfuel=20,alertint=5,alrthptc=0,maxmin=1,title=1}
+local widgetTable = {fmsrc=1,lwvltge=2170,lowfuel=20,alertint=5,alrthptc=0,maxmin=1,title=1,cells=6}
 
 local function create(widget)
 
@@ -49,6 +49,14 @@ local function configure(widget)
 		);
 	field:decimals(2)
     field:default(2170)
+	
+    -- CELLS
+    line = form.addLine("BATTERY CELLS")
+	form.addChoiceField(line, nil, {{'1S',1}, {'2S',2}, {'3S',3}, {'4S',4}, {'5S',5}, {'6S',6}, {'7S',7}, {'8S',8}, {'9S',9}, {'10S',10}, {'11S',11}, {'12S',12}, {'13S',13}, {'14S',14}}, 
+		function() return widget.cells end, 
+		function(newValue) widget.cells = newValue end
+		)	
+    field:default(6)		
 
     -- LOW FUEL TRIGGER
     line = form.addLine("LOW FUEL ALERT %")
@@ -353,6 +361,17 @@ local function paint(widget)
 		end	
 		
 		-- FUEL
+		-- work around for weird fuel bug
+		--print(sensors.fuel)
+		--print(sensors.voltage)
+		if sensors.voltage ~= 0 and sensors.fuel == 0 then
+			fullVoltage = widget.cells * 4.196
+			sensors.fuel = math.floor(((sensors.voltage / fullVoltage) * 100)/100)
+			if sensors.fuel > 100 then
+				sensors.fuel = 100
+			end
+		end		
+		
 		if sensors.fuel ~= nil and widget.lowfuel ~= nil then
 			if sensors.fuel <= widget.lowfuel then
 					lcd.color(lcd.RGB(255, 0, 0,1))			
@@ -1350,7 +1369,16 @@ function getSensors()
 				else
 					fm = ''
 				end
-				rssi =  linkUP		
+				if system.getSource("Rx Quality") ~= nil then
+					rssi = system.getSource("Rx Quality"):stringValue()
+					if rssi ~= nil then
+						rssi = sensorMakeNumber(rssi)		
+					else
+						rssi = 0
+					end			
+				else
+					rssi = 0
+				end			
 			else
 				-- we are run sport	
 				if system.getSource("VFAS") ~= nil then
@@ -1461,6 +1489,7 @@ function getSensors()
 					fm = ''
 				end
 				rssi =  linkUP
+			
 
 		
 			end
@@ -1545,7 +1574,7 @@ local function read(widget)
 		widget.alrthptc = storage.read("alrthptc")
 		widget.maxmin = storage.read("maxmin")
 		widget.title = storage.read("title")
-	
+		widget.cells = storage.read("cells")	
 		return widget
 end
 
@@ -1558,7 +1587,7 @@ local function write(widget)
         storage.write("alrthptc",widget.alrthptc)
         storage.write("maxmin",widget.maxmin)
         storage.write("title",widget.title)
-
+        storage.write("cells",widget.cells)
 		return widget
 end
 
