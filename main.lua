@@ -22,7 +22,8 @@ local oldsensors = {
 local sensors
 local gfx_model
 local audioAlertCounter = 0
-local voltageLowCounter = 0
+local lvTimer = false
+local lvTimerStart
 local linkUP = 0
 local refresh = true
 local isInConfiguration = false
@@ -441,8 +442,11 @@ local function paint(thisWidget)
     --print(sensors.fuel)
     --print(sensors.voltage)
     if sensors.voltage ~= 0 and sensors.fuel == 0 then
-        fullVoltage = thisWidget.cells * 4.196
-        sensors.fuel = math.floor(((sensors.voltage / fullVoltage) * 100) / 100)
+		maxCellVoltage = 4.196
+		minCellVoltage = 3.2
+		avgCellVoltage = sensors.voltage / thisWidget.cells
+        batteryPercentage = 100 * (avgCellVoltage - minCellVoltage) / (maxCellVoltage - minCellVoltage);	
+        sensors.fuel = batteryPercentage
         if sensors.fuel > 100 then
             sensors.fuel = 100
         end
@@ -1349,14 +1353,57 @@ local function paint(thisWidget)
         lcd.drawText((w / 2) - tsizeW / 2, (h / 2) - tsizeH / 2, str)
     end
 
-    -- -----------------------------------------------------------------------------------------------
 
-    -- we only trigger in certain cases
-    if getRSSI() ~= 0 then
+	-- big conditional to trigger lvTimer if needed
+	if getRSSI() ~= 0 then
 		if  sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or sensors.govmode == "ACTIVE" or sensors.govmode == "LOST-HS" or sensors.govmode == "BAILOUT" or sensors.govmode == "RECOVERY" then
+			if ((sensors.voltage) <= thisWidget.lwvltge) or (sensors.fuel <= thisWidget.lowfuel) then
+					lvTimer = true
+			else
+					lvTimer = false			
+			end
+		else
+			lvTimer = false
+		end
+	else
+		lvTimer = false
+	end	
+		
+	if 	lvTimer == true then
+		--start timer
+		if lvTimerStart == nil then
+			lvTimerStart = os.time()
+		end	
+	else
+		lvTimerStart = nil
+	end
+
+	if lvTimerStart ~= nil then
+		if (os.time() - lvTimerStart >= 5) then
+			-- only trigger if we have been on for 5 seconds or more
+			if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >= thisWidget.alertint then
+				audioAlertCounter = os.clock()
+				system.playFile("/scripts/rf2status/sounds/lowvoltage.wav")
+
+				if thisWidget.alrthptc == 1 then
+					system.playHaptic("- . -")
+				end
+			end				
+		end
+	else
+		-- stop timer
+		lvTimerStart = nil
+	end
+
+
+
+	--[[
+    -- we only trigger in certain cases
+    --if getRSSI() ~= 0 then
+		--if  sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or sensors.govmode == "ACTIVE" or sensors.govmode == "LOST-HS" or sensors.govmode == "BAILOUT" or sensors.govmode == "RECOVERY" then
 	
 			if ((sensors.voltage) <= thisWidget.lwvltge) or (sensors.fuel <= thisWidget.lowfuel) then
-			
+				
 				lvTime = SecondsFromTime(os.clock())
 		
 				-- we dont start complaining until more than X seconds
@@ -1373,6 +1420,8 @@ local function paint(thisWidget)
 				voltageLowCounter = 0
 			end
 
+			print(lvTime)
+
 			-- play alarm - but no more than interval
 			if lvAlarm == true then
 				if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >= thisWidget.alertint then
@@ -1384,8 +1433,11 @@ local function paint(thisWidget)
 					end
 				end
 			end
-		end
-    end
+		--end
+    --end
+	]]--
+
+	
 end
 
 function getSensors()
@@ -1396,7 +1448,7 @@ function getSensors()
     if environment.simulation == true then
         --elseif getRSSI() ~= 0 then
         -- we are running simulation
-        tv = math.random(1164, 2274)
+        tv = math.random(2160, 2274)
         voltage = sensorMakeNumber(tv)
         rpm = sensorMakeNumber(math.random(0, 1510))
         current = sensorMakeNumber(math.random(0, 17))
@@ -1436,6 +1488,10 @@ function getSensors()
                 rpm = 0
             end
             if system.getSource("Rx Curr") ~= nil then
+                if system.getSource("Rx Curr"):maximum() == 50.0 then
+                    system.getSource("Rx Curr"):maximum(400.0)
+                end			
+			
                 current = system.getSource("Rx Curr"):stringValue()
                 if current ~= nil then
                     current = sensorMakeNumber(current) / 10
@@ -1795,6 +1851,7 @@ local function wakeup(thisWidget)
 
     return
 end
+
 
 local function init()
     system.registerWidget(
