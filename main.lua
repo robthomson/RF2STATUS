@@ -5,6 +5,8 @@ set crsf_gps_ground_speed_reuse = ESC_TEMP
 set crsf_gps_sats_reuse = MCU_TEMP
 ]] --
 
+
+
 local environment = system.getVersion()
 local oldsensors = {
     "refresh",
@@ -27,7 +29,7 @@ local lvTimerStart
 local linkUP = 0
 local refresh = true
 local isInConfiguration = false
-local WidgetTable = {
+local defaultWidgets = {
     fmsrc = 0,
     lwvltge = 2170,
     lowfuel = 20,
@@ -40,16 +42,25 @@ local WidgetTable = {
 local stopTimer = true
 local startTimer = false
 
-local function create(thisWidget)
+
+ 
+voltageNoiseQ= 150;	 
+fuelNoiseQ= 150;	 
+rpmNoiseQ= 150;	 
+temp_mcuNoiseQ= 500;	 
+temp_escNoiseQ= 500;
+rssiNoiseQ= 50;
+
+local function create(widget)
     gfx_model = lcd.loadBitmap(model.bitmap())
 	gfx_heli =  lcd.loadBitmap("/scripts/rf2status/gfx/heli.png")
     rssiSensor = getRssiSensor()
 
 
-    return WidgetTable
+    return defaultWidgets
 end
 
-local function configure(thisWidget)
+local function configure(widget)
 
     isInConfiguration = true
 
@@ -62,10 +73,10 @@ local function configure(thisWidget)
         0,
         20000,
         function()
-            return thisWidget.lwvltge
+            return widget.lwvltge
         end,
         function(value)
-            thisWidget.lwvltge = value
+            widget.lwvltge = value
         end
     )
     field:decimals(2)
@@ -93,10 +104,10 @@ local function configure(thisWidget)
             {"14S", 14}
         },
         function()
-            return thisWidget.cells
+            return widget.cells
         end,
         function(newValue)
-            thisWidget.cells = newValue
+            widget.cells = newValue
         end
     )
 
@@ -110,10 +121,10 @@ local function configure(thisWidget)
         0,
         1000,
         function()
-            return thisWidget.lowfuel
+            return widget.lowfuel
         end,
         function(value)
-            thisWidget.lowfuel = value
+            widget.lowfuel = value
         end
     )
     field:default(20)
@@ -125,10 +136,10 @@ local function configure(thisWidget)
         nil,
         {{"5S", 5}, {"10S", 10}, {"15S", 15}, {"20S", 20}, {"30S", 30}},
         function()
-            return thisWidget.alertint
+            return widget.alertint
         end,
         function(newValue)
-            thisWidget.alertint = newValue
+            widget.alertint = newValue
         end
     )
 
@@ -139,10 +150,10 @@ local function configure(thisWidget)
         nil,
         {{"NO", 0}, {"YES", 1}},
         function()
-            return thisWidget.alrthptc
+            return widget.alrthptc
         end,
         function(newValue)
-            thisWidget.alrthptc = newValue
+            widget.alrthptc = newValue
         end
     )
 
@@ -153,10 +164,10 @@ local function configure(thisWidget)
         nil,
         {{"RF GOVERNOR", 0}, {"ETHOS FLIGHT MODES", 1}},
         function()
-            return thisWidget.fmsrc
+            return widget.fmsrc
         end,
         function(newValue)
-            thisWidget.fmsrc = newValue
+            widget.fmsrc = newValue
         end
     )
 
@@ -167,10 +178,10 @@ local function configure(thisWidget)
         nil,
         {{"NO", 0}, {"YES", 1}},
         function()
-            return thisWidget.title
+            return widget.title
         end,
         function(newValue)
-            thisWidget.title = newValue
+            widget.title = newValue
         end
     )
 
@@ -181,14 +192,15 @@ local function configure(thisWidget)
         nil,
         {{"NO", 0}, {"YES", 1}},
         function()
-            return thisWidget.maxmin
+            return widget.maxmin
         end,
         function(newValue)
-            thisWidget.maxmin = newValue
+            widget.maxmin = newValue
         end
     )
 
-    return WidgetTable
+	return widget
+    --return defaultWidgets
 end
 
 function getRssiSensor()
@@ -226,12 +238,12 @@ function screenSmallError()
     return
 end
 
-local function paint(thisWidget)
+local function paint(widget)
     if isInConfiguration == true then
         isInConfiguration = false
     end
 
-    if type(thisWidget) ~= "table" then
+    if type(widget) ~= "table" then
         local w, h = lcd.getWindowSize()
         colSpacing = 5
 
@@ -285,25 +297,25 @@ local function paint(thisWidget)
         return
     end
 
-    if thisWidget.fmsrc == nil then
+    if widget.fmsrc == nil then
         return
     end
-    if thisWidget.lwvltge == nil then
+    if widget.lwvltge == nil then
         return
     end
-    if thisWidget.lowfuel == nil then
+    if widget.lowfuel == nil then
         return
     end
-    if thisWidget.alertint == nil then
+    if widget.alertint == nil then
         return
     end
-    if thisWidget.alrthptc == nil then
+    if widget.alrthptc == nil then
         return
     end
-    if thisWidget.maxmin == nil then
+    if widget.maxmin == nil then
         return
     end
-    if thisWidget.title == nil then
+    if widget.title == nil then
         return
     end
 
@@ -444,7 +456,7 @@ local function paint(thisWidget)
     if sensors.voltage ~= 0 and sensors.fuel == 0 then
 		maxCellVoltage = 4.196
 		minCellVoltage = 3.2
-		avgCellVoltage = sensors.voltage / thisWidget.cells
+		avgCellVoltage = sensors.voltage / widget.cells
         batteryPercentage = 100 * (avgCellVoltage - minCellVoltage) / (maxCellVoltage - minCellVoltage);	
         sensors.fuel = batteryPercentage
         if sensors.fuel > 100 then
@@ -452,8 +464,8 @@ local function paint(thisWidget)
         end
     end
 
-    if sensors.fuel ~= nil and thisWidget.lowfuel ~= nil then
-        if sensors.fuel <= thisWidget.lowfuel then
+    if sensors.fuel ~= nil and widget.lowfuel ~= nil then
+        if sensors.fuel <= widget.lowfuel then
             lcd.color(lcd.RGB(255, 0, 0, 1))
         end
     end
@@ -467,7 +479,7 @@ local function paint(thisWidget)
     offsetX = boxW / 2 - tsizeW / 2
     offsetY = boxH / 2 - tsizeH / 2
     lcd.drawText(col3X + (colSpacing / 2) + offsetX, row1Y + offsetY, str)
-    if thisWidget.title == 1 then
+    if widget.title == 1 then
         if lcd.themeColor(1) == 251666692 then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
@@ -490,7 +502,7 @@ local function paint(thisWidget)
         lcd.font(FONT_XXL)
     end
 
-    if thisWidget.maxmin == 1 and sensors.fuel ~= nil then
+    if widget.maxmin == 1 and sensors.fuel ~= nil then
         if linkUP ~= 0 then
             if sensors.govmode == "SPOOLUP" then
                 fuelNearlyActive = 1
@@ -557,7 +569,7 @@ local function paint(thisWidget)
         end
         lcd.font(FONT_XXL)
     end
-    if sensors.fuel <= thisWidget.lowfuel then
+    if sensors.fuel <= widget.lowfuel then
         if lcd.themeColor(1) == 251666692 then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
@@ -571,7 +583,11 @@ local function paint(thisWidget)
     lcd.font(FONT_XXL)
 
     if sensors.rpm ~= nil then
-        str = "" .. sensors.rpm .. "rpm"
+		if sensors.rpm <= 5 then
+			str = "0rpm"		
+		else
+			str = "" .. sensors.rpm .. "rpm"
+		end	
     else
         str = "0rpm"
     end
@@ -579,7 +595,7 @@ local function paint(thisWidget)
     offsetX = boxW / 2 - tsizeW / 2
     offsetY = boxH / 2 - tsizeH / 2
     lcd.drawText(col3X + (colSpacing / 2) + offsetX, row2Y + offsetY, str)
-    if thisWidget.title == 1 then
+    if widget.title == 1 then
         if lcd.themeColor(1) == 251666692 then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
@@ -601,7 +617,7 @@ local function paint(thisWidget)
         end
         lcd.font(FONT_XXL)
     end
-    if thisWidget.maxmin == 1 and sensors.rpm ~= nil then
+    if widget.maxmin == 1 and sensors.rpm ~= nil then
         if linkUP ~= 0 then
             if sensors.govmode == "SPOOLUP" then
                 rpmNearlyActive = 1
@@ -667,7 +683,7 @@ local function paint(thisWidget)
     end
 
     -- VOLT
-    if sensors.voltage <= thisWidget.lwvltge then
+    if sensors.voltage <= widget.lwvltge then
         lcd.color(lcd.RGB(255, 0, 0, 1))
     end
     lcd.font(FONT_XXL)
@@ -680,7 +696,7 @@ local function paint(thisWidget)
     offsetX = boxW / 2 - tsizeW / 2
     offsetY = boxH / 2 - tsizeH / 2
     lcd.drawText(col2X + (colSpacing / 2) + offsetX, row1Y + offsetY, str)
-    if thisWidget.title == 1 then
+    if widget.title == 1 then
         if lcd.themeColor(1) == 251666692 then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
@@ -704,7 +720,7 @@ local function paint(thisWidget)
     end
 
     -- voltage should never start at 0.  we prevent this here with a bit of funny stuff
-    if thisWidget.maxmin == 1 and sensors.voltage ~= nil then
+    if widget.maxmin == 1 and sensors.voltage ~= nil then
         if linkUP ~= 0 then
             if sensors.govmode == "SPOOLUP" then
                 voltageNearlyActive = 1
@@ -789,7 +805,7 @@ local function paint(thisWidget)
     offsetX = boxW / 2 - tsizeW / 2
     offsetY = boxH / 2 - tsizeH / 2
     lcd.drawText(col2X + (colSpacing / 2) + offsetX, row2Y + offsetY, str)
-    if thisWidget.title == 1 then
+    if widget.title == 1 then
         if lcd.themeColor(1) == 251666692 then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
@@ -811,7 +827,7 @@ local function paint(thisWidget)
         end
         lcd.font(FONT_XXL)
     end
-    if thisWidget.maxmin == 1 and sensors.current ~= nil then
+    if widget.maxmin == 1 and sensors.current ~= nil then
         if linkUP ~= 0 then
             if sensors.govmode == "SPOOLUP" then
                 currentNearlyActive = 1
@@ -877,7 +893,7 @@ local function paint(thisWidget)
         lcd.font(FONT_XXL)
     end
 
-    if thisWidget.fmsrc == 0 then
+    if widget.fmsrc == 0 then
         -- GOVERNER
         lcd.font(FONT_STD)
         str = "" .. sensors.govmode
@@ -885,7 +901,7 @@ local function paint(thisWidget)
         offsetX = boxW / 2 - tsizeW / 2
         offsetY = (boxHs / 2) + colSpacing - tsizeH / 2
         lcd.drawText(col1X + (colSpacing / 2) + offsetX, row1Y + boxHs + offsetY, str)
-        if thisWidget.title == 1 then
+        if widget.title == 1 then
             if lcd.themeColor(1) == 251666692 then
                 -- dark theme
                 lcd.color(lcd.RGB(255, 255, 255, 1))
@@ -911,7 +927,7 @@ local function paint(thisWidget)
             end
             lcd.font(FONT_XXL)
         end
-    elseif thisWidget.fmsrc == 1 then
+    elseif widget.fmsrc == 1 then
         -- SYSTEM FM
         lcd.font(FONT_STD)
         str = "" .. sensors.fm
@@ -919,7 +935,7 @@ local function paint(thisWidget)
         offsetX = boxW / 2 - tsizeW / 2
         offsetY = (boxHs / 2) + colSpacing - tsizeH / 2
         lcd.drawText(col1X + (colSpacing / 2) + offsetX, row1Y + boxHs + offsetY, str)
-        if thisWidget.title == 1 then
+        if widget.title == 1 then
             if lcd.themeColor(1) == 251666692 then
                 -- dark theme
                 lcd.color(lcd.RGB(114, 114, 114))
@@ -958,7 +974,7 @@ local function paint(thisWidget)
     offsetX = boxW / 2 + (colSpacing * 2) - tsizeW / 2
     offsetY = (boxHs + boxHs / 2) + colSpacing - tsizeH / 2
     lcd.drawText(col1X + (colSpacing / 2) + boxWs / 2 - tsizeW / 2, row1Y + boxHs + offsetY, str)
-    if thisWidget.title == 1 then
+    if widget.title == 1 then
         if lcd.themeColor(1) == 251666692 then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
@@ -980,7 +996,7 @@ local function paint(thisWidget)
         end
         lcd.font(FONT_XXL)
     end
-    if thisWidget.maxmin == 1 and sensors.rssi ~= nil then
+    if widget.maxmin == 1 and sensors.rssi ~= nil then
         if linkUP ~= 0 then
             if sensors.govmode == "SPOOLUP" then
                 rssiNearlyActive = 1
@@ -1057,7 +1073,7 @@ local function paint(thisWidget)
     offsetX = boxWs / 2 + (colSpacing * 2) - tsizeW / 2
     offsetY = (boxHs + boxHs / 2) + colSpacing - tsizeH / 2
     lcd.drawText(col1X + (colSpacing / 2) + boxWs / 2 - tsizeW / 2, row2Y + offsetY, str .. "°")
-    if thisWidget.title == 1 then
+    if widget.title == 1 then
         if lcd.themeColor(1) == 251666692 then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
@@ -1079,7 +1095,7 @@ local function paint(thisWidget)
         end
         lcd.font(FONT_XXL)
     end
-    if thisWidget.maxmin == 1 and sensors.temp_esc ~= nil then
+    if widget.maxmin == 1 and sensors.temp_esc ~= nil then
         if linkUP ~= 0 then
             if sensors.govmode == "SPOOLUP" then
                 temp_escNearlyActive = 1
@@ -1156,7 +1172,7 @@ local function paint(thisWidget)
     offsetX = (boxWs / 2 + (colSpacing * 2) - tsizeW / 2) + boxWs
     offsetY = (boxHs + boxHs / 2) + colSpacing - tsizeH / 2
     lcd.drawText(col1X + (colSpacing / 2) + boxWs + colSpacing + boxWs / 2 - tsizeW / 2, row2Y + offsetY, str .. "°")
-    if thisWidget.title == 1 then
+    if widget.title == 1 then
         if lcd.themeColor(1) == 251666692 then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
@@ -1182,7 +1198,7 @@ local function paint(thisWidget)
         end
         lcd.font(FONT_XXL)
     end
-    if thisWidget.maxmin == 1 and sensors.temp_mcu ~= nil then
+    if widget.maxmin == 1 and sensors.temp_mcu ~= nil then
         if linkUP ~= 0 then
             if sensors.govmode == "SPOOLUP" then
                 temp_mcuNearlyActive = 1
@@ -1284,7 +1300,7 @@ local function paint(thisWidget)
     offsetY = (boxHs + boxHs / 2) + colSpacing - tsizeH / 2
     lcd.drawText(col1X + (colSpacing / 2) + boxWs + colSpacing + boxWs / 2 - tsizeW / 2, row1Y + boxHs + offsetY, str)
 
-    if thisWidget.title == 1 then
+    if widget.title == 1 then
         if lcd.themeColor(1) == 251666692 then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
@@ -1357,7 +1373,7 @@ local function paint(thisWidget)
 	-- big conditional to trigger lvTimer if needed
 	if getRSSI() ~= 0 then
 		if  sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or sensors.govmode == "ACTIVE" or sensors.govmode == "LOST-HS" or sensors.govmode == "BAILOUT" or sensors.govmode == "RECOVERY" then
-			if ((sensors.voltage) <= thisWidget.lwvltge) or (sensors.fuel <= thisWidget.lowfuel) then
+			if ((sensors.voltage) <= widget.lwvltge) or (sensors.fuel <= widget.lowfuel) then
 					lvTimer = true
 			else
 					lvTimer = false			
@@ -1381,11 +1397,11 @@ local function paint(thisWidget)
 	if lvTimerStart ~= nil then
 		if (os.time() - lvTimerStart >= 5) then
 			-- only trigger if we have been on for 5 seconds or more
-			if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >= thisWidget.alertint then
+			if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >= widget.alertint then
 				audioAlertCounter = os.clock()
 				system.playFile("/scripts/rf2status/sounds/lowvoltage.wav")
 
-				if thisWidget.alrthptc == 1 then
+				if widget.alrthptc == 1 then
 					system.playHaptic("- . -")
 				end
 			end				
@@ -1402,7 +1418,7 @@ local function paint(thisWidget)
     --if getRSSI() ~= 0 then
 		--if  sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or sensors.govmode == "ACTIVE" or sensors.govmode == "LOST-HS" or sensors.govmode == "BAILOUT" or sensors.govmode == "RECOVERY" then
 	
-			if ((sensors.voltage) <= thisWidget.lwvltge) or (sensors.fuel <= thisWidget.lowfuel) then
+			if ((sensors.voltage) <= widget.lwvltge) or (sensors.fuel <= widget.lowfuel) then
 				
 				lvTime = SecondsFromTime(os.clock())
 		
@@ -1424,11 +1440,11 @@ local function paint(thisWidget)
 
 			-- play alarm - but no more than interval
 			if lvAlarm == true then
-				if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >= thisWidget.alertint then
+				if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >= widget.alertint then
 					audioAlertCounter = os.clock()
 					system.playFile("/scripts/rf2status/sounds/lowvoltage.wav")
 
-					if thisWidget.alrthptc == 1 then
+					if widget.alrthptc == 1 then
 						system.playHaptic("- . -")
 					end
 				end
@@ -1686,6 +1702,24 @@ function getSensors()
     end
 
     -- set flag to refresh screen or not
+	
+	voltage = kalmanVoltage(voltage,oldsensors.voltage)
+	voltage = round(voltage,0)
+
+	fuel = kalmanVoltage(fuel,oldsensors.fuel)
+	fuel = round(fuel,0)
+
+	rpm = kalmanRPM(rpm,oldsensors.rpm)
+	rpm = round(rpm,0)
+
+	temp_mcu = kalmanTempMCU(temp_mcu,oldsensors.temp_mcu)
+	temp_mcu = round(temp_mcu,0)
+
+	temp_esc = kalmanTempESC(temp_mcu,oldsensors.temp_esc)
+	temp_esc = round(temp_esc,0)
+
+	rssi = kalmanRSSI(rssi,oldsensors.rssi)
+	rssi = round(rssi,0)
 
     if oldsensors.voltage ~= voltage then
         refresh = true
@@ -1735,6 +1769,113 @@ function getSensors()
     return ret
 end
 
+function kalmanRSSI(new,old)
+  if old == nil then
+	old = 0
+  end
+  if new == nil then
+	new = 0
+  end
+  x=old; 
+  local p=100; 
+  local k=0; 
+  p = p + 0.05;
+  k = p / (p + rssiNoiseQ);
+  x = x + k * (new - x);
+  p = (1 - k) * p;
+  return x;
+end
+ 
+
+
+function kalmanTempMCU(new,old)
+  if old == nil then
+	old = 0
+  end
+  if new == nil then
+	new = 0
+  end
+  x=old; 
+  local p=100; 
+  local k=0; 
+  p = p + 0.05;
+  k = p / (p + temp_mcuNoiseQ);
+  x = x + k * (new - x);
+  p = (1 - k) * p;
+  return x;
+end
+ 
+
+
+function kalmanTempESC(new,old)
+  if old == nil then
+	old = 0
+  end
+  if new == nil then
+	new = 0
+  end
+  x=old; 
+  local p=100; 
+  local k=0; 
+  p = p + 0.05;
+  k = p / (p + temp_escNoiseQ);
+  x = x + k * (new - x);
+  p = (1 - k) * p;
+  return x;
+end
+ 
+function kalmanRPM(new,old)
+  if old == nil then
+	old = 0
+  end
+  if new == nil then
+	new = 0
+  end
+  x=old; 
+  local p=100; 
+  local k=0; 
+  p = p + 0.05;
+  k = p / (p + rpmNoiseQ);
+  x = x + k * (new - x);
+  p = (1 - k) * p;
+  return x;
+end
+ 
+ function kalmanFuel(new,old)
+  if old == nil then
+	old = 0
+  end
+  if new == nil then
+	new = 0
+  end
+  x=old; 
+  local p=100; 
+  local k=0; 
+  p = p + 0.05;
+  k = p / (p + fuelNoiseQ);
+  x = x + k * (new - x);
+  p = (1 - k) * p;
+  return x;
+end
+ 
+ 
+function kalmanVoltage(new,old)
+  if old == nil then
+	old = 0
+  end
+  if new == nil then
+	new = 0
+  end
+  x=old; 
+  local p=100; 
+  local k=0; 
+  p = p + 0.05;
+  k = p / (p + voltageNoiseQ);
+  x = x + k * (new - x);
+  p = (1 - k) * p;
+  return x;
+end
+
 function sensorMakeNumber(x)
     if x == nil or x == "" then
         x = 0
@@ -1749,9 +1890,11 @@ function sensorMakeNumber(x)
     return x
 end
 
-function round(num, dp)
-    local mult = 10 ^ (dp or 0)
-    return math.floor(num * mult + 0.5) / mult
+function round(number, precision)
+   local fmtStr = string.format('%%0.%sf',precision)
+   number = string.format(fmtStr,number)
+   number = tonumber(number)
+   return number
 end
 
 function SecondsToClock(seconds)
@@ -1781,65 +1924,65 @@ function SecondsFromTime(seconds)
 end
 
 
-local function read(thisWidget)
-    thisWidget.fmsrc = storage.read("fmsrc")
-	if thisWidget.fmsrc == nil then
-		thisWidget.fmsrc = WidgetTable.fmsrc
+local function read(widget)
+    widget.fmsrc = storage.read("fmsrc")
+	if widget.fmsrc == nil then
+		widget.fmsrc = defaultWidgets.fmsrc
 	end
 	
-    thisWidget.lwvltge = storage.read("lwvltge")
-	if thisWidget.lwvltge == nil then
-		thisWidget.lwvltge = WidgetTable.lwvltge
+    widget.lwvltge = storage.read("lwvltge")
+	if widget.lwvltge == nil then
+		widget.lwvltge = defaultWidgets.lwvltge
 	end	
 	
-    thisWidget.lowfuel = storage.read("lowfuel")
-	if thisWidget.lowfuel == nil then
-		thisWidget.lowfuel = WidgetTable.lowfuel
+    widget.lowfuel = storage.read("lowfuel")
+	if widget.lowfuel == nil then
+		widget.lowfuel = defaultWidgets.lowfuel
 	end		
 	
-    thisWidget.alertint = storage.read("alertint")
-	if thisWidget.alertint == nil then
-		thisWidget.alertint = WidgetTable.alertint
+    widget.alertint = storage.read("alertint")
+	if widget.alertint == nil then
+		widget.alertint = defaultWidgets.alertint
 	end		
 	
-    thisWidget.alrthptc = storage.read("alrthptc")
-	if thisWidget.alrthptc == nil then
-		thisWidget.alrthptc = WidgetTable.alrthptc
+    widget.alrthptc = storage.read("alrthptc")
+	if widget.alrthptc == nil then
+		widget.alrthptc = defaultWidgets.alrthptc
 	end			
 	
-    thisWidget.maxmin = storage.read("maxmin")
-	if thisWidget.maxmin == nil then
-		thisWidget.maxmin = WidgetTable.maxmin
+    widget.maxmin = storage.read("maxmin")
+	if widget.maxmin == nil then
+		widget.maxmin = defaultWidgets.maxmin
 	end				
 	
-    thisWidget.title = storage.read("title")
-	if thisWidget.title == nil then
-		thisWidget.title = WidgetTable.title
+    widget.title = storage.read("title")
+	if widget.title == nil then
+		widget.title = defaultWidgets.title
 	end	
 	
-    thisWidget.cells = storage.read("cells")
-	if thisWidget.cells == nil then
-		thisWidget.cells = WidgetTable.cells
+    widget.cells = storage.read("cells")
+	if widget.cells == nil then
+		widget.cells = defaultWidgets.cells
 	end	
 		
 	
 	
-    return thisWidget
+    return widget
 end
 
-local function write(thisWidget)
-    storage.write("fmsrc", thisWidget.fmsrc)
-    storage.write("lwvltge", thisWidget.lwvltge)
-    storage.write("lowfuel", thisWidget.lowfuel)
-    storage.write("alertint", thisWidget.alertint)
-    storage.write("alrthptc", thisWidget.alrthptc)
-    storage.write("maxmin", thisWidget.maxmin)
-    storage.write("title", thisWidget.title)
-    storage.write("cells", thisWidget.cells)
-    return thisWidget
+local function write(widget)
+    storage.write("fmsrc", widget.fmsrc)
+    storage.write("lwvltge", widget.lwvltge)
+    storage.write("lowfuel", widget.lowfuel)
+    storage.write("alertint", widget.alertint)
+    storage.write("alrthptc", widget.alrthptc)
+    storage.write("maxmin", widget.maxmin)
+    storage.write("title", widget.title)
+    storage.write("cells", widget.cells)
+    return widget
 end
 
-local function wakeup(thisWidget)
+local function wakeup(widget)
     refresh = false
     sensors = getSensors()
 
