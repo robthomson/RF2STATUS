@@ -1587,8 +1587,8 @@ function getSensors()
             else
                 voltage = 0
             end
-            if system.getSource("RPM") ~= nil then
-                rpm = system.getSource("RPM"):stringValue()
+            if system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0500}) ~= nil then
+                rpm = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0500}):stringValue()
                 if rpm ~= nil then
                     rpm = sensorMakeNumber(rpm)
                 else
@@ -1597,8 +1597,8 @@ function getSensors()
             else
                 rpm = 0
             end
-            if system.getSource("Current") ~= nil then
-                current = system.getSource("Current"):stringValue()
+            if system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200}) ~= nil then
+                current = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200}):stringValue()
                 if current ~= nil then
                     current = sensorMakeNumber(current)
                 else
