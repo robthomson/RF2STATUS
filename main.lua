@@ -22,6 +22,7 @@ local oldsensors = {
     "govmode"
 }
 local sensors
+local supportedRADIO = false
 local gfx_model
 local audioAlertCounter = 0
 local lvTimer = false
@@ -31,7 +32,7 @@ local refresh = true
 local isInConfiguration = false
 local defaultWidgets = {
     fmsrc = 0,
-    lwvltge = 2170,
+	btype = 1,
     lowfuel = 20,
     alertint = 5,
     alrthptc = 1,
@@ -41,7 +42,7 @@ local defaultWidgets = {
 }
 local stopTimer = true
 local startTimer = false
-
+local voltageIsLow = false
 
  
 voltageNoiseQ= 150;	 
@@ -65,51 +66,42 @@ local function configure(widget)
     isInConfiguration = true
 
 
-	-- LOW VOLTAGE TRIGGER
-    line = form.addLine("LOW VOLTAGE ALERT")
-    field = form.addNumberField(
-        line,
-        nil,
-        0,
-        20000,
-        function()
-            return widget.lwvltge
-        end,
-        function(value)
-            widget.lwvltge = value
-        end
-    )
-    field:decimals(2)
-    field:default(2170)
-
     -- CELLS
-    line = form.addLine("BATTERY CELLS")
+    line = form.addLine("BATTERY TYPE")
     form.addChoiceField(
         line,
         nil,
         {
-            {"1S", 1},
-            {"2S", 2},
-            {"3S", 3},
-            {"4S", 4},
-            {"5S", 5},
-            {"6S", 6},
-            {"7S", 7},
-            {"8S", 8},
-            {"9S", 9},
-            {"10S", 10},
-            {"11S", 11},
-            {"12S", 12},
-            {"13S", 13},
-            {"14S", 14}
+            {"LiPo", 0},
+            {"LiHv", 1},
+            {"Lion", 2},
+            {"LiFe", 3},
+            {"NiMh", 4},
         },
+        function()
+            return widget.btype
+        end,
+        function(newValue)
+            widget.btype = newValue
+        end
+    )
+
+    -- BATTERY CELLS
+    line = form.addLine("BATTERY CELLS")
+    field =
+        form.addNumberField(
+        line,
+        nil,
+        0,
+        14,
         function()
             return widget.cells
         end,
-        function(newValue)
-            widget.cells = newValue
+        function(value)
+            widget.cells = value
         end
     )
+    field:default(6)
 
 
     -- LOW FUEL TRIGGER
@@ -220,14 +212,14 @@ function getRSSI()
     return 0
 end
 
-function screenSmallError()
+function screenError(msg)
     local w, h = lcd.getWindowSize()
 
     lcd.font(FONT_STD)
-    str = "DISPLAY SIZE TOO SMALL"
+    str = msg
     tsizeW, tsizeH = lcd.getTextSize(str)
 
-    if lcd.themeColor(1) == 251666692 then
+    if  lcd.darkMode() then
         -- dark theme
         lcd.color(lcd.RGB(255, 255, 255, 1))
     else
@@ -242,6 +234,8 @@ local function paint(widget)
     if isInConfiguration == true then
         isInConfiguration = false
     end
+
+
 
     if type(widget) ~= "table" then
         local w, h = lcd.getWindowSize()
@@ -269,7 +263,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
 
         --draw the background
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             lcd.color(lcd.RGB(40, 40, 40))
         else
             lcd.color(lcd.RGB(240, 240, 240))
@@ -277,7 +271,7 @@ local function paint(widget)
         lcd.drawFilledRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
 
         --draw the border
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -286,7 +280,7 @@ local function paint(widget)
         end
         lcd.drawRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -300,7 +294,7 @@ local function paint(widget)
     if widget.fmsrc == nil then
         return
     end
-    if widget.lwvltge == nil then
+    if widget.btype == nil then
         return
     end
     if widget.lowfuel == nil then
@@ -318,6 +312,42 @@ local function paint(widget)
     if widget.title == nil then
         return
     end
+    if widget.cells == nil then
+        return
+    end	
+
+
+	--voltage detection
+
+	if widget.btype ~= nil then
+		if widget.btype == 0 then
+			--LiPo
+			cellVoltage = 3.6
+		elseif widget.btype == 1 then
+			--LiHv
+			cellVoltage = 3.6	
+		elseif widget.btype == 2 then
+			--Lion
+			cellVoltage = 3	
+		elseif widget.btype == 3 then
+			--LiFe
+			cellVoltage = 2.9	
+		elseif widget.btype == 4 then
+			--NiMh
+			cellVoltage = 1.1	
+		else
+			--LiPo (default)
+			cellVoltage = 3.6	
+		end
+
+
+		if sensors.voltage/100 < (cellVoltage * widget.cells) then
+			voltageIsLow = true
+		else
+			voltageIsLow = false	
+		end
+	end	
+
 
     -- -----------------------------------------------------------------------------------------------
     -- write values to boxes
@@ -325,43 +355,58 @@ local function paint(widget)
 
     local w, h = lcd.getWindowSize()
 
+	--print(sensorMakeNumber(environment.version))
+
+
+	if tonumber(sensorMakeNumber(environment.version)) < 153 then
+            screenError("ETHOS < V1.5.3")
+            return	
+	end
+
+
     if
         environment.board == "V20" or environment.board == "XES" or environment.board == "X20" or
             environment.board == "X20S" or
-            environment.board == "X20PRO"
+            environment.board == "X20PRO" or
+			environment.board == "X20PROAW"
      then
+		supportedRADIO = true
         if w ~= 784 and h ~= 294 then
-            screenSmallError()
+            screenError("DISPLAY SIZE TOO SMALL")
             return
         end
     end
     if environment.board == "X18" or environment.board == "X18S" then
+		supportedRADIO = true
         if w ~= 472 and h ~= 191 then
-            screenSmallError()
+            screenError("DISPLAY SIZE TOO SMALL")
             return
         end
     end
     if environment.board == "X14" or environment.board == "X14S" then
+		supportedRADIO = true
         if w ~= 630 and h ~= 236 then
-            screenSmallError()
+            screenError("DISPLAY SIZE TOO SMALL")
             return
         end
     end
     if environment.board == "TWXLITE" or environment.board == "TWXLITES" then
+		supportedRADIO = true
         if w ~= 472 and h ~= 191 then
-            screenSmallError()
+            screenError("DISPLAY SIZE TOO SMALL")
             return
         end
     end
     if environment.board == "X10EXPRESS" then
+		supportedRADIO = true
         if w ~= 472 and h ~= 158 then
-            screenSmallError()
+            screenError("DISPLAY SIZE TOO SMALL")
             return
         end
     end
 
     -- blank out display
-    if lcd.themeColor(1) == 251666692 then
+    if  lcd.darkMode() then
         -- dark theme
         lcd.color(lcd.RGB(16, 16, 16))
     else
@@ -370,15 +415,12 @@ local function paint(widget)
     end
     lcd.drawFilledRectangle(0, 0, w, h)
 
-    if lcd.themeColor(1) == 251666692 then
-        lcd.color(lcd.RGB(40, 40, 40))
-    else
-        lcd.color(lcd.RGB(240, 240, 240))
-    end
+
 
     if
         environment.board == "XES" or environment.board == "X20" or environment.board == "X20S" or
-            environment.board == "X20PRO"
+            environment.board == "X20PRO" or
+			environment.board == "X20PROAW"			
      then
         colSpacing = 4
         fullBoxW = 262
@@ -413,6 +455,11 @@ local function paint(widget)
         fullBoxH = 79
         textOFFSET = 12
     end
+	
+	if supportedRADIO == false then
+		            screenError("UNKNOWN " .. environment.board)
+					return
+	end
 
     boxW = fullBoxW - colSpacing
     boxH = fullBoxH - colSpacing
@@ -425,6 +472,13 @@ local function paint(widget)
     row1Y = 0
     row2Y = fullBoxH
     row3Y = fullBoxH * 2
+
+    if  lcd.darkMode() then
+        lcd.color(lcd.RGB(40, 40, 40))
+    else
+        lcd.color(lcd.RGB(240, 240, 240))
+    end
+
 
     lcd.drawFilledRectangle(col1X, row1Y, boxW, boxHs) -- col 1 row 1 1x1
     lcd.drawFilledRectangle(col1X, row1Y + colSpacing + boxHs + (colSpacing / 3), boxW, boxHs) -- col 1 row 1 1x1
@@ -440,8 +494,9 @@ local function paint(widget)
 
     lcd.drawFilledRectangle(col3X + (colSpacing), row1Y, boxW, boxH) -- col 2 row 1 1x1
     lcd.drawFilledRectangle(col3X + (colSpacing), row2Y + (colSpacing / 2), boxW, boxH) -- col 2 row 2 1x1
+	
 
-    if lcd.themeColor(1) == 251666692 then
+    if  lcd.darkMode() then
         -- dark theme
         lcd.color(lcd.RGB(255, 255, 255, 1))
     else
@@ -450,9 +505,8 @@ local function paint(widget)
     end
 
     -- FUEL
-    -- work around for weird fuel bug
-    --print(sensors.fuel)
-    --print(sensors.voltage)
+	
+	-- calc fuel if sensor missing
     if sensors.voltage ~= 0 and sensors.fuel == 0 then
 		maxCellVoltage = 4.196
 		minCellVoltage = 3.2
@@ -471,7 +525,11 @@ local function paint(widget)
     end
     lcd.font(FONT_XXL)
     if sensors.fuel ~= nil then
-        str = "" .. sensors.fuel .. "%"
+		if sensors.fuel > 5 then
+			str = "" .. sensors.fuel .. "%"
+		else
+         str = "0%"       
+		end
     else
         str = "0%"
     end
@@ -480,7 +538,7 @@ local function paint(widget)
     offsetY = boxH / 2 - tsizeH / 2
     lcd.drawText(col3X + (colSpacing / 2) + offsetX, row1Y + offsetY, str)
     if widget.title == 1 then
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -492,7 +550,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText(col3X + (colSpacing / 2) + (boxW / 2) - tsizeW / 2, row1Y + (boxH - colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -533,7 +591,7 @@ local function paint(widget)
             sensorFuelMin = 0
         end
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -560,7 +618,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col3X + boxW) - tsizeW, row1Y + (boxH - colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -570,7 +628,7 @@ local function paint(widget)
         lcd.font(FONT_XXL)
     end
     if sensors.fuel <= widget.lowfuel then
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -596,7 +654,7 @@ local function paint(widget)
     offsetY = boxH / 2 - tsizeH / 2
     lcd.drawText(col3X + (colSpacing / 2) + offsetX, row2Y + offsetY, str)
     if widget.title == 1 then
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -608,7 +666,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText(col3X + (colSpacing / 2) + (boxW / 2) - tsizeW / 2, row2Y + (boxH - colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -646,7 +704,7 @@ local function paint(widget)
             sensorRPMMax = 0
         end
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -672,7 +730,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col3X + boxW) - tsizeW, row2Y + (boxH - colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -683,12 +741,16 @@ local function paint(widget)
     end
 
     -- VOLT
-    if sensors.voltage <= widget.lwvltge then
+    if voltageIsLow then
         lcd.color(lcd.RGB(255, 0, 0, 1))
     end
     lcd.font(FONT_XXL)
     if sensors.voltage ~= nil then
-        str = "" .. tostring(sensors.voltage / 100) .. "v"
+		if sensors.voltage > 1 then
+			str = "" .. tostring(sensors.voltage / 100) .. "v"
+		else
+			str = "0v"
+		end
     else
         str = "0v"
     end
@@ -697,7 +759,7 @@ local function paint(widget)
     offsetY = boxH / 2 - tsizeH / 2
     lcd.drawText(col2X + (colSpacing / 2) + offsetX, row1Y + offsetY, str)
     if widget.title == 1 then
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -709,7 +771,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText(col2X + (colSpacing / 2) + (boxW / 2) - tsizeW / 2, row1Y + (boxH - colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -750,7 +812,7 @@ local function paint(widget)
             sensorVoltageMin = 0
         end
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -777,7 +839,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col2X + boxW) - tsizeW, row1Y + (boxH - colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -786,7 +848,7 @@ local function paint(widget)
         end
         lcd.font(FONT_XXL)
     end
-    if lcd.themeColor(1) == 251666692 then
+    if  lcd.darkMode() then
         -- dark theme
         lcd.color(lcd.RGB(255, 255, 255, 1))
     else
@@ -796,8 +858,13 @@ local function paint(widget)
 
     -- CURRENT
     lcd.font(FONT_XXL)
+	print(sensors.current)
     if sensors.current ~= nil then
-        str = "" .. sensors.current .. "A"
+		if sensors.current > 1 then
+			str = "" .. sensors.current .. "A"
+		else
+			str = "0A"
+		end
     else
         str = "0A"
     end
@@ -806,7 +873,7 @@ local function paint(widget)
     offsetY = boxH / 2 - tsizeH / 2
     lcd.drawText(col2X + (colSpacing / 2) + offsetX, row2Y + offsetY, str)
     if widget.title == 1 then
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -818,7 +885,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText(col2X + (colSpacing / 2) + (boxW / 2) - tsizeW / 2, row2Y + (boxH - colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -856,7 +923,7 @@ local function paint(widget)
             sensorCurrentMin = 0
         end
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -883,7 +950,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col2X + boxW) - tsizeW, row2Y + (boxH - colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -902,7 +969,7 @@ local function paint(widget)
         offsetY = (boxHs / 2) + colSpacing - tsizeH / 2
         lcd.drawText(col1X + (colSpacing / 2) + offsetX, row1Y + boxHs + offsetY, str)
         if widget.title == 1 then
-            if lcd.themeColor(1) == 251666692 then
+            if  lcd.darkMode() then
                 -- dark theme
                 lcd.color(lcd.RGB(255, 255, 255, 1))
             else
@@ -918,7 +985,7 @@ local function paint(widget)
                 str
             )
 
-            if lcd.themeColor(1) == 251666692 then
+            if  lcd.darkMode() then
                 -- dark theme
                 lcd.color(lcd.RGB(255, 255, 255, 1))
             else
@@ -936,7 +1003,7 @@ local function paint(widget)
         offsetY = (boxHs / 2) + colSpacing - tsizeH / 2
         lcd.drawText(col1X + (colSpacing / 2) + offsetX, row1Y + boxHs + offsetY, str)
         if widget.title == 1 then
-            if lcd.themeColor(1) == 251666692 then
+            if  lcd.darkMode() then
                 -- dark theme
                 lcd.color(lcd.RGB(114, 114, 114))
             else
@@ -952,7 +1019,7 @@ local function paint(widget)
                 str
             )
 
-            if lcd.themeColor(1) == 251666692 then
+            if  lcd.darkMode() then
                 -- dark theme
                 lcd.color(lcd.RGB(255, 255, 255, 1))
             else
@@ -975,7 +1042,7 @@ local function paint(widget)
     offsetY = (boxHs + boxHs / 2) + colSpacing - tsizeH / 2
     lcd.drawText(col1X + (colSpacing / 2) + boxWs / 2 - tsizeW / 2, row1Y + boxHs + offsetY, str)
     if widget.title == 1 then
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -987,7 +1054,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText(col1X + (colSpacing / 2) + boxWs / 2 - tsizeW / 2, row2Y + (boxHs - colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1025,7 +1092,7 @@ local function paint(widget)
             sensorTempRSSIMin = 0
         end
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1052,7 +1119,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col1X + boxW) / 2 - tsizeW, row2Y + (boxHs + -colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1065,7 +1132,11 @@ local function paint(widget)
     -- TEMP ESC
     lcd.font(FONT_STD)
     if sensors.temp_esc ~= nil then
-        str = "" .. sensors.temp_esc
+		if sensors.temp_esc < 1 then
+			str = "" .. sensors.temp_esc
+		else
+			str = "0"
+		end
     else
         str = "0"
     end
@@ -1074,7 +1145,7 @@ local function paint(widget)
     offsetY = (boxHs + boxHs / 2) + colSpacing - tsizeH / 2
     lcd.drawText(col1X + (colSpacing / 2) + boxWs / 2 - tsizeW / 2, row2Y + offsetY, str .. "°")
     if widget.title == 1 then
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1086,7 +1157,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText(col1X + (colSpacing / 2) + boxWs / 2 - tsizeW / 2, row2Y + (boxH - colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1124,7 +1195,7 @@ local function paint(widget)
             sensorTempESCMin = 0
         end
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1151,7 +1222,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col1X + boxW) / 2 - tsizeW, row2Y + (boxH - colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1164,7 +1235,11 @@ local function paint(widget)
     -- TEMP MCU
     lcd.font(FONT_STD)
     if sensors.temp_mcu ~= nil then
-        str = "" .. sensors.temp_mcu .. ""
+		if sensors.temp_mcu < 1 then	
+			str = "" .. sensors.temp_mcu .. ""
+		else
+			str = "0"
+		end
     else
         str = "0"
     end
@@ -1173,7 +1248,7 @@ local function paint(widget)
     offsetY = (boxHs + boxHs / 2) + colSpacing - tsizeH / 2
     lcd.drawText(col1X + (colSpacing / 2) + boxWs + colSpacing + boxWs / 2 - tsizeW / 2, row2Y + offsetY, str .. "°")
     if widget.title == 1 then
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1189,7 +1264,7 @@ local function paint(widget)
             str
         )
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1227,7 +1302,7 @@ local function paint(widget)
             sensorTempMCUMin = 0
         end
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1254,7 +1329,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col1X + boxW) + (colSpacing) - tsizeW, row2Y + (boxH - colSpacing - tsizeH), str)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1301,7 +1376,7 @@ local function paint(widget)
     lcd.drawText(col1X + (colSpacing / 2) + boxWs + colSpacing + boxWs / 2 - tsizeW / 2, row1Y + boxHs + offsetY, str)
 
     if widget.title == 1 then
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1316,7 +1391,7 @@ local function paint(widget)
             row2Y + (boxHs - colSpacing - tsizeH),
             str
         )
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1342,7 +1417,7 @@ local function paint(widget)
         tsizeW, tsizeH = lcd.getTextSize(str)
 
         --draw the background
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             lcd.color(lcd.RGB(40, 40, 40))
         else
             lcd.color(lcd.RGB(240, 240, 240))
@@ -1350,7 +1425,7 @@ local function paint(widget)
         lcd.drawFilledRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
 
         --draw the border
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1359,7 +1434,7 @@ local function paint(widget)
         end
         lcd.drawRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
 
-        if lcd.themeColor(1) == 251666692 then
+        if  lcd.darkMode() then
             -- dark theme
             lcd.color(lcd.RGB(255, 255, 255, 1))
         else
@@ -1373,7 +1448,7 @@ local function paint(widget)
 	-- big conditional to trigger lvTimer if needed
 	if getRSSI() ~= 0 then
 		if  sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or sensors.govmode == "ACTIVE" or sensors.govmode == "LOST-HS" or sensors.govmode == "BAILOUT" or sensors.govmode == "RECOVERY" then
-			if ((sensors.voltage) <= widget.lwvltge) or (sensors.fuel <= widget.lowfuel) then
+			if (voltageIsLow) or (sensors.fuel <= widget.lowfuel) then
 					lvTimer = true
 			else
 					lvTimer = false			
@@ -1411,48 +1486,6 @@ local function paint(widget)
 		lvTimerStart = nil
 	end
 
-
-
-	--[[
-    -- we only trigger in certain cases
-    --if getRSSI() ~= 0 then
-		--if  sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or sensors.govmode == "ACTIVE" or sensors.govmode == "LOST-HS" or sensors.govmode == "BAILOUT" or sensors.govmode == "RECOVERY" then
-	
-			if ((sensors.voltage) <= widget.lwvltge) or (sensors.fuel <= widget.lowfuel) then
-				
-				lvTime = SecondsFromTime(os.clock())
-		
-				-- we dont start complaining until more than X seconds
-				if lvTime >= 5 then
-					lvAlarm = true
-				else
-					lvAlarm = false
-					voltageLowCounter = 0
-					lvTime = 0
-				end
-			else
-				lvTime = 0
-				lvAlarm = false
-				voltageLowCounter = 0
-			end
-
-			print(lvTime)
-
-			-- play alarm - but no more than interval
-			if lvAlarm == true then
-				if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >= widget.alertint then
-					audioAlertCounter = os.clock()
-					system.playFile("/scripts/rf2status/sounds/lowvoltage.wav")
-
-					if widget.alrthptc == 1 then
-						system.playHaptic("- . -")
-					end
-				end
-			end
-		--end
-    --end
-	]]--
-
 	
 end
 
@@ -1464,7 +1497,7 @@ function getSensors()
     if environment.simulation == true then
         --elseif getRSSI() ~= 0 then
         -- we are running simulation
-        tv = math.random(2160, 2274)
+        tv = math.random(2100, 2274)
         voltage = sensorMakeNumber(tv)
         rpm = sensorMakeNumber(math.random(0, 1510))
         current = sensorMakeNumber(math.random(0, 17))
@@ -1930,11 +1963,10 @@ local function read(widget)
 		widget.fmsrc = defaultWidgets.fmsrc
 	end
 	
-    widget.lwvltge = storage.read("lwvltge")
-	if widget.lwvltge == nil then
-		widget.lwvltge = defaultWidgets.lwvltge
+    widget.btype = storage.read("btype")
+	if widget.btype == nil then
+		widget.btype = defaultWidgets.btype
 	end	
-	
     widget.lowfuel = storage.read("lowfuel")
 	if widget.lowfuel == nil then
 		widget.lowfuel = defaultWidgets.lowfuel
@@ -1972,7 +2004,7 @@ end
 
 local function write(widget)
     storage.write("fmsrc", widget.fmsrc)
-    storage.write("lwvltge", widget.lwvltge)
+	storage.write("btype", widget.btype)
     storage.write("lowfuel", widget.lowfuel)
     storage.write("alertint", widget.alertint)
     storage.write("alrthptc", widget.alrthptc)
@@ -1991,6 +2023,7 @@ local function wakeup(widget)
     if refresh == true then
         lcd.invalidate()
     end
+		
 
     return
 end
@@ -1999,7 +2032,7 @@ end
 local function init()
     system.registerWidget(
         {
-            key = "rf2st13",
+            key = "rf2st14",
             name = "RF2 Flight Status",
             create = create,
             configure = configure,
