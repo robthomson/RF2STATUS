@@ -46,9 +46,10 @@ local govmodeParam = 0
 voltageNoiseQ= 150;	 
 fuelNoiseQ= 150;	 
 rpmNoiseQ= 150;	 
-temp_mcuNoiseQ= 500;	 
-temp_escNoiseQ= 500;
-rssiNoiseQ= 50;
+temp_mcuNoiseQ = 500;	 
+temp_escNoiseQ = 500;
+rssiNoiseQ = 50;
+currentNoiseQ = 150;
 
 local function create(widget)
     gfx_model = lcd.loadBitmap(model.bitmap())
@@ -173,7 +174,6 @@ local function configure(widget)
 			return fmsrcParam
         end,
         function(newValue)
-			print(newValue)
             fmsrcParam = newValue
         end
     )
@@ -797,10 +797,9 @@ local function paint(widget)
 
     -- CURRENT
     lcd.font(FONT_XXL)
-	--print(sensors.current)
     if sensors.current ~= nil then
 		if sensors.current > 1 then
-			str = "" .. sensors.current .. "A"
+			str = "" .. (sensors.current/10) .. "A"
 		else
 			str = "0A"
 		end
@@ -874,7 +873,7 @@ local function paint(widget)
         if sensorCurrentMin == 0 or sensorCurrentMin == nil then
             str = "-"
         else
-            str = sensorCurrentMin .. "A"
+            str = sensorCurrentMin/10 .. "A"
         end
 
         tsizeW, tsizeH = lcd.getTextSize(str)
@@ -883,7 +882,7 @@ local function paint(widget)
         if sensorCurrentMax == 0 or sensorCurrentMax == nil then
             str = "-  "
         else
-            str = sensorCurrentMax .. "A"
+            str = sensorCurrentMax/10 .. "A"
         end
 
         tsizeW, tsizeH = lcd.getTextSize(str)
@@ -1482,10 +1481,10 @@ function getSensors()
 			
                 current = system.getSource("Rx Curr"):stringValue()
                 if current ~= nil then
-                    current = sensorMakeNumber(current) / 10
+                    current = sensorMakeNumber(current) * 10
                 else
                     current = 0
-                end
+                end			
             else
                 current = 0
             end
@@ -1572,7 +1571,7 @@ function getSensors()
             if system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200}) ~= nil then
                 current = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200}):stringValue()
                 if current ~= nil then
-                    current = sensorMakeNumber(current)
+                    current = sensorMakeNumber(current) * 10
                 else
                     current = 0
                 end
@@ -1686,6 +1685,11 @@ function getSensors()
 
 	temp_esc = kalmanTempESC(temp_mcu,oldsensors.temp_esc)
 	temp_esc = round(temp_esc,0)
+	
+	
+	current = kalmanCurrent(current,oldsensors.current)
+	current = round(current,0)	
+
 
 	rssi = kalmanRSSI(rssi,oldsensors.rssi)
 	rssi = round(rssi,0)
@@ -1737,6 +1741,24 @@ function getSensors()
 
     return ret
 end
+
+function kalmanCurrent(new,old)
+  if old == nil then
+	old = 0
+  end
+  if new == nil then
+	new = 0
+  end
+  x=old; 
+  local p=100; 
+  local k=0; 
+  p = p + 0.05;
+  k = p / (p + currentNoiseQ);
+  x = x + k * (new - x);
+  p = (1 - k) * p;
+  return x;
+end
+
 
 function kalmanRSSI(new,old)
   if old == nil then
