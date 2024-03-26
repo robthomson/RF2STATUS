@@ -443,7 +443,8 @@ local function paint(widget)
     -- FUEL
 	
 	-- calc fuel if sensor missing
-    if sensors.voltage ~= 0 and sensors.fuel == 0 then
+	--print("s" .. sensors.fuel)
+    if sensors.voltage ~= 0 and (sensors.fuel == 0) then
 		maxCellVoltage = 4.196
 		minCellVoltage = 3.2
 		avgCellVoltage = sensors.voltage / cellsParam
@@ -1598,8 +1599,8 @@ function getSensors()
             else
                 temp_mcu = 0
             end
-            if system.getSource("Fuel") ~= nil then
-                fuel = system.getSource("Fuel"):stringValue()
+            if system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600}) ~= nil then
+                fuel = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600}):stringValue()
                 if fuel ~= nil then
                     fuel = sensorMakeNumber(fuel)
                 else
@@ -1676,9 +1677,6 @@ function getSensors()
 	
 	voltage = kalmanVoltage(voltage,oldsensors.voltage)
 	voltage = round(voltage,0)
-
-	fuel = kalmanVoltage(fuel,oldsensors.fuel)
-	fuel = round(fuel,0)
 
 	rpm = kalmanRPM(rpm,oldsensors.rpm)
 	rpm = round(rpm,0)
@@ -1807,23 +1805,6 @@ function kalmanRPM(new,old)
   local k=0; 
   p = p + 0.05;
   k = p / (p + rpmNoiseQ);
-  x = x + k * (new - x);
-  p = (1 - k) * p;
-  return x;
-end
- 
- function kalmanFuel(new,old)
-  if old == nil then
-	old = 0
-  end
-  if new == nil then
-	new = 0
-  end
-  x=old; 
-  local p=100; 
-  local k=0; 
-  p = p + 0.05;
-  k = p / (p + fuelNoiseQ);
   x = x + k * (new - x);
   p = (1 - k) * p;
   return x;
