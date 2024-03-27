@@ -261,6 +261,7 @@ function getThemeInfo()
      then
 		ret = {
 			supportedRADIO  = true,
+			cpuSaver = 2,
 			colSpacing = 4,
 			fullBoxW = 262,
 			fullBoxH = h / 2,
@@ -283,6 +284,7 @@ function getThemeInfo()
     if environment.board == "X18" or environment.board == "X18S" then
 		ret = {	
 			supportedRADIO  = true,
+			cpuSaver = 4,			
 			colSpacing = 2,
 			fullBoxW = 158,
 			fullBoxH = 97,
@@ -306,6 +308,7 @@ function getThemeInfo()
     if environment.board == "X14" or environment.board == "X14S" then
 		ret = {
 			supportedRADIO  = true,
+			cpuSaver = 6,			
 			colSpacing = 3,
 			fullBoxW = 210,
 			fullBoxH = 120,
@@ -330,6 +333,7 @@ function getThemeInfo()
     if environment.board == "TWXLITE" or environment.board == "TWXLITES" then
 		ret = {
 		supportedRADIO  = true,
+		cpuSaver = 6,		
         colSpacing = 2,
         fullBoxW = 158,
         fullBoxH = 96,
@@ -352,6 +356,7 @@ function getThemeInfo()
     if environment.board == "X10EXPRESS" then
 		ret = {
 			supportedRADIO  = true,
+			cpuSaver = 6,			
 			colSpacing = 2,
 			fullBoxW = 158,
 			fullBoxH = 79,
@@ -1043,6 +1048,9 @@ local function paint(widget)
     if fmsrcParam == 0 then
         -- GOVERNER
         lcd.font(FONT_STD)
+		if sensors.govmode == nil then
+			sensors.govmode = "INIT"
+		end
         str = "" .. sensors.govmode
         tsizeW, tsizeH = lcd.getTextSize(str)
         offsetX = boxW / 2 - tsizeW / 2
@@ -1222,7 +1230,7 @@ local function paint(widget)
     lcd.font(FONT_STD)
     if sensors.temp_esc ~= nil then
 		if sensors.temp_esc > 1 then
-			str = "" .. round(sensors.temp_esc/100,1)
+			str = "" .. round(sensors.temp_esc/100,0)
 		else
 			str = "0"
 		end
@@ -1285,8 +1293,8 @@ local function paint(widget)
         end
 
 		if environment.simulation == true then
-                    sensorTempESCMin = sensors.temp_esc
-                    sensorTempESCMax = sensors.temp_esc
+                    sensorTempESCMin = round(sensors.temp_esc/100,0)
+                    sensorTempESCMax = round(sensors.temp_esc/100,0)
 		end
 
 
@@ -1339,7 +1347,7 @@ local function paint(widget)
     lcd.font(FONT_STD)
     if sensors.temp_mcu ~= nil then
 		if sensors.temp_mcu > 1 then	
-			str = "" .. round(sensors.temp_mcu/100,2) .. ""
+			str = "" .. round(sensors.temp_mcu/100,0) .. ""
 		else
 			str = "0"
 		end
@@ -1406,8 +1414,8 @@ local function paint(widget)
         end
 
 		if environment.simulation == true then
-                    sensorTempMCUMin = sensors.temp_mcu
-                    sensorTempMCUMax = sensors.temp_mcu
+                    sensorTempMCUMin = round(sensors.temp_mcu/100,0)
+                    sensorTempMCUMax = round(sensors.temp_mcu/100,0)
 		end
 
         if  lcd.darkMode() then
@@ -1617,8 +1625,8 @@ function getSensors()
         voltage = sensorMakeNumber(tv)
         rpm = sensorMakeNumber(math.random(0, 1510))
         current = sensorMakeNumber(math.random(0, 17))
-        temp_esc = sensorMakeNumber(math.random(0, 32))
-        temp_mcu = sensorMakeNumber(math.random(0, 12))
+        temp_esc = sensorMakeNumber(math.random(1510, 1520))
+        temp_mcu = sensorMakeNumber(math.random(1510, 1520))
         fuel = sensorMakeNumber(math.floor(((tv / 10 * 100) / 252)))
         mah = sensorMakeNumber(math.random(10000, 10100))
         govmode = "ACTIVE"
@@ -1668,11 +1676,21 @@ function getSensors()
             end
             if system.getSource("GPS Speed") ~= nil then
                 temp_esc = system.getSource("GPS Speed"):value()
-                if temp_esc ~= nil then
-                    temp_esc = (sensorMakeNumber(temp_esc) /10) *100
-                else
-                    temp_esc = 0
-                end
+				    
+				--work around for weired bug on x18
+				if environment.board == "X18" or environment.board == "X18S" then
+						if temp_esc ~= nil then
+							temp_esc = (sensorMakeNumber(temp_esc)) *100
+						else
+							temp_esc = 0
+						end				
+				else
+						if temp_esc ~= nil then
+							temp_esc = (sensorMakeNumber(temp_esc) /10) *100
+						else
+							temp_esc = 0
+						end
+				end		
             else
                 temp_esc = 0
             end
@@ -2156,7 +2174,8 @@ end
 local function wakeup(widget)
     refresh = false
 
-	if loopCounter == 2 then
+	local theme = getThemeInfo()
+	if loopCounter == theme.cpuSaver then
 		sensors = getSensors()
 		loopCounter = 0
 	else
