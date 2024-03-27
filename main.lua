@@ -1748,7 +1748,7 @@ function getSensors()
             if system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200}) ~= nil then
                 current = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200}):stringValue()
                 if current ~= nil then
-                    current = sensorMakeNumber(current) * 10
+                    current = sensorMakeNumber(current)
                 else
                     current = 0
                 end
