@@ -261,7 +261,7 @@ function getThemeInfo()
      then
 		ret = {
 			supportedRADIO  = true,
-			cpuSaver = 2,
+			cpuSaver = 10,
 			colSpacing = 4,
 			fullBoxW = 262,
 			fullBoxH = h / 2,
@@ -284,7 +284,7 @@ function getThemeInfo()
     if environment.board == "X18" or environment.board == "X18S" then
 		ret = {	
 			supportedRADIO  = true,
-			cpuSaver = 4,			
+			cpuSaver = 15,			
 			colSpacing = 2,
 			fullBoxW = 158,
 			fullBoxH = 97,
@@ -308,7 +308,7 @@ function getThemeInfo()
     if environment.board == "X14" or environment.board == "X14S" then
 		ret = {
 			supportedRADIO  = true,
-			cpuSaver = 6,			
+			cpuSaver = 20,			
 			colSpacing = 3,
 			fullBoxW = 210,
 			fullBoxH = 120,
@@ -333,7 +333,7 @@ function getThemeInfo()
     if environment.board == "TWXLITE" or environment.board == "TWXLITES" then
 		ret = {
 		supportedRADIO  = true,
-		cpuSaver = 6,		
+		cpuSaver = 20,		
         colSpacing = 2,
         fullBoxW = 158,
         fullBoxH = 96,
@@ -356,7 +356,7 @@ function getThemeInfo()
     if environment.board == "X10EXPRESS" then
 		ret = {
 			supportedRADIO  = true,
-			cpuSaver = 6,			
+			cpuSaver = 20,			
 			colSpacing = 2,
 			fullBoxW = 158,
 			fullBoxH = 79,
@@ -2182,6 +2182,7 @@ local function wakeup(widget)
 		sensors = oldsensors
 		loopCounter = loopCounter + 1
 	end
+
 
     linkUP = getRSSI()
 
