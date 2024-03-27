@@ -14,6 +14,7 @@ local oldsensors = {
     "fm",
     "govmode"
 }
+local loopCounter = 0
 local sensors
 local supportedRADIO = false
 local gfx_model
@@ -2154,8 +2155,17 @@ end
 
 local function wakeup(widget)
     refresh = false
-    sensors = getSensors()
+
+	if loopCounter == 2 then
+		sensors = getSensors()
+		loopCounter = 0
+	else
+		sensors = oldsensors
+		loopCounter = loopCounter + 1
+	end
+
     linkUP = getRSSI()
+
 
     if refresh == true then
         lcd.invalidate()
