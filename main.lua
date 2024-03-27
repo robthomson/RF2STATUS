@@ -1658,7 +1658,7 @@ function getSensors()
 			
                 current = system.getSource("Rx Curr"):stringValue()
                 if current ~= nil then
-                    current = sensorMakeNumber(current) * 10
+                    current = sensorMakeNumber(current)
                 else
                     current = 0
                 end			
