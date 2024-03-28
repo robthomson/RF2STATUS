@@ -1634,108 +1634,111 @@ function getSensors()
         --fm = system.getSource({category=CATEGORY_FLIGHT, member=FLIGHT_CURRENT_MODE}):stringValue()
         rssi = math.random(90, 100)
     elseif linkUP ~= 0 then
-        if system.getSource("Rx RSSI1") ~= nil then
+		local telemetrySOURCE = system.getSource("Rx RSSI1")		
+        if telemetrySOURCE ~= nil then
             -- we are running crsf
-            if system.getSource("Rx Batt") ~= nil then
-                voltage = system.getSource("Rx Batt"):stringValue()
+			local voltageSOURCE = system.getSource("Rx Batt")
+            if voltageSOURCE ~= nil then
+                voltage = voltageSOURCE:value()
                 if voltage ~= nil then
-                    voltage = sensorMakeNumber(voltage) * 10
+					voltage = voltage * 100
                 else
                     voltage = 0
                 end
             else
                 voltage = 0
             end
-            if system.getSource("GPS Alt") ~= nil then
-                if system.getSource("GPS Alt"):maximum() == 1000.0 then
-                    system.getSource("GPS Alt"):maximum(65000)
+			local rpmSOURCE = system.getSource("GPS Alt")
+            if rpmSOURCE ~= nil then
+                if rpmSOURCE:maximum() == 1000.0 then
+                    rpmSOURCE:maximum(65000)
                 end
 
-                rpm = system.getSource("GPS Alt"):stringValue()
+                rpm = rpmSOURCE:value()
                 if rpm ~= nil then
-                    rpm = sensorMakeNumber(rpm)
+                    rpm = rpm
                 else
                     rpm = 0
                 end
             else
                 rpm = 0
             end
-            if system.getSource("Rx Curr") ~= nil then
-                if system.getSource("Rx Curr"):maximum() == 50.0 then
-                    system.getSource("Rx Curr"):maximum(400.0)
+			local currentSOURCE = system.getSource("Rx Curr")
+            if currentSOURCE ~= nil then
+                if currentSOURCE:maximum() == 50.0 then
+                    currentSOURCE:maximum(400.0)
                 end			
 			
-                current = system.getSource("Rx Curr"):stringValue()
+                current = currentSOURCE:value()
                 if current ~= nil then
-                    current = sensorMakeNumber(current)
+                    current = current * 10
                 else
                     current = 0
                 end			
             else
                 current = 0
             end
-            if system.getSource("GPS Speed") ~= nil then
-                temp_esc = system.getSource("GPS Speed"):value()
-				    
-				--work around for weired bug on x18
-				if environment.board == "X18" or environment.board == "X18S" then
-						if temp_esc ~= nil then
-							temp_esc = (sensorMakeNumber(temp_esc)) *100
-						else
-							temp_esc = 0
-						end				
+			
+			temp_escSOURCE = system.getSource("GPS Speed")
+            if temp_escSOURCE ~= nil then
+			
+                temp_esc = temp_escSOURCE:value()
+				if temp_esc ~= nil then
+					temp_esc = temp_esc * 1000
 				else
-						if temp_esc ~= nil then
-							temp_esc = (sensorMakeNumber(temp_esc) /10) *100
-						else
-							temp_esc = 0
-						end
-				end		
+					temp_esc = 0
+				end
+
             else
                 temp_esc = 0
             end
-            if system.getSource("GPS Sats") ~= nil then
-                temp_mcu = system.getSource("GPS Sats"):stringValue()
+			local temp_mcuSOURCE = system.getSource("GPS Sats")
+            if temp_mcuSOURCE ~= nil then
+                temp_mcu = temp_mcuSOURCE:value()
                 if temp_mcu ~= nil then
-                    temp_mcu = (sensorMakeNumber(temp_mcu) * 100) 
+                    temp_mcu = (temp_mcu) * 100 
                 else
                     temp_mcu = 0
                 end
             else
                 temp_mcu = 0
             end
-            if system.getSource("Rx Batt%") ~= nil then
-                fuel = system.getSource("Rx Batt%"):stringValue()
+			local fuelSOURCE = system.getSource("Rx Batt%")
+            if fuelSOURCE ~= nil then
+                fuel = fuelSOURCE:value()
                 if fuel ~= nil then
-                    fuel = sensorMakeNumber(fuel)
+                    fuel = fuel
                 else
                     fuel = 0
                 end
             else
                 fuel = 0
             end
-            if system.getSource("Rx Cons") ~= nil then
-                mah = system.getSource("Rx Cons"):stringValue()
+			local mahSOURCE = system.getSource("Rx Cons")		
+            if mahSOURCE ~= nil then
+                mah = mahSOURCE:value()
                 if mah ~= nil then
-                    mah = sensorMakeNumber(mah)
+                    mah = mah
                 else
                     mah = 0
                 end
             else
                 mah = 0
             end
-            if system.getSource("Flight mode") ~= nil then
-                govmode = system.getSource("Flight mode"):stringValue()
+			local govSOURCE = system.getSource("Flight mode")		
+            if govSOURCE ~= nil then
+                govmode = govSOURCE:stringValue()
             end
             if system.getSource({category = CATEGORY_FLIGHT, member = FLIGHT_CURRENT_MODE}):stringValue() then
                 fm = system.getSource({category = CATEGORY_FLIGHT, member = FLIGHT_CURRENT_MODE}):stringValue()
             else
                 fm = ""
             end
-            if system.getSource("Rx Quality") ~= nil then
-                rssi = system.getSource("Rx Quality"):stringValue()
+			local rssiSOURCE = system.getSource("Rx Quality")
+            if rssiSOURCE ~= nil then
+                rssi = rssiSOURCE:value()
                 if rssi ~= nil then
-                    rssi = sensorMakeNumber(rssi)
+                    rssi = rssi
                 else
                     rssi = 0
                 end
@@ -1744,79 +1747,87 @@ function getSensors()
             end
         else
             -- we are run sport
-            if system.getSource("VFAS") ~= nil then
-                voltage = system.getSource("VFAS"):stringValue()
+			voltageSOURCE = system.getSource("VFAS")
+            if voltageSOURCE ~= nil then
+                voltage = voltageSOURCE:value()
                 if voltage ~= nil then
-                    voltage = sensorMakeNumber(voltage)
+                    voltage = voltage * 100
                 else
                     voltage = 0
                 end
             else
                 voltage = 0
             end
-            if system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0500}) ~= nil then
-                rpm = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0500}):stringValue()
+			rpmSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0500})
+            if rpmSOURCE ~= nil then
+                rpm = rpmSOURCE:value()
                 if rpm ~= nil then
-                    rpm = sensorMakeNumber(rpm)
+                    rpm = rpm
                 else
                     rpm = 0
                 end
             else
                 rpm = 0
             end
-            if system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200}) ~= nil then
-                current = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200}):stringValue()
+			local currentSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200})
+            if currentSOURCE ~= nil then
+                current = currentSOURCE:value()
                 if current ~= nil then
-                    current = sensorMakeNumber(current)
+                    current = current * 10
                 else
                     current = 0
                 end
             else
                 current = 0
             end
-            if system.getSource("ESC temp") ~= nil then
-                temp_esc = system.getSource("ESC temp"):stringValue()
+			local temp_escSOURCE = system.getSource("ESC temp")
+            if temp_escSOURCE ~= nil then
+                temp_esc = temp_escSOURCE:value()
                 if temp_esc ~= nil then
-                    temp_esc = sensorMakeNumber(temp_esc)*100
+                    temp_esc = temp_esc*100
                 else
                     temp_esc = 0
                 end
             else
                 temp_esc = 0
             end
-            if system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0401}) ~= nil then
-                temp_mcu = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0401}):stringValue()
+			local temp_mcuSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0401})
+            if temp_mcuSOURCE ~= nil then
+                temp_mcu = temp_mcuSOURCE:value()
                 if temp_mcu ~= nil then
-                    temp_mcu = sensorMakeNumber(temp_mcu)*100
+                    temp_mcu = temp_mcu*100
                 else
                     temp_mcu = 0
                 end
             else
                 temp_mcu = 0
             end
-            if system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600}) ~= nil then
-                fuel = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600}):stringValue()
+			local fuelSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600})
+            if fuelSOURCE ~= nil then
+                fuel = fuelSOURCE:value()
                 if fuel ~= nil then
-                    fuel = sensorMakeNumber(fuel)
+                    fuel = fuel
                 else
                     fuel = 0
                 end
             else
                 fuel = 0
             end
-            if system.getSource("Consumption") ~= nil then
-                mah = system.getSource("Consumption"):stringValue()
+			local mahSOURCE = system.getSource("Consumption")
+            if mahSOURCE ~= nil then
+                mah = mahSOURCE:value()
                 if mah ~= nil then
-                    mah = sensorMakeNumber(mah)
+                    mah = mah
                 else
                     mah = 0
                 end
             else
                 mah = 0
             end
-            if system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5450}) ~= nil then
-                govId = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5450}):stringValue()
-                govId = sensorMakeNumber(govId)
+			local govSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5450})
+            if govSOURCE ~= nil then
+                govId = govSOURCE:value()
+                
                 --print(govId)
                 if govId == 0 then
                     govmode = "OFF"
