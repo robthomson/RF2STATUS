@@ -383,6 +383,8 @@ end
 
 local function paint(widget)
  
+	isVisible = lcd.isVisible()
+ 
 
 	if tonumber(sensorMakeNumber(environment.version)) < 152 then
             screenError("ETHOS < V1.5.2")
@@ -431,107 +433,109 @@ local function paint(widget)
     -- write values to boxes
     -- -----------------------------------------------------------------------------------------------
 
-	local theme = getThemeInfo()
-    local w, h = lcd.getWindowSize()
 
+			local theme = getThemeInfo()
+			local w, h = lcd.getWindowSize()
 
-    -- blank out display
-    if  lcd.darkMode() then
-        -- dark theme
-        lcd.color(lcd.RGB(16, 16, 16))
-    else
-        -- light theme
-        lcd.color(lcd.RGB(209, 208, 208))
-    end
-    lcd.drawFilledRectangle(0, 0, w, h)
+			
+	if isVisible then
+			-- blank out display
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(16, 16, 16))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(209, 208, 208))
+			end
+			lcd.drawFilledRectangle(0, 0, w, h)
 
-	-- hard error
-	if theme.supportedRADIO ~= true then
-		            screenError("UNKNOWN " .. environment.board)
+			-- hard error
+			if theme.supportedRADIO ~= true then
+							screenError("UNKNOWN " .. environment.board)
+							return
+			end
+
+			-- widget size
+			if
+				environment.board == "V20" or environment.board == "XES" or environment.board == "X20" or
+					environment.board == "X20S" or
+					environment.board == "X20PRO" or
+					environment.board == "X20PROAW"
+			 then
+				if w ~= 784 and h ~= 294 then
+					screenError("DISPLAY SIZE TOO SMALL")
 					return
+				end
+			end
+			if environment.board == "X18" or environment.board == "X18S" then
+				smallTEXT = true
+				if w ~= 472 and h ~= 191 then
+					screenError("DISPLAY SIZE TOO SMALL")
+					return
+				end
+			end
+			if environment.board == "X14" or environment.board == "X14S" then
+				if w ~= 630 and h ~= 236 then
+					screenError("DISPLAY SIZE TOO SMALL")
+					return
+				end
+			end
+			if environment.board == "TWXLITE" or environment.board == "TWXLITES" then
+				if w ~= 472 and h ~= 191 then
+					screenError("DISPLAY SIZE TOO SMALL")
+					return
+				end
+			end
+			if environment.board == "X10EXPRESS" then
+				if w ~= 472 and h ~= 158 then
+					screenError("DISPLAY SIZE TOO SMALL")
+					return
+				end
+			end
+
+			boxW = theme.fullBoxW - theme.colSpacing
+			boxH = theme.fullBoxH - theme.colSpacing
+			boxHs = theme.fullBoxH / 2 - theme.colSpacing
+			boxWs = theme.fullBoxW / 2 - theme.colSpacing
+
+			col1X = 0
+			col2X = theme.fullBoxW
+			col3X = theme.fullBoxW * 2
+			row1Y = 0
+			row2Y = theme.fullBoxH
+			row3Y = theme.fullBoxH * 2
+
+			if  lcd.darkMode() then
+				lcd.color(lcd.RGB(40, 40, 40))
+			else
+				lcd.color(lcd.RGB(240, 240, 240))
+			end
+
+
+			lcd.drawFilledRectangle(col1X, row1Y, boxW, boxHs) -- col 1 row 1 1x1
+			lcd.drawFilledRectangle(col1X, row1Y + theme.colSpacing + boxHs + (theme.colSpacing / 3), boxW, boxHs) -- col 1 row 1 1x1
+
+			lcd.drawFilledRectangle(col1X, row2Y + (theme.colSpacing / 2), boxWs, boxHs) -- col 1 row 2 1x1
+			lcd.drawFilledRectangle(col1X + boxWs + theme.colSpacing, row2Y + (theme.colSpacing / 2), boxWs, boxHs)
+
+			lcd.drawFilledRectangle(col1X, (row2Y + boxHs + theme.colSpacing) + (theme.colSpacing), boxWs, boxHs) -- col 1 row 2 1x1
+			lcd.drawFilledRectangle(col1X + boxWs + theme.colSpacing, (row2Y + boxHs + theme.colSpacing) + (theme.colSpacing), boxWs, boxHs) -- col 1 row 2 1x1
+
+			lcd.drawFilledRectangle(col2X + (theme.colSpacing / 2), row1Y, boxW, boxH) -- col 2 row 1 1x1
+			lcd.drawFilledRectangle(col2X + (theme.colSpacing / 2), row2Y + (theme.colSpacing / 2), boxW, boxH) -- col 2 row 2 1x1
+
+			lcd.drawFilledRectangle(col3X + (theme.colSpacing), row1Y, boxW, boxH) -- col 2 row 1 1x1
+			lcd.drawFilledRectangle(col3X + (theme.colSpacing), row2Y + (theme.colSpacing / 2), boxW, boxH) -- col 2 row 2 1x1
+			
+
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
 	end
-
-	-- widget size
-    if
-        environment.board == "V20" or environment.board == "XES" or environment.board == "X20" or
-            environment.board == "X20S" or
-            environment.board == "X20PRO" or
-			environment.board == "X20PROAW"
-     then
-        if w ~= 784 and h ~= 294 then
-            screenError("DISPLAY SIZE TOO SMALL")
-            return
-        end
-    end
-    if environment.board == "X18" or environment.board == "X18S" then
-		smallTEXT = true
-        if w ~= 472 and h ~= 191 then
-            screenError("DISPLAY SIZE TOO SMALL")
-            return
-        end
-    end
-    if environment.board == "X14" or environment.board == "X14S" then
-        if w ~= 630 and h ~= 236 then
-            screenError("DISPLAY SIZE TOO SMALL")
-            return
-        end
-    end
-    if environment.board == "TWXLITE" or environment.board == "TWXLITES" then
-        if w ~= 472 and h ~= 191 then
-            screenError("DISPLAY SIZE TOO SMALL")
-            return
-        end
-    end
-    if environment.board == "X10EXPRESS" then
-        if w ~= 472 and h ~= 158 then
-            screenError("DISPLAY SIZE TOO SMALL")
-            return
-        end
-    end
-
-    boxW = theme.fullBoxW - theme.colSpacing
-    boxH = theme.fullBoxH - theme.colSpacing
-    boxHs = theme.fullBoxH / 2 - theme.colSpacing
-    boxWs = theme.fullBoxW / 2 - theme.colSpacing
-
-    col1X = 0
-    col2X = theme.fullBoxW
-    col3X = theme.fullBoxW * 2
-    row1Y = 0
-    row2Y = theme.fullBoxH
-    row3Y = theme.fullBoxH * 2
-
-    if  lcd.darkMode() then
-        lcd.color(lcd.RGB(40, 40, 40))
-    else
-        lcd.color(lcd.RGB(240, 240, 240))
-    end
-
-
-    lcd.drawFilledRectangle(col1X, row1Y, boxW, boxHs) -- col 1 row 1 1x1
-    lcd.drawFilledRectangle(col1X, row1Y + theme.colSpacing + boxHs + (theme.colSpacing / 3), boxW, boxHs) -- col 1 row 1 1x1
-
-    lcd.drawFilledRectangle(col1X, row2Y + (theme.colSpacing / 2), boxWs, boxHs) -- col 1 row 2 1x1
-    lcd.drawFilledRectangle(col1X + boxWs + theme.colSpacing, row2Y + (theme.colSpacing / 2), boxWs, boxHs)
-
-    lcd.drawFilledRectangle(col1X, (row2Y + boxHs + theme.colSpacing) + (theme.colSpacing), boxWs, boxHs) -- col 1 row 2 1x1
-    lcd.drawFilledRectangle(col1X + boxWs + theme.colSpacing, (row2Y + boxHs + theme.colSpacing) + (theme.colSpacing), boxWs, boxHs) -- col 1 row 2 1x1
-
-    lcd.drawFilledRectangle(col2X + (theme.colSpacing / 2), row1Y, boxW, boxH) -- col 2 row 1 1x1
-    lcd.drawFilledRectangle(col2X + (theme.colSpacing / 2), row2Y + (theme.colSpacing / 2), boxW, boxH) -- col 2 row 2 1x1
-
-    lcd.drawFilledRectangle(col3X + (theme.colSpacing), row1Y, boxW, boxH) -- col 2 row 1 1x1
-    lcd.drawFilledRectangle(col3X + (theme.colSpacing), row2Y + (theme.colSpacing / 2), boxW, boxH) -- col 2 row 2 1x1
-	
-
-    if  lcd.darkMode() then
-        -- dark theme
-        lcd.color(lcd.RGB(255, 255, 255, 1))
-    else
-        -- light theme
-        lcd.color(lcd.RGB(90, 90, 90))
-    end
-
     -- FUEL
 	
 	-- calc fuel if sensor missing
@@ -547,47 +551,50 @@ local function paint(widget)
         end
     end
 
-    if sensors.fuel ~= nil and lowfuelParam ~= nil then
-        if sensors.fuel <= lowfuelParam then
-            lcd.color(lcd.RGB(255, 0, 0, 1))
-        end
-    end
-    lcd.font(theme.fontSENSOR)
-    if sensors.fuel ~= nil then
-		if sensors.fuel > 5 then
-			str = "" .. sensors.fuel .. "%"
-		else
-         str = "0%"       
-		end
-    else
-        str = "0%"
-    end
-    tsizeW, tsizeH = lcd.getTextSize(str)
-    offsetX = boxW / 2 - tsizeW / 2
-    offsetY = boxH / 2 - tsizeH / 2
-    lcd.drawText(col3X + (theme.colSpacing / 2) + offsetX, row1Y + offsetY, str)
-    if titleParam == 1 then
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
-        str = theme.title_fuel
-        tsizeW, tsizeH = lcd.getTextSize(str)
-        lcd.drawText(col3X + (theme.colSpacing / 2) + (boxW / 2) - tsizeW / 2, row1Y + (boxH - theme.colSpacing - tsizeH), str)
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
-    end
+	if isVisible then
+			if sensors.fuel ~= nil and lowfuelParam ~= nil then
+				if sensors.fuel <= lowfuelParam then
+					lcd.color(lcd.RGB(255, 0, 0, 1))
+				end
+			end
+			lcd.font(theme.fontSENSOR)
+			if sensors.fuel ~= nil then
+				if sensors.fuel > 5 then
+					str = "" .. sensors.fuel .. "%"
+				else
+				 str = "0%"       
+				end
+			else
+				str = "0%"
+			end
+			tsizeW, tsizeH = lcd.getTextSize(str)
+			offsetX = boxW / 2 - tsizeW / 2
+			offsetY = boxH / 2 - tsizeH / 2
+			lcd.drawText(col3X + (theme.colSpacing / 2) + offsetX, row1Y + offsetY, str)
+			if titleParam == 1 then
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(255, 255, 255, 1))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(90, 90, 90))
+				end
+				lcd.font(theme.fontTITLE)
+				str = theme.title_fuel
+				tsizeW, tsizeH = lcd.getTextSize(str)
+				lcd.drawText(col3X + (theme.colSpacing / 2) + (boxW / 2) - tsizeW / 2, row1Y + (boxH - theme.colSpacing - tsizeH), str)
+
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(255, 255, 255, 1))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(90, 90, 90))
+				end
+				lcd.font(theme.fontSENSOR)
+			end
+	end		
 
     if maxminParam == 1 and sensors.fuel ~= nil then
         if linkUP ~= 0 then
@@ -625,53 +632,7 @@ local function paint(widget)
                     sensorFuelMax = sensors.fuel		
 		end
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
-
-
-        if sensorFuelMin == 0 or sensorFuelMin == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""			
-        else
-            str = sensorFuelMin 
-			str_unit = "%"
-			str_unit_fake = "A"			
-        end
-
-        tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
-        lcd.drawText(col3X + (theme.colSpacing * 2), row1Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
-
-        if sensorFuelMax == 0 or sensorFuelMax == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""	
-        else
-            str = sensorFuelMax
-			str_unit = "%"
-			str_unit_fake = "A"				
-        end
-
-        tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
-        lcd.drawText((col3X + boxW) - tsizeW - theme.colSpacing, row1Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
-
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
-    end
-	if sensors.fuel ~= nil and lowfuelParam ~= nil then
-		if sensors.fuel <= lowfuelParam then
+		if isVisible then
 			if  lcd.darkMode() then
 				-- dark theme
 				lcd.color(lcd.RGB(255, 255, 255, 1))
@@ -679,47 +640,100 @@ local function paint(widget)
 				-- light theme
 				lcd.color(lcd.RGB(90, 90, 90))
 			end
+			lcd.font(theme.fontTITLE)
+
+
+			if sensorFuelMin == 0 or sensorFuelMin == nil then
+				str = "-"
+				str_unit = ""
+				str_unit_fake = ""			
+			else
+				str = sensorFuelMin 
+				str_unit = "%"
+				str_unit_fake = "A"			
+			end
+
+			tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
+			lcd.drawText(col3X + (theme.colSpacing * 2), row1Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
+
+			if sensorFuelMax == 0 or sensorFuelMax == nil then
+				str = "-"
+				str_unit = ""
+				str_unit_fake = ""	
+			else
+				str = sensorFuelMax
+				str_unit = "%"
+				str_unit_fake = "A"				
+			end
+
+			tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
+			lcd.drawText((col3X + boxW) - tsizeW - theme.colSpacing, row1Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
+
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontSENSOR)
+		end	
+    end
+	if isVisible then
+		if sensors.fuel ~= nil and lowfuelParam ~= nil then
+			if sensors.fuel <= lowfuelParam then
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(255, 255, 255, 1))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(90, 90, 90))
+				end
+			end
 		end
-	end
+	end	
 
     -- RPM
-    lcd.font(theme.fontSENSOR)
 
-    if sensors.rpm ~= nil then
-		if sensors.rpm <= 5 then
-			str = "0rpm"		
-		else
-			str = "" .. sensors.rpm .. "rpm"
-		end	
-    else
-        str = "0rpm"
-    end
-    tsizeW, tsizeH = lcd.getTextSize(str)
-    offsetX = boxW / 2 - tsizeW / 2
-    offsetY = boxH / 2 - tsizeH / 2
-    lcd.drawText(col3X + (theme.colSpacing / 2) + offsetX, row2Y + offsetY, str)
-    if titleParam == 1 then
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
-        str = theme.title_rpm
-        tsizeW, tsizeH = lcd.getTextSize(str)
-        lcd.drawText(col3X + (theme.colSpacing / 2) + (boxW / 2) - tsizeW / 2, row2Y + (boxH - theme.colSpacing - tsizeH), str)
+	if isVisible then
+			lcd.font(theme.fontSENSOR)
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
-    end
+			if sensors.rpm ~= nil then
+				if sensors.rpm <= 5 then
+					str = "0rpm"		
+				else
+					str = "" .. sensors.rpm .. "rpm"
+				end	
+			else
+				str = "0rpm"
+			end
+			tsizeW, tsizeH = lcd.getTextSize(str)
+			offsetX = boxW / 2 - tsizeW / 2
+			offsetY = boxH / 2 - tsizeH / 2
+			lcd.drawText(col3X + (theme.colSpacing / 2) + offsetX, row2Y + offsetY, str)
+			if titleParam == 1 then
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(255, 255, 255, 1))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(90, 90, 90))
+				end
+				lcd.font(theme.fontTITLE)
+				str = theme.title_rpm
+				tsizeW, tsizeH = lcd.getTextSize(str)
+				lcd.drawText(col3X + (theme.colSpacing / 2) + (boxW / 2) - tsizeW / 2, row2Y + (boxH - theme.colSpacing - tsizeH), str)
+
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(255, 255, 255, 1))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(90, 90, 90))
+				end
+				lcd.font(theme.fontSENSOR)
+			end
+	end		
     if maxminParam == 1 and sensors.rpm ~= nil then
         if linkUP ~= 0 then
             if sensors.govmode == "SPOOLUP" then
@@ -754,90 +768,94 @@ local function paint(widget)
                     sensorRPMMax = sensors.rpm		
 		end
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
+		if isVisible then
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(255, 255, 255, 1))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(90, 90, 90))
+				end
+				lcd.font(theme.fontTITLE)
 
-        if sensorRPMMin == 0 or sensorRPMMin == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""				
-        else
-            str = sensorRPMMin
-			str_unit = "rpm"
-			str_unit_fake = "A"				
-        end
-        tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
-        lcd.drawText(col3X + (theme.colSpacing * 2), row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
+				if sensorRPMMin == 0 or sensorRPMMin == nil then
+					str = "-"
+					str_unit = ""
+					str_unit_fake = ""				
+				else
+					str = sensorRPMMin
+					str_unit = "rpm"
+					str_unit_fake = "A"				
+				end
+				tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
+				lcd.drawText(col3X + (theme.colSpacing * 2), row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
 
-        if sensorRPMMax == 0 or sensorRPMMin == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""				
-        else
-            str = sensorRPMMax
-			str_unit = "rpm"
-			str_unit_fake = "rpm"				
-        end
+				if sensorRPMMax == 0 or sensorRPMMin == nil then
+					str = "-"
+					str_unit = ""
+					str_unit_fake = ""				
+				else
+					str = sensorRPMMax
+					str_unit = "rpm"
+					str_unit_fake = "rpm"				
+				end
 
-        tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
-        lcd.drawText((col3X + boxW) - tsizeW, row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
+				tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
+				lcd.drawText((col3X + boxW) - tsizeW, row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(255, 255, 255, 1))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(90, 90, 90))
+				end
+				lcd.font(theme.fontSENSOR)
+		end		
     end
 
     -- VOLT
-    if voltageIsLow then
-        lcd.color(lcd.RGB(255, 0, 0, 1))
-    end
-    lcd.font(theme.fontSENSOR)
-    if sensors.voltage ~= nil then
-		if sensors.voltage > 1 then
-			str = "" .. tostring(sensors.voltage / 100) .. "v"
+	if isVisible then
+		if voltageIsLow then
+			lcd.color(lcd.RGB(255, 0, 0, 1))
+		end
+		lcd.font(theme.fontSENSOR)
+		if sensors.voltage ~= nil then
+			if sensors.voltage > 1 then
+				str = "" .. tostring(sensors.voltage / 100) .. "v"
+			else
+				str = "0v"
+			end
 		else
 			str = "0v"
 		end
-    else
-        str = "0v"
-    end
-    tsizeW, tsizeH = lcd.getTextSize(str)
-    offsetX = boxW / 2 - tsizeW / 2
-    offsetY = boxH / 2 - tsizeH / 2
-    lcd.drawText(col2X + (theme.colSpacing / 2) + offsetX, row1Y + offsetY, str)
-    if titleParam == 1 then
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
-        str = theme.title_voltage
-        tsizeW, tsizeH = lcd.getTextSize(str)
-        lcd.drawText(col2X + (theme.colSpacing / 2) + (boxW / 2) - tsizeW / 2, row1Y + (boxH - theme.colSpacing - tsizeH), str)
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		offsetX = boxW / 2 - tsizeW / 2
+		offsetY = boxH / 2 - tsizeH / 2
+		lcd.drawText(col2X + (theme.colSpacing / 2) + offsetX, row1Y + offsetY, str)
+		if titleParam == 1 then
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontTITLE)
+			str = theme.title_voltage
+			tsizeW, tsizeH = lcd.getTextSize(str)
+			lcd.drawText(col2X + (theme.colSpacing / 2) + (boxW / 2) - tsizeW / 2, row1Y + (boxH - theme.colSpacing - tsizeH), str)
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
-    end
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontSENSOR)
+		end
+	end	
 
     -- voltage should never start at 0.  we prevent this here with a bit of funny stuff
     if maxminParam == 1 and sensors.voltage ~= nil then
@@ -875,95 +893,102 @@ local function paint(widget)
                     sensorVoltageMax = sensors.voltage	
 		end
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
+		
+		if isVisible then
 
-        if sensorVoltageMin == 0 or sensorVoltageMax == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""					
-        else
-            str = sensorVoltageMin / 100
-			str_unit = "v"
-			str_unit_fake = "A"					
-        end
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(255, 255, 255, 1))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(90, 90, 90))
+				end
+				lcd.font(theme.fontTITLE)
 
-        tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
-        lcd.drawText(col2X + (theme.colSpacing * 2), row1Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
+				if sensorVoltageMin == 0 or sensorVoltageMax == nil then
+					str = "-"
+					str_unit = ""
+					str_unit_fake = ""					
+				else
+					str = sensorVoltageMin / 100
+					str_unit = "v"
+					str_unit_fake = "A"					
+				end
 
-        if sensorVoltageMax == 0 or sensorVoltageMax == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""				
-        else
-            str = sensorVoltageMax / 100
-			str_unit = "v"
-			str_unit_fake = "v"				
-        end
+				tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
+				lcd.drawText(col2X + (theme.colSpacing * 2), row1Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
 
-        tsizeW, tsizeH = lcd.getTextSize(str)
-        lcd.drawText((col2X + boxW) - (theme.colSpacing*2) - tsizeW, row1Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
+				if sensorVoltageMax == 0 or sensorVoltageMax == nil then
+					str = "-"
+					str_unit = ""
+					str_unit_fake = ""				
+				else
+					str = sensorVoltageMax / 100
+					str_unit = "v"
+					str_unit_fake = "v"				
+				end
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
+				tsizeW, tsizeH = lcd.getTextSize(str)
+				lcd.drawText((col2X + boxW) - (theme.colSpacing*2) - tsizeW, row1Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
+
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(255, 255, 255, 1))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(90, 90, 90))
+				end
+				lcd.font(theme.fontSENSOR)
+		end		
     end
-    if  lcd.darkMode() then
-        -- dark theme
-        lcd.color(lcd.RGB(255, 255, 255, 1))
-    else
-        -- light theme
-        lcd.color(lcd.RGB(90, 90, 90))
-    end
+	
+	if isVisible then
+		if  lcd.darkMode() then
+			-- dark theme
+			lcd.color(lcd.RGB(255, 255, 255, 1))
+		else
+			-- light theme
+			lcd.color(lcd.RGB(90, 90, 90))
+		end
 
-    -- CURRENT
-    lcd.font(theme.fontSENSOR)
-    if sensors.current ~= nil then
-		if sensors.current > 1 then
-			str = "" .. (sensors.current/10) .. "A"
+		-- CURRENT
+		lcd.font(theme.fontSENSOR)
+		if sensors.current ~= nil then
+			if sensors.current > 1 then
+				str = "" .. (sensors.current/10) .. "A"
+			else
+				str = "0A"
+			end
 		else
 			str = "0A"
 		end
-    else
-        str = "0A"
-    end
-    tsizeW, tsizeH = lcd.getTextSize(str)
-    offsetX = boxW / 2 - tsizeW / 2
-    offsetY = boxH / 2 - tsizeH / 2
-    lcd.drawText(col2X + (theme.colSpacing / 2) + offsetX, row2Y + offsetY, str)
-    if titleParam == 1 then
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
-        str = theme.title_current
-        tsizeW, tsizeH = lcd.getTextSize(str)
-        lcd.drawText(col2X + (theme.colSpacing / 2) + (boxW / 2) - tsizeW / 2, row2Y + (boxH - theme.colSpacing - tsizeH), str)
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		offsetX = boxW / 2 - tsizeW / 2
+		offsetY = boxH / 2 - tsizeH / 2
+		lcd.drawText(col2X + (theme.colSpacing / 2) + offsetX, row2Y + offsetY, str)
+		if titleParam == 1 then
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontTITLE)
+			str = theme.title_current
+			tsizeW, tsizeH = lcd.getTextSize(str)
+			lcd.drawText(col2X + (theme.colSpacing / 2) + (boxW / 2) - tsizeW / 2, row2Y + (boxH - theme.colSpacing - tsizeH), str)
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
-    end
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontSENSOR)
+		end
+	end	
     if maxminParam == 1 and sensors.current ~= nil then
         if linkUP ~= 0 then
             if sensors.govmode == "SPOOLUP" then
@@ -998,153 +1023,161 @@ local function paint(widget)
                     sensorCurrentMax = sensors.current
 		end
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
+		if isVisible then
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontTITLE)
 
-        if sensorCurrentMin == 0 or sensorCurrentMin == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""				
-        else
-            str = sensorCurrentMin/10
-			str_unit = "A"
-			str_unit_fake = "A"				
-        end
+			if sensorCurrentMin == 0 or sensorCurrentMin == nil then
+				str = "-"
+				str_unit = ""
+				str_unit_fake = ""				
+			else
+				str = sensorCurrentMin/10
+				str_unit = "A"
+				str_unit_fake = "A"				
+			end
 
-        tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
-        lcd.drawText(col2X + (theme.colSpacing * 2), row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
+			tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
+			lcd.drawText(col2X + (theme.colSpacing * 2), row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
 
-        if sensorCurrentMax == 0 or sensorCurrentMax == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""				
-        else
-            str = sensorCurrentMax/10
-			str_unit = "A"
-			str_unit_fake = "A"				
-        end
+			if sensorCurrentMax == 0 or sensorCurrentMax == nil then
+				str = "-"
+				str_unit = ""
+				str_unit_fake = ""				
+			else
+				str = sensorCurrentMax/10
+				str_unit = "A"
+				str_unit_fake = "A"				
+			end
 
-        tsizeW, tsizeH = lcd.getTextSize( str .. str_unit_fake)
-        lcd.drawText(col2X + (theme.colSpacing) + boxW - tsizeW - theme.colSpacing, row2Y + (boxH - theme.colSpacing - tsizeH),  str .. str_unit)
+			tsizeW, tsizeH = lcd.getTextSize( str .. str_unit_fake)
+			lcd.drawText(col2X + (theme.colSpacing) + boxW - tsizeW - theme.colSpacing, row2Y + (boxH - theme.colSpacing - tsizeH),  str .. str_unit)
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontSENSOR)
+		end	
     end
 
     if fmsrcParam == 0 then
         -- GOVERNER
-        lcd.font(FONT_STD)
-		if sensors.govmode == nil then
-			sensors.govmode = "INIT"
-		end
-        str = "" .. sensors.govmode
-        tsizeW, tsizeH = lcd.getTextSize(str)
-        offsetX = boxW / 2 - tsizeW / 2
-        offsetY = (boxHs / 2) + theme.colSpacing - tsizeH / 2 + theme.smallBoxSensortextOFFSET
-        lcd.drawText(col1X + (theme.colSpacing / 2) + offsetX, row1Y + boxHs + offsetY , str)
-        if titleParam == 1 then
-            if  lcd.darkMode() then
-                -- dark theme
-                lcd.color(lcd.RGB(255, 255, 255, 1))
-            else
-                -- light theme
-                lcd.color(lcd.RGB(90, 90, 90))
-            end
-            lcd.font(theme.fontTITLE)
-			str = theme.title_governor
-            tsizeW, tsizeH = lcd.getTextSize(str)
-            lcd.drawText(col1X + (theme.colSpacing / 2) + (boxW / 2) - tsizeW / 2,row1Y + (boxH - theme.colSpacing - tsizeH),str)
+		if isVisible then		
+			lcd.font(FONT_STD)
+			if sensors.govmode == nil then
+				sensors.govmode = "INIT"
+			end
+			str = "" .. sensors.govmode
+			tsizeW, tsizeH = lcd.getTextSize(str)
+			offsetX = boxW / 2 - tsizeW / 2
+			offsetY = (boxHs / 2) + theme.colSpacing - tsizeH / 2 + theme.smallBoxSensortextOFFSET
+			lcd.drawText(col1X + (theme.colSpacing / 2) + offsetX, row1Y + boxHs + offsetY , str)
+			if titleParam == 1 then
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(255, 255, 255, 1))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(90, 90, 90))
+				end
+				lcd.font(theme.fontTITLE)
+				str = theme.title_governor
+				tsizeW, tsizeH = lcd.getTextSize(str)
+				lcd.drawText(col1X + (theme.colSpacing / 2) + (boxW / 2) - tsizeW / 2,row1Y + (boxH - theme.colSpacing - tsizeH),str)
 
-            if  lcd.darkMode() then
-                -- dark theme
-                lcd.color(lcd.RGB(255, 255, 255, 1))
-            else
-                -- light theme
-                lcd.color(lcd.RGB(90, 90, 90))
-            end
-            lcd.font(theme.fontSENSOR)
-        end
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(255, 255, 255, 1))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(90, 90, 90))
+				end
+				lcd.font(theme.fontSENSOR)
+			end
+		end	
     elseif fmsrcParam == 1 then
         -- SYSTEM FM
-        lcd.font(FONT_STD)
-        str = "" .. sensors.fm
-        tsizeW, tsizeH = lcd.getTextSize(str)
-        offsetX = boxW / 2 - tsizeW / 2
-        offsetY = (boxHs / 2) + theme.colSpacing - tsizeH / 2 + theme.smallBoxSensortextOFFSET
-        lcd.drawText(col1X + (theme.colSpacing / 2) + offsetX, row1Y + boxHs + offsetY, str)
-        if titleParam == 1 then
-            if  lcd.darkMode() then
-                -- dark theme
-                lcd.color(lcd.RGB(114, 114, 114))
-            else
-                -- light theme
-                lcd.color(lcd.RGB(180, 180, 180))
-            end
-            lcd.font(theme.fontTITLE)
-             str = theme.title_fm
-            tsizeW, tsizeH = lcd.getTextSize(str)
-            lcd.drawText(
-                col1X + (theme.colSpacing / 2) + (boxW / 2) - tsizeW / 2,
-                row1Y + (boxH - theme.colSpacing - tsizeH),
-                str
-            )
+		if isVisible then		
+			lcd.font(FONT_STD)
+			str = "" .. sensors.fm
+			tsizeW, tsizeH = lcd.getTextSize(str)
+			offsetX = boxW / 2 - tsizeW / 2
+			offsetY = (boxHs / 2) + theme.colSpacing - tsizeH / 2 + theme.smallBoxSensortextOFFSET
+			lcd.drawText(col1X + (theme.colSpacing / 2) + offsetX, row1Y + boxHs + offsetY, str)
+			if titleParam == 1 then
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(114, 114, 114))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(180, 180, 180))
+				end
+				lcd.font(theme.fontTITLE)
+				 str = theme.title_fm
+				tsizeW, tsizeH = lcd.getTextSize(str)
+				lcd.drawText(
+					col1X + (theme.colSpacing / 2) + (boxW / 2) - tsizeW / 2,
+					row1Y + (boxH - theme.colSpacing - tsizeH),
+					str
+				)
 
-            if  lcd.darkMode() then
-                -- dark theme
-                lcd.color(lcd.RGB(255, 255, 255, 1))
-            else
-                -- light theme
-                lcd.color(lcd.RGB(90, 90, 90))
-            end
-            lcd.font(theme.fontSENSOR)
-        end
+				if  lcd.darkMode() then
+					-- dark theme
+					lcd.color(lcd.RGB(255, 255, 255, 1))
+				else
+					-- light theme
+					lcd.color(lcd.RGB(90, 90, 90))
+				end
+				lcd.font(theme.fontSENSOR)
+			end
+		end	
     end
 
     --  RSSI
-    lcd.font(FONT_STD)
-    if sensors.rssi ~= nil then
-        str = "" .. sensors.rssi .. "%"
-    else
-        str = "0"
-    end
-    tsizeW, tsizeH = lcd.getTextSize(str)
-    offsetX = boxW / 2 + (theme.colSpacing * 2) - tsizeW / 2
-    offsetY = (boxHs + boxHs / 2) + theme.colSpacing - tsizeH / 2 + theme.smallBoxSensortextOFFSET
-    lcd.drawText(col1X + (theme.colSpacing / 2) + boxWs / 2 - tsizeW / 2, row1Y + boxHs + offsetY, str)
-    if titleParam == 1 then
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
-        str = theme.title_rssi
-        tsizeW, tsizeH = lcd.getTextSize(str)
-        lcd.drawText(col1X + (theme.colSpacing / 2) + boxWs / 2 - tsizeW / 2, row2Y + (boxHs - theme.colSpacing - tsizeH), str)
+	if isVisible then
+		lcd.font(FONT_STD)
+		if sensors.rssi ~= nil then
+			str = "" .. sensors.rssi .. "%"
+		else
+			str = "0"
+		end
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		offsetX = boxW / 2 + (theme.colSpacing * 2) - tsizeW / 2
+		offsetY = (boxHs + boxHs / 2) + theme.colSpacing - tsizeH / 2 + theme.smallBoxSensortextOFFSET
+		lcd.drawText(col1X + (theme.colSpacing / 2) + boxWs / 2 - tsizeW / 2, row1Y + boxHs + offsetY, str)
+		if titleParam == 1 then
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontTITLE)
+			str = theme.title_rssi
+			tsizeW, tsizeH = lcd.getTextSize(str)
+			lcd.drawText(col1X + (theme.colSpacing / 2) + boxWs / 2 - tsizeW / 2, row2Y + (boxHs - theme.colSpacing - tsizeH), str)
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
-    end
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontSENSOR)
+		end
+	end	
     if maxminParam == 1 and sensors.rssi ~= nil then
         if linkUP ~= 0 then
             if sensors.govmode == "SPOOLUP" then
@@ -1179,88 +1212,92 @@ local function paint(widget)
                     sensorRSSIMax = sensors.rssi
 		end
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
+		if isVisible then
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontTITLE)
 
-        if sensorRSSIMin == 0 or sensorRSSIMin == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""				
-        else
-            str = sensorRSSIMin 
-			str_unit = "%"
-			str_unit_fake = "A"				
-        end
+			if sensorRSSIMin == 0 or sensorRSSIMin == nil then
+				str = "-"
+				str_unit = ""
+				str_unit_fake = ""				
+			else
+				str = sensorRSSIMin 
+				str_unit = "%"
+				str_unit_fake = "A"				
+			end
 
-        tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
-        lcd.drawText(col1X + (theme.colSpacing), row2Y + (boxHs - theme.colSpacing - tsizeH), str .. str_unit)
+			tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
+			lcd.drawText(col1X + (theme.colSpacing), row2Y + (boxHs - theme.colSpacing - tsizeH), str .. str_unit)
 
-        if sensorRSSIMax == 0 or sensorRSSIMax == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""				
-        else
-            str = sensorRSSIMax
-			str_unit = "%"
-			str_unit_fake = "A"				
-        end
+			if sensorRSSIMax == 0 or sensorRSSIMax == nil then
+				str = "-"
+				str_unit = ""
+				str_unit_fake = ""				
+			else
+				str = sensorRSSIMax
+				str_unit = "%"
+				str_unit_fake = "A"				
+			end
 
-        tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
-        lcd.drawText(((col1X + boxW) / 2) - tsizeW - (theme.colSpacing*2), row2Y + (boxHs - theme.colSpacing - tsizeH), str .. str_unit)
+			tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
+			lcd.drawText(((col1X + boxW) / 2) - tsizeW - (theme.colSpacing*2), row2Y + (boxHs - theme.colSpacing - tsizeH), str .. str_unit)
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontSENSOR)
+		end	
     end
 
     -- TEMP ESC
-    lcd.font(FONT_STD)
-    if sensors.temp_esc ~= nil then
-		if sensors.temp_esc > 1 then
-			str = "" .. round(sensors.temp_esc/100,0)
+	if isVisible then	
+		lcd.font(FONT_STD)
+		if sensors.temp_esc ~= nil then
+			if sensors.temp_esc > 1 then
+				str = "" .. round(sensors.temp_esc/100,0)
+			else
+				str = "0"
+			end
 		else
 			str = "0"
 		end
-    else
-        str = "0"
-    end
-    tsizeW, tsizeH = lcd.getTextSize(str)
-    offsetX = boxWs / 2 + (theme.colSpacing * 2) - tsizeW / 2
-    offsetY = (boxHs + boxHs / 2) + theme.colSpacing - tsizeH / 2 + theme.smallBoxSensortextOFFSET
-    lcd.drawText(col1X + (theme.colSpacing / 2) + boxWs / 2 - tsizeW / 2, row2Y + offsetY, str .. "°")
-    if titleParam == 1 then
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
-        str = theme.title_tempESC
-        tsizeW, tsizeH = lcd.getTextSize(str)
-        lcd.drawText(col1X + (theme.colSpacing / 2) + boxWs / 2 - tsizeW / 2, row2Y + (boxH - theme.colSpacing - tsizeH), str)
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		offsetX = boxWs / 2 + (theme.colSpacing * 2) - tsizeW / 2
+		offsetY = (boxHs + boxHs / 2) + theme.colSpacing - tsizeH / 2 + theme.smallBoxSensortextOFFSET
+		lcd.drawText(col1X + (theme.colSpacing / 2) + boxWs / 2 - tsizeW / 2, row2Y + offsetY, str .. "°")
+		if titleParam == 1 then
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontTITLE)
+			str = theme.title_tempESC
+			tsizeW, tsizeH = lcd.getTextSize(str)
+			lcd.drawText(col1X + (theme.colSpacing / 2) + boxWs / 2 - tsizeW / 2, row2Y + (boxH - theme.colSpacing - tsizeH), str)
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
-    end
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontSENSOR)
+		end
+	end	
     if maxminParam == 1 and sensors.temp_esc ~= nil then
         if linkUP ~= 0 then
             if sensors.govmode == "SPOOLUP" then
@@ -1295,93 +1332,96 @@ local function paint(widget)
                     sensorTempESCMax = round(sensors.temp_esc/100,0)
 		end
 
+		if isVisible then
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontTITLE)
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
+			if sensorTempESCMin == 0 or sensorTempESCMin == nil then
+				str = "-"
+				str_unit = ""
+				str_unit_fake = ""				
+			else
+				str = sensorTempESCMin
+				str_unit = "°"
+				str_unit_fake = "A"				
+			end
 
-        if sensorTempESCMin == 0 or sensorTempESCMin == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""				
-        else
-            str = sensorTempESCMin
-			str_unit = "°"
-			str_unit_fake = "A"				
-        end
+			tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake )
+			lcd.drawText(col1X + (theme.colSpacing), row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
 
-        tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake )
-        lcd.drawText(col1X + (theme.colSpacing), row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
+			if sensorTempESCMax == 0 or sensorTempESCMax == nil then
+				str = "-"
+				str_unit = ""
+				str_unit_fake = ""			
+			else
+				str = sensorTempESCMax
+				str_unit = "°"
+				str_unit_fake = "."			
+			end
 
-        if sensorTempESCMax == 0 or sensorTempESCMax == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""			
-        else
-            str = sensorTempESCMax
-			str_unit = "°"
-			str_unit_fake = "."			
-        end
+			tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake  )
+			lcd.drawText(((col1X + boxW) / 2) - tsizeW - (theme.colSpacing*2), row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit )
 
-        tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake  )
-        lcd.drawText(((col1X + boxW) / 2) - tsizeW - (theme.colSpacing*2), row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit )
-
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontSENSOR)
+		end	
     end
 
     -- TEMP MCU
-    lcd.font(FONT_STD)
-    if sensors.temp_mcu ~= nil then
-		if sensors.temp_mcu > 1 then	
-			str = "" .. round(sensors.temp_mcu/100,0) .. ""
+	if isVisible then	
+		lcd.font(FONT_STD)
+		if sensors.temp_mcu ~= nil then
+			if sensors.temp_mcu > 1 then	
+				str = "" .. round(sensors.temp_mcu/100,0) .. ""
+			else
+				str = "0"
+			end
 		else
 			str = "0"
 		end
-    else
-        str = "0"
-    end
-    tsizeW, tsizeH = lcd.getTextSize(str)
-    offsetX = (boxWs / 2 + (theme.colSpacing * 2) - tsizeW / 2) + boxWs
-    offsetY = (boxHs + boxHs / 2) + theme.colSpacing - tsizeH / 2 + theme.smallBoxSensortextOFFSET
-    lcd.drawText(col1X + (theme.colSpacing / 2) + boxWs + theme.colSpacing + boxWs / 2 - tsizeW / 2, row2Y + offsetY, str .. "°")
-    if titleParam == 1 then
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
-        str = theme.title_tempMCU
-        tsizeW, tsizeH = lcd.getTextSize(str)
-        lcd.drawText(
-            col1X + (theme.colSpacing / 2) + boxWs + theme.colSpacing + boxWs / 2 - tsizeW / 2,
-            row2Y + (boxH - theme.colSpacing - tsizeH),
-            str
-        )
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		offsetX = (boxWs / 2 + (theme.colSpacing * 2) - tsizeW / 2) + boxWs
+		offsetY = (boxHs + boxHs / 2) + theme.colSpacing - tsizeH / 2 + theme.smallBoxSensortextOFFSET
+		lcd.drawText(col1X + (theme.colSpacing / 2) + boxWs + theme.colSpacing + boxWs / 2 - tsizeW / 2, row2Y + offsetY, str .. "°")
+		if titleParam == 1 then
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontTITLE)
+			str = theme.title_tempMCU
+			tsizeW, tsizeH = lcd.getTextSize(str)
+			lcd.drawText(
+				col1X + (theme.colSpacing / 2) + boxWs + theme.colSpacing + boxWs / 2 - tsizeW / 2,
+				row2Y + (boxH - theme.colSpacing - tsizeH),
+				str
+			)
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
-    end
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontSENSOR)
+		end
+	end	
     if maxminParam == 1 and sensors.temp_mcu ~= nil then
         if linkUP ~= 0 then
             if sensors.govmode == "SPOOLUP" then
@@ -1416,49 +1456,51 @@ local function paint(widget)
                     sensorTempMCUMax = round(sensors.temp_mcu/100,0)
 		end
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
+		if isVisible then
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontTITLE)
 
-        if sensorTempMCUMin == 0 or sensorTempMCUMin == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""				
-        else
-            str = sensorTempMCUMin
-			str_unit = "°"
-			str_unit_fake = "."				
-        end
+			if sensorTempMCUMin == 0 or sensorTempMCUMin == nil then
+				str = "-"
+				str_unit = ""
+				str_unit_fake = ""				
+			else
+				str = sensorTempMCUMin
+				str_unit = "°"
+				str_unit_fake = "."				
+			end
 
-        tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
-        lcd.drawText((col1X + boxW / 2) + (theme.colSpacing * 2), row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
+			tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
+			lcd.drawText((col1X + boxW / 2) + (theme.colSpacing * 2), row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
 
-        if sensorTempMCUMax == 0 or sensorTempMCUMax == nil then
-            str = "-"
-			str_unit = ""
-			str_unit_fake = ""				
-        else
-            str = sensorTempMCUMax
-			str_unit = "°"
-			str_unit_fake = "."					
-        end
+			if sensorTempMCUMax == 0 or sensorTempMCUMax == nil then
+				str = "-"
+				str_unit = ""
+				str_unit_fake = ""				
+			else
+				str = sensorTempMCUMax
+				str_unit = "°"
+				str_unit_fake = "."					
+			end
 
-        tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
-        lcd.drawText((col1X + boxW)-tsizeW - (theme.colSpacing*2), row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
+			tsizeW, tsizeH = lcd.getTextSize(str .. str_unit_fake)
+			lcd.drawText((col1X + boxW)-tsizeW - (theme.colSpacing*2), row2Y + (boxH - theme.colSpacing - tsizeH), str .. str_unit)
 
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontSENSOR)
+		end	
     end
 
     -- TIME
@@ -1486,86 +1528,91 @@ local function paint(widget)
         theTIME = 0
     end
 
-    lcd.font(FONT_STD)
-    if theTIME ~= nil or theTIME == 0 then
-        str = SecondsToClock(theTIME)
-    else
-        str = "00:00:00"
-    end
-    tsizeW, tsizeH = lcd.getTextSize(str)
-    offsetX = (boxWs / 2 + (theme.colSpacing * 2) - tsizeW / 2) + boxWs
-    offsetY = (boxHs + boxHs / 2) + theme.colSpacing - tsizeH / 2 + theme.smallBoxSensortextOFFSET
-    lcd.drawText(col1X + (theme.colSpacing / 2) + boxWs + theme.colSpacing + boxWs / 2 - tsizeW / 2, row1Y + boxHs + offsetY, str)
+	if isVisible then
+		lcd.font(FONT_STD)
+		if theTIME ~= nil or theTIME == 0 then
+			str = SecondsToClock(theTIME)
+		else
+			str = "00:00:00"
+		end
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		offsetX = (boxWs / 2 + (theme.colSpacing * 2) - tsizeW / 2) + boxWs
+		offsetY = (boxHs + boxHs / 2) + theme.colSpacing - tsizeH / 2 + theme.smallBoxSensortextOFFSET
+		lcd.drawText(col1X + (theme.colSpacing / 2) + boxWs + theme.colSpacing + boxWs / 2 - tsizeW / 2, row1Y + boxHs + offsetY, str)
 
-    if titleParam == 1 then
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontTITLE)
-        str = theme.title_time
-        tsizeW, tsizeH = lcd.getTextSize(str)
-        lcd.drawText(
-            col1X + (theme.colSpacing / 2) + boxWs + theme.colSpacing + boxWs / 2 - tsizeW / 2,
-            row2Y + (boxHs - theme.colSpacing - tsizeH),
-            str
-        )
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.font(theme.fontSENSOR)
-    end
+		if titleParam == 1 then
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontTITLE)
+			str = theme.title_time
+			tsizeW, tsizeH = lcd.getTextSize(str)
+			lcd.drawText(
+				col1X + (theme.colSpacing / 2) + boxWs + theme.colSpacing + boxWs / 2 - tsizeW / 2,
+				row2Y + (boxHs - theme.colSpacing - tsizeH),
+				str
+			)
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.font(theme.fontSENSOR)
+		end
+	end
 
     -- IMAGE
 
-	if gfx_model ~= nil then
-		lcd.drawBitmap(col1X, row1Y, gfx_model, boxW, boxHs)
-	else
-		lcd.drawBitmap(col1X, row1Y, gfx_heli, boxW, boxHs)
+	if isVisible then
+		if gfx_model ~= nil then
+			lcd.drawBitmap(col1X, row1Y, gfx_model, boxW, boxHs)
+		else
+			lcd.drawBitmap(col1X, row1Y, gfx_heli, boxW, boxHs)
+		end
+	end	
+
+	if isVisible then
+		if getRSSI() == 0 and environment.simulation ~= true then
+			lcd.font(FONT_STD)
+			str = "NO DATA"
+			boxW = math.floor(w / 2)
+			boxH = 45
+			tsizeW, tsizeH = lcd.getTextSize(str)
+
+			--draw the background
+			if  lcd.darkMode() then
+				lcd.color(lcd.RGB(40, 40, 40))
+			else
+				lcd.color(lcd.RGB(240, 240, 240))
+			end
+			lcd.drawFilledRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
+
+			--draw the border
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.drawRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
+
+			if  lcd.darkMode() then
+				-- dark theme
+				lcd.color(lcd.RGB(255, 255, 255, 1))
+			else
+				-- light theme
+				lcd.color(lcd.RGB(90, 90, 90))
+			end
+			lcd.drawText((w / 2) - tsizeW / 2, (h / 2) - tsizeH / 2, str)
+		end
 	end
-
-    if getRSSI() == 0 and environment.simulation ~= true then
-        lcd.font(FONT_STD)
-        str = "NO DATA"
-        boxW = math.floor(w / 2)
-        boxH = 45
-        tsizeW, tsizeH = lcd.getTextSize(str)
-
-        --draw the background
-        if  lcd.darkMode() then
-            lcd.color(lcd.RGB(40, 40, 40))
-        else
-            lcd.color(lcd.RGB(240, 240, 240))
-        end
-        lcd.drawFilledRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
-
-        --draw the border
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.drawRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
-
-        if  lcd.darkMode() then
-            -- dark theme
-            lcd.color(lcd.RGB(255, 255, 255, 1))
-        else
-            -- light theme
-            lcd.color(lcd.RGB(90, 90, 90))
-        end
-        lcd.drawText((w / 2) - tsizeW / 2, (h / 2) - tsizeH / 2, str)
-    end
-
 
 	-- big conditional to trigger lvTimer if needed
 	if linkUP then
