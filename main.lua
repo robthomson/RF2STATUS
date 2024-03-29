@@ -261,7 +261,7 @@ function getThemeInfo()
      then
 		ret = {
 			supportedRADIO  = true,
-			cpuSaver = 10,
+			cpuSaver = 2,
 			colSpacing = 4,
 			fullBoxW = 262,
 			fullBoxH = h / 2,
@@ -284,7 +284,7 @@ function getThemeInfo()
     if environment.board == "X18" or environment.board == "X18S" then
 		ret = {	
 			supportedRADIO  = true,
-			cpuSaver = 15,			
+			cpuSaver = 4,			
 			colSpacing = 2,
 			fullBoxW = 158,
 			fullBoxH = 97,
@@ -308,7 +308,7 @@ function getThemeInfo()
     if environment.board == "X14" or environment.board == "X14S" then
 		ret = {
 			supportedRADIO  = true,
-			cpuSaver = 15,			
+			cpuSaver = 4,			
 			colSpacing = 3,
 			fullBoxW = 210,
 			fullBoxH = 120,
@@ -333,7 +333,7 @@ function getThemeInfo()
     if environment.board == "TWXLITE" or environment.board == "TWXLITES" then
 		ret = {
 		supportedRADIO  = true,
-		cpuSaver = 15,		
+		cpuSaver = 4,		
         colSpacing = 2,
         fullBoxW = 158,
         fullBoxH = 96,
@@ -356,7 +356,7 @@ function getThemeInfo()
     if environment.board == "X10EXPRESS" then
 		ret = {
 			supportedRADIO  = true,
-			cpuSaver = 15,			
+			cpuSaver = 4,			
 			colSpacing = 2,
 			fullBoxW = 158,
 			fullBoxH = 79,
@@ -2264,6 +2264,7 @@ local function init()
             write = write
         }
     )
+	system.compile("/scripts/rf2status/main.lua")
 end
 
 return {init = init}
