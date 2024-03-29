@@ -308,7 +308,7 @@ function getThemeInfo()
     if environment.board == "X14" or environment.board == "X14S" then
 		ret = {
 			supportedRADIO  = true,
-			cpuSaver = 20,			
+			cpuSaver = 15,			
 			colSpacing = 3,
 			fullBoxW = 210,
 			fullBoxH = 120,
@@ -333,7 +333,7 @@ function getThemeInfo()
     if environment.board == "TWXLITE" or environment.board == "TWXLITES" then
 		ret = {
 		supportedRADIO  = true,
-		cpuSaver = 20,		
+		cpuSaver = 15,		
         colSpacing = 2,
         fullBoxW = 158,
         fullBoxH = 96,
@@ -356,7 +356,7 @@ function getThemeInfo()
     if environment.board == "X10EXPRESS" then
 		ret = {
 			supportedRADIO  = true,
-			cpuSaver = 20,			
+			cpuSaver = 15,			
 			colSpacing = 2,
 			fullBoxW = 158,
 			fullBoxH = 79,
@@ -383,8 +383,6 @@ end
 
 local function paint(widget)
  
- 
-
 
 	if tonumber(sensorMakeNumber(environment.version)) < 152 then
             screenError("ETHOS < V1.5.2")
@@ -1570,7 +1568,7 @@ local function paint(widget)
 
 
 	-- big conditional to trigger lvTimer if needed
-	if getRSSI() ~= 0 then
+	if linkUP then
 		if  sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or sensors.govmode == "ACTIVE" or sensors.govmode == "LOST-HS" or sensors.govmode == "BAILOUT" or sensors.govmode == "RECOVERY" then
 			if (voltageIsLow) or (sensors.fuel <= lowfuelParam) then
 					lvTimer = true
@@ -1598,8 +1596,8 @@ local function paint(widget)
 			-- only trigger if we have been on for 5 seconds or more
 			if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >= alertintParam then
 				audioAlertCounter = os.clock()
-				system.playFile("/scripts/rf2status/sounds/lowvoltage.wav")
-
+				--system.playFile("/scripts/rf2status/sounds/lowvoltage.wav")
+				system.playNumber(sensors.voltage/100,2,2)	
 				if alrthptParam == 1 then
 					system.playHaptic("- . -")
 				end
@@ -1613,25 +1611,24 @@ local function paint(widget)
 	
 end
 
+
 function getSensors()
     if isInConfiguration == true then
         return oldsensors
     end
 
     if environment.simulation == true then
-        --elseif getRSSI() ~= 0 then
         -- we are running simulation
         tv = math.random(2100, 2274)
-        voltage = sensorMakeNumber(tv)
-        rpm = sensorMakeNumber(math.random(0, 1510))
-        current = sensorMakeNumber(math.random(0, 17))
-        temp_esc = sensorMakeNumber(math.random(1510, 1520))
-        temp_mcu = sensorMakeNumber(math.random(1510, 1520))
-        fuel = sensorMakeNumber(math.floor(((tv / 10 * 100) / 252)))
-        mah = sensorMakeNumber(math.random(10000, 10100))
+        voltage = tv
+        rpm = math.random(0, 1510)
+        current = math.random(0, 17)
+        temp_esc = math.random(1510, 1520)
+        temp_mcu = math.random(1510, 1520)
+        fuel = math.floor(((tv / 10 * 100) / 252))
+        mah = math.random(10000, 10100)
         govmode = "ACTIVE"
         fm = "DISABLED"
-        --fm = system.getSource({category=CATEGORY_FLIGHT, member=FLIGHT_CURRENT_MODE}):stringValue()
         rssi = math.random(90, 100)
     elseif linkUP ~= 0 then
 		local telemetrySOURCE = system.getSource("Rx RSSI1")		
@@ -2203,7 +2200,6 @@ local function wakeup(widget)
     end
 	
 	playVoltage(widget)
-
     return
 end
 
