@@ -711,11 +711,7 @@ local function paint(widget)
 			sensorWARN = false
 			smallBOX = false
 		
-			if sensors.fuel > 5 then
-				sensorVALUE = sensors.rpm
-			else
-				sensorVALUE = "0"
-			end
+			sensorVALUE = sensors.rpm
 		
 			if titleParam == 1 then
 				sensorTITLE = theme.title_rpm
@@ -751,11 +747,7 @@ local function paint(widget)
 				sensorWARN = true	
 			end
 		
-			if sensors.fuel > 5 then
-				sensorVALUE = sensors.voltage
-			else
-				sensorVALUE = "0"
-			end
+			sensorVALUE = sensors.voltage
 		
 			if titleParam == 1 then
 				sensorTITLE = theme.title_voltage
@@ -787,12 +779,9 @@ local function paint(widget)
 			sensorWARN = false	
 			smallBOX = false
 	
-			if sensors.fuel > 5 then
-				sensorVALUE = sensors.current
-			else
-				sensorVALUE = "0"
-			end
-		
+
+			sensorVALUE = sensors.current
+			
 			if titleParam == 1 then
 				sensorTITLE = theme.title_current
 			else
@@ -823,11 +812,7 @@ local function paint(widget)
 			sensorWARN = false
 			smallBOX = true	
 	
-			if sensors.fuel > 5 then
-				sensorVALUE = sensors.temp_esc
-			else
-				sensorVALUE = "0"
-			end
+			sensorVALUE = round(sensors.temp_esc/100,0)
 		
 			if titleParam == 1 then
 				sensorTITLE = theme.title_tempESC
@@ -847,7 +832,7 @@ local function paint(widget)
 					sensorMAX = sensorTempESCMax
 			end
 	
-			telemetryBox(posX,posY,boxWs,boxHs,sensorTITLE,sensorVALUE/100,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
+			telemetryBox(posX,posY,boxWs,boxHs,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
 		end	
 
 		--TEMP MCU
@@ -859,12 +844,8 @@ local function paint(widget)
 			sensorWARN = false
 			smallBOX = true	
 	
-			if sensors.fuel > 5 then
-				sensorVALUE = sensors.temp_mcu
-			else
-				sensorVALUE = "0"
-			end
-		
+			sensorVALUE = round(sensors.temp_mcu/100,0)
+			
 			if titleParam == 1 then
 				sensorTITLE = theme.title_tempMCU
 			else
@@ -883,7 +864,7 @@ local function paint(widget)
 					sensorMAX = sensorTempMCUMax
 			end
 	
-			telemetryBox(posX,posY,boxWs,boxHs,sensorTITLE,sensorVALUE/100,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
+			telemetryBox(posX,posY,boxWs,boxHs,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
 		end	
 
 		--RSSI
@@ -895,12 +876,8 @@ local function paint(widget)
 			sensorWARN = false
 			smallBOX = true	
 	
-			if sensors.fuel > 5 then
-				sensorVALUE = sensors.rssi
-			else
-				sensorVALUE = "0"
-			end
-		
+			sensorVALUE = sensors.rssi
+			
 			if titleParam == 1 then
 				sensorTITLE = theme.title_rssi
 			else
