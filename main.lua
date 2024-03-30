@@ -270,6 +270,46 @@ function screenError(msg)
     return
 end
 
+function noTelem()
+	lcd.font(FONT_STD)
+	str = "NO DATA"
+	
+    local theme = getThemeInfo()
+    local w, h = lcd.getWindowSize()	
+	boxW = math.floor(w / 2)
+	boxH = 45
+	tsizeW, tsizeH = lcd.getTextSize(str)
+
+	--draw the background
+	if isDARKMODE then
+		lcd.color(lcd.RGB(40, 40, 40))
+	else
+		lcd.color(lcd.RGB(240, 240, 240))
+	end
+	lcd.drawFilledRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
+
+	--draw the border
+	if isDARKMODE then
+		-- dark theme
+		lcd.color(lcd.RGB(255, 255, 255, 1))
+	else
+		-- light theme
+		lcd.color(lcd.RGB(90, 90, 90))
+	end
+	lcd.drawRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
+
+	if isDARKMODE then
+		-- dark theme
+		lcd.color(lcd.RGB(255, 255, 255, 1))
+	else
+		-- light theme
+		lcd.color(lcd.RGB(90, 90, 90))
+	end
+	lcd.drawText((w / 2) - tsizeW / 2, (h / 2) - tsizeH / 2, str)
+return
+end
+
+
 function getThemeInfo()
     environment = system.getVersion()
     local w, h = lcd.getWindowSize()
@@ -482,9 +522,12 @@ local function telemetryBox(x,y,w,h,title,value,unit,smallbox,alarm,minimum,maxi
 
 	if minimum ~= nil and maxminParam == 1 then
 		lcd.font(theme.fontTITLE)
-		
-		
-		str = minimum .. unit
+
+		if tostring(minimum) == "-" then
+			str = minimum
+		else
+			str = minimum .. unit
+		end
 		if unit == "°" then
 			tsizeW, tsizeH = lcd.getTextSize(minimum .. ".")
 		else
@@ -499,7 +542,12 @@ local function telemetryBox(x,y,w,h,title,value,unit,smallbox,alarm,minimum,maxi
 	
 	if maximum ~= nil and maxminParam == 1 then
 		lcd.font(theme.fontTITLE)
-		str = maximum .. unit
+
+		if tostring(minimum) == "-" then
+			str = maximum
+		else
+			str = maximum .. unit
+		end
 		if unit == "°" then
 			tsizeW, tsizeH = lcd.getTextSize(maximum .. ".")
 		else
@@ -535,6 +583,9 @@ local function telemetryBoxImage(x,y,w,h,gfx)
 end
 
 local function paint(widget)
+
+	
+
     isVisible = lcd.isVisible()
 	isDARKMODE = lcd.darkMode()
 
@@ -616,32 +667,32 @@ local function paint(widget)
                 environment.board == "X20PROAW"
          then
             if w ~= 784 and h ~= 294 then
-                screenError("DISPLAY SIZE TOO SMALL")
+                screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
         if environment.board == "X18" or environment.board == "X18S" then
             smallTEXT = true
             if w ~= 472 and h ~= 191 then
-                screenError("DISPLAY SIZE TOO SMALL")
+                screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
         if environment.board == "X14" or environment.board == "X14S" then
             if w ~= 630 and h ~= 236 then
-                screenError("DISPLAY SIZE TOO SMALL")
+                screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
         if environment.board == "TWXLITE" or environment.board == "TWXLITES" then
             if w ~= 472 and h ~= 191 then
-                screenError("DISPLAY SIZE TOO SMALL")
+                screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
         if environment.board == "X10EXPRESS" then
             if w ~= 472 and h ~= 158 then
-                screenError("DISPLAY SIZE TOO SMALL")
+                screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
@@ -747,7 +798,7 @@ local function paint(widget)
 				sensorWARN = true	
 			end
 		
-			sensorVALUE = sensors.voltage
+			sensorVALUE = sensors.voltage/100
 		
 			if titleParam == 1 then
 				sensorTITLE = theme.title_voltage
@@ -758,16 +809,16 @@ local function paint(widget)
 			if sensorVoltageMin == 0 or sensorVoltageMin == nil then
 					sensorMIN = "-"
 			else 
-					sensorMIN = sensorVoltageMin
+					sensorMIN = sensorVoltageMin/100
 			end
 			
 			if sensorVoltageMax == 0 or sensorVoltageMax == nil then
 					sensorMAX = "-"
 			else 
-					sensorMAX = sensorVoltageMax
+					sensorMAX = sensorVoltageMax/100
 			end
-	
-			telemetryBox(posX,posY,boxW,boxH,sensorTITLE,sensorVALUE/100,sensorUNIT,smallBOX,sensorWARN,sensorMIN/100,sensorMAX/100)
+			
+			telemetryBox(posX,posY,boxW,boxH,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
 		end
 		
 		--CURRENT
@@ -780,7 +831,7 @@ local function paint(widget)
 			smallBOX = false
 	
 
-			sensorVALUE = sensors.current
+			sensorVALUE = sensors.current/100
 			
 			if titleParam == 1 then
 				sensorTITLE = theme.title_current
@@ -800,7 +851,7 @@ local function paint(widget)
 					sensorMAX = sensorCurrentMax
 			end
 	
-			telemetryBox(posX,posY,boxW,boxH,sensorTITLE,sensorVALUE/100,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
+			telemetryBox(posX,posY,boxW,boxH,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
 		end		
 
 		--TEMP ESC
@@ -952,6 +1003,10 @@ local function paint(widget)
 
 	    telemetryBox(posX,posY,boxW,boxHs,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
 
+		--if linkUP == 0 then
+        if linkUP == 0 and environment.simulation ~= true then
+			noTelem()
+		end
 
 	end
 		
@@ -1040,7 +1095,7 @@ function getSensors()
         -- we are running simulation
         tv = math.random(2100, 2274)
         voltage = tv
-        rpm = math.random(0, 1510)
+        rpm = math.random(0, 1510)		
         current = math.random(0, 17)
         temp_esc = math.random(1510, 1520)
         temp_mcu = math.random(1510, 1520)
@@ -1049,6 +1104,9 @@ function getSensors()
         govmode = "ACTIVE"
         fm = "DISABLED"
         rssi = math.random(90, 100)
+		
+		
+		
     elseif linkUP ~= 0 then
         local telemetrySOURCE = system.getSource("Rx RSSI1")
         if telemetrySOURCE ~= nil then
