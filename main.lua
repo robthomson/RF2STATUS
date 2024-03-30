@@ -577,7 +577,7 @@ local function telemetryBoxImage(x,y,w,h,gfx)
 	-- draw box background	
 	lcd.drawFilledRectangle(x, y, w, h) 
 
-    lcd.drawBitmap(x, y, gfx, w, h)
+    lcd.drawBitmap(x, y, gfx, w-theme.colSpacing, h-theme.colSpacing)
 
 
 end
