@@ -474,7 +474,7 @@ local function telemetryBox(x,y,w,h,title,value,unit,smallbox,alarm,minimum,maxi
 		tsizeW, tsizeH = lcd.getTextSize(str)
 		
 		sx = (x + w/2)-(tsizeW/2)
-		sy = (y + h)-(tsizeH) - (tsizeH/4)
+		sy = (y + h)-(tsizeH) - theme.colSpacing
 
 		lcd.drawText(sx,sy, str)
 	end	
@@ -493,7 +493,7 @@ local function telemetryBox(x,y,w,h,title,value,unit,smallbox,alarm,minimum,maxi
 		
 		sx = (x + theme.colSpacing)
 		sy = (y + h)-(tsizeH) - theme.colSpacing
-
+		
 		lcd.drawText(sx,sy, str)
 	end		
 	
