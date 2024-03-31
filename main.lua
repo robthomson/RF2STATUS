@@ -42,6 +42,10 @@ local cellsParam = 6
 local triggerswitchParam = nil
 local govmodeParam = 0
 
+local simPreSPOOLUP=false
+local simDoSPOOLUP=false
+local simDODISARM=false
+
 sensorVoltageMax = 0
 sensorVoltageMin = 0
 sensorFuelMin = 0
@@ -56,6 +60,7 @@ sensorTempESCMin = 0
 sensorTempESCMax = 0
 sensorRSSIMin = 0
 sensorRSSIMax = 0
+lastMaxMin = 0
 
 voltageNoiseQ = 150
 fuelNoiseQ = 150
@@ -246,6 +251,9 @@ function getRssiSensor()
 end
 
 function getRSSI()
+	if environment.simulation == true then
+		return 100
+	end
     if rssiSensor ~= nil and rssiSensor:state() then
         return rssiSensor:value()
     end
@@ -520,45 +528,55 @@ local function telemetryBox(x,y,w,h,title,value,unit,smallbox,alarm,minimum,maxi
 	end	
 
 
-	if minimum ~= nil and maxminParam == 1 then
-		lcd.font(theme.fontTITLE)
+	if maxminParam == 1 then	
 
-		if tostring(minimum) == "-" then
-			str = minimum
-		else
-			str = minimum .. unit
-		end
-		if unit == "°" then
-			tsizeW, tsizeH = lcd.getTextSize(minimum .. ".")
-		else
-			tsizeW, tsizeH = lcd.getTextSize(str)
-		end
+		if minimum ~= nil then
 		
-		sx = (x + theme.colSpacing)
-		sy = (y + h)-(tsizeH) - theme.colSpacing
-		
-		lcd.drawText(sx,sy, str)
-	end		
-	
-	if maximum ~= nil and maxminParam == 1 then
-		lcd.font(theme.fontTITLE)
+			lcd.font(theme.fontTITLE)
 
-		if tostring(minimum) == "-" then
-			str = maximum
-		else
-			str = maximum .. unit
-		end
-		if unit == "°" then
-			tsizeW, tsizeH = lcd.getTextSize(maximum .. ".")
-		else
-			tsizeW, tsizeH = lcd.getTextSize(str)
-		end
-		
-		sx = (x + w) - tsizeW - theme.colSpacing
-		sy = (y + h)-(tsizeH) - theme.colSpacing
+			if tostring(minimum) ~= "-" then
+					lastMin = minimum
+			end
 
-		lcd.drawText(sx,sy, str)
-	end			
+			if tostring(minimum) == "-" then
+				str = minimum
+			else
+				str = minimum .. unit
+			end
+
+			if unit == "°" then
+				tsizeW, tsizeH = lcd.getTextSize(minimum .. ".")
+			else
+				tsizeW, tsizeH = lcd.getTextSize(str)
+			end
+			
+			sx = (x + theme.colSpacing)
+			sy = (y + h)-(tsizeH) - theme.colSpacing
+			
+			lcd.drawText(sx,sy, str)
+		end		
+		
+		if maximum ~= nil then
+			lcd.font(theme.fontTITLE)
+
+			if tostring(minimum) == "-" then
+				str = maximum
+			else
+				str = maximum .. unit
+			end
+			if unit == "°" then
+				tsizeW, tsizeH = lcd.getTextSize(maximum .. ".")
+			else
+				tsizeW, tsizeH = lcd.getTextSize(str)
+			end
+			
+			sx = (x + w) - tsizeW - theme.colSpacing
+			sy = (y + h)-(tsizeH) - theme.colSpacing
+
+			lcd.drawText(sx,sy, str)
+		end	
+
+	end
 	
 end
 
@@ -923,7 +941,7 @@ local function paint(widget)
 		
 			posX = 0
 			posY =  boxH+(theme.colSpacing*2)
-			sensorUNIT = "°"
+			sensorUNIT = "%"
 			sensorWARN = false
 			smallBOX = true	
 	
@@ -940,8 +958,8 @@ local function paint(widget)
 			else 
 					sensorMIN = sensorRSSIMin
 			end
-			
-			if sensorRSSIMaxMax == 0 or sensorRSSIMax == nil then
+
+			if sensorRSSIMax == 0 or sensorRSSIMax == nil then
 					sensorMAX = "-"
 			else 
 					sensorMAX = sensorRSSIMax
@@ -1004,7 +1022,7 @@ local function paint(widget)
 	    telemetryBox(posX,posY,boxW,boxHs,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
 
 		--if linkUP == 0 then
-        if linkUP == 0 and environment.simulation ~= true then
+        if linkUP == 0 then
 			noTelem()
 		end
 
@@ -1071,8 +1089,8 @@ local function paint(widget)
             -- only trigger if we have been on for 5 seconds or more
             if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >= alertintParam then
                 audioAlertCounter = os.clock()
-                --system.playFile("/scripts/rf2status/sounds/lowvoltage.wav")
-                system.playNumber(sensors.voltage / 100, 2, 2)
+                system.playFile("/scripts/rf2status/sounds/lowvoltage.wav")
+                --system.playNumber(sensors.voltage / 100, 2, 2)
                 if alrthptParam == 1 then
                     system.playHaptic("- . -")
                 end
@@ -1092,19 +1110,37 @@ function getSensors()
     end
 
     if environment.simulation == true then
-        -- we are running simulation
-        tv = math.random(2100, 2274)
-        voltage = tv
-        rpm = math.random(0, 1510)		
-        current = math.random(0, 17)
-        temp_esc = math.random(1510, 1520)
-        temp_mcu = math.random(1510, 1520)
-        fuel = math.floor(math.random(15, 25))
-        mah = math.random(10000, 10100)
-        govmode = "ACTIVE"
-        fm = "DISABLED"
-        rssi = math.random(90, 100)
-		
+	
+		lcd.resetFocusTimeout()	
+
+		if simDoSPOOLUP == false then
+			-- we are running simulation
+			tv = math.random(2100, 2274)
+			voltage = tv
+			rpm = math.random(0, 1510)		
+			current = math.random(0, 17)
+			temp_esc = math.random(1510, 1520)
+			temp_mcu = math.random(1510, 1520)
+			fuel = math.floor(math.random(15, 25))
+			mah = math.random(10000, 10100)
+			govmode = "IDLE"
+			fm = "DISABLED"
+			rssi = math.random(90, 100)		
+		else
+			-- we are running simulation
+			tv = math.random(2100, 2274)
+			voltage = tv
+			rpm = math.random(0, 1510)		
+			current = math.random(0, 17)
+			temp_esc = math.random(1510, 1520)
+			temp_mcu = math.random(1510, 1520)
+			fuel = math.floor(math.random(15, 25))
+			mah = math.random(10000, 10100)
+			govmode = "ACTIVE"
+			fm = "DISABLED"
+			rssi = math.random(90, 100)
+		end
+
 		
 		
     elseif linkUP ~= 0 then
@@ -1440,7 +1476,8 @@ function sensorsMAXMIN(sensors)
             govNearlyActive = 1
         end
 
-        if sensors.govmode == "IDLE" then
+	
+        if sensors.govmode == "DISARMED" then
             sensorVoltageMin = 0
             sensorVoltageMax = 0
             sensorFuelMin = 0
@@ -1456,6 +1493,7 @@ function sensorsMAXMIN(sensors)
             sensorTempESCMin = 0
             sensorTempESCMax = 0
         end
+	
 
         if sensors.govmode == "ACTIVE" then
             if govNearlyActive == 1 then
@@ -1531,22 +1569,6 @@ function sensorsMAXMIN(sensors)
         sensorTempESCMax = 0
     end
 
-    if environment.simulation == true then
-        sensorVoltageMin = sensors.voltage
-        sensorVoltageMax = sensors.voltage
-        sensorFuelMin = sensors.fuel
-        sensorFuelMax = sensors.fuel
-        sensorRPMMin = sensors.rpm
-        sensorRPMMax = sensors.rpm
-        sensorCurrentMin = sensors.current
-        sensorCurrentMax = sensors.current
-        sensorRSSIMin = sensors.rssi
-        sensorRSSIMax = sensors.rssi
-        sensorTempMCUMin = round(sensors.temp_mcu / 100, 0)
-        sensorTempMCUMax = round(sensors.temp_mcu / 100, 0)
-        sensorTempESCMin = round(sensors.temp_esc / 100, 0)
-        sensorTempESCMax = round(sensors.temp_esc / 100, 0)
-    end  
 end
 
 function kalmanCurrent(new, old)
@@ -1763,6 +1785,32 @@ function playVoltage(widget)
     end
 end
 
+local function event(widget, category, value, x, y)
+
+  -- if in sumlation we capture a press long press php/down to trigger a fake govenor spool up
+  if environment.simulation == true then
+	print("Event received:", category, value, x, y)
+	
+	-- turn off governor
+	if sensors.govmode == 'ACTIVE' and value == 32 then
+		simDoSPOOLUP = false
+	end
+	
+	if sensors.govmode == 'IDLE' and category == 0 and value == 64 then
+		-- flag that release of pgdown = start spoolup
+		simPreSPOOLUP = true
+		govNearlyActive = 1
+		timerNearlyActive = 1
+	end
+	if sensors.govmode == 'IDLE' and category == 0 and value == 32 and simPreSPOOLUP == true then
+		-- flag that release of pgdown = start spoolup
+		simDoSPOOLUP = true
+	end	
+	
+	
+  end	
+end
+
 local function wakeup(widget)
     refresh = false
 
@@ -1788,7 +1836,8 @@ local function init()
             paint = paint,
             wakeup = wakeup,
             read = read,
-            write = write
+            write = write,
+			event = event
         }
     )
 
