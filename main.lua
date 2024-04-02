@@ -31,6 +31,8 @@ local startTimer = false
 local voltageIsLow = false
 local fuelIsLow = false
 
+local showLOGS=false
+
 local fmsrcParam = 0
 local btypeParam = 0
 local lowfuelParam = 20
@@ -42,9 +44,27 @@ local cellsParam = 6
 local triggerswitchParam = nil
 local govmodeParam = 0
 
+local timerWASActive = false
+local govWasActive = false
 local simPreSPOOLUP=false
 local simDoSPOOLUP=false
 local simDODISARM=false
+
+
+local maxminFinals = {}
+local maxminFinals1 = nil
+local maxminFinals2 = nil
+local maxminFinals3 = nil
+local maxminFinals4 = nil
+local maxminFinals5 = nil
+local maxminFinals6 = nil
+local maxminFinals7 = nil
+local maxminFinals8 = nil
+
+closeButtonX = 0
+closeButtonY = 0 
+closeButtonW = 0
+closeButtonH = 0
 
 sensorVoltageMax = 0
 sensorVoltageMin = 0
@@ -73,7 +93,9 @@ currentNoiseQ = 150
 local function create(widget)
     gfx_model = lcd.loadBitmap(model.bitmap())
     gfx_heli = lcd.loadBitmap("/scripts/rf2status/gfx/heli.png")
+	gfx_close = lcd.loadBitmap("/scripts/rf2status/gfx/close.png")
     rssiSensor = getRssiSensor()
+
 
     if tonumber(sensorMakeNumber(environment.version)) < 152 then
         screenError("ETHOS < V1.5.2")
@@ -90,7 +112,15 @@ local function create(widget)
         title = 1,
         cells = 6,
         triggerswitch = nil,
-        govmode = 0
+        govmode = 0,
+		maxminFinals1 = nil,
+		maxminFinals2 = nil,
+		maxminFinals3 = nil,
+		maxminFinals4 = nil,
+		maxminFinals5 = nil,
+		maxminFinals6 = nil,
+		maxminFinals7 = nil,
+		maxminFinals8 = nil
     }
 end
 
@@ -237,6 +267,8 @@ local function configure(widget)
         end
     )
 
+	resetALL()
+
     return widget
 end
 
@@ -276,6 +308,22 @@ function screenError(msg)
     end
     lcd.drawText((w / 2) - tsizeW / 2, (h / 2) - tsizeH / 2, str)
     return
+end
+
+function resetALL()
+	showLOGS = false
+	sensorVoltageMax = 0
+	sensorVoltageMin = 0
+	sensorFuelMin = 0
+	sensorFuelMax = 0
+	sensorRPMMin = 0
+	sensorRPMMax = 0
+	sensorCurrentMin = 0
+	sensorCurrentMax = 0
+	sensorTempMCUMin = 0
+	sensorTempMCUMax = 0
+	sensorTempESCMin = 0
+	sensorTempESCMax = 0
 end
 
 function noTelem()
@@ -347,7 +395,18 @@ function getThemeInfo()
             title_rssi = "LQ",
             fontSENSOR = FONT_XXL,
 			fontSENSORSmallBox = FONT_STD,
-            fontTITLE = FONT_XS
+            fontTITLE = FONT_XS,
+			fontPopupTitle = FONT_S,
+			widgetTitleOffset = 20,
+			logsCOL1w = 60,
+			logsCOL2w = 120,
+			logsCOL3w = 120,
+			logsCOL4w = 170,
+			logsCOL5w = 110,
+			logsCOL6w = 90,
+			logsCOL7w = 90,
+			logsHeaderOffset = 5
+			
         }
     end
 
@@ -370,7 +429,17 @@ function getThemeInfo()
             title_rssi = "LQ",
             fontSENSOR = FONT_XXL,
 			fontSENSORSmallBox = FONT_STD,			
-            fontTITLE = 768
+            fontTITLE = 768,
+			fontPopupTitle = FONT_S,
+			widgetTitleOffset = 20,
+			logsCOL1w = 100,
+			logsCOL2w = 120,
+			logsCOL3w = 100,
+			logsCOL4w = 100,
+			logsCOL5w = 100,
+			logsCOL6w = 100,
+			logsCOL7w = 100,
+			logsHeaderOffset = 5
         }
     end
 
@@ -393,7 +462,17 @@ function getThemeInfo()
             title_rssi = "LQ",
             fontSENSOR = FONT_XXL,
 			fontSENSORSmallBox = FONT_STD,			
-            fontTITLE = 768
+            fontTITLE = 768,
+			fontPopupTitle = FONT_S,
+			widgetTitleOffset = 20,
+			logsCOL1w = 100,
+			logsCOL2w = 100,
+			logsCOL3w = 100,
+			logsCOL4w = 100,
+			logsCOL5w = 100,
+			logsCOL6w = 100,
+			logsCOL7w = 100,
+			logsHeaderOffset = 5
         }
     end
 
@@ -416,7 +495,17 @@ function getThemeInfo()
             title_rssi = "LQ",
             fontSENSOR = FONT_XXL,
 			fontSENSORSmallBox = FONT_STD,			
-            fontTITLE = 768
+            fontTITLE = 768,
+			fontPopupTitle = FONT_S,
+			widgetTitleOffset = 20,
+			logsCOL1w = 100,
+			logsCOL2w = 100,
+			logsCOL3w = 100,
+			logsCOL4w = 100,
+			logsCOL5w = 100,
+			logsCOL6w = 100,
+			logsCOL7w = 100,
+			logsHeaderOffset = 5
         }
     end
 
@@ -439,7 +528,17 @@ function getThemeInfo()
             title_rssi = "LQ",
             fontSENSOR = FONT_XXL,
 			fontSENSORSmallBox = FONT_STD,			
-            fontTITLE = FONT_XS
+            fontTITLE = FONT_XS,
+			fontPopupTitle = FONT_S,
+			widgetTitleOffset = 20,
+			logsCOL1w = 100,
+			logsCOL2w = 100,
+			logsCOL3w = 100,
+			logsCOL4w = 100,
+			logsCOL5w = 100,
+			logsCOL6w = 100,
+			logsCOL7w = 100,
+			logsHeaderOffset = 5
         }
     end
 
@@ -559,7 +658,7 @@ local function telemetryBox(x,y,w,h,title,value,unit,smallbox,alarm,minimum,maxi
 		if maximum ~= nil then
 			lcd.font(theme.fontTITLE)
 
-			if tostring(minimum) == "-" then
+			if tostring(maximum) == "-" then
 				str = maximum
 			else
 				str = maximum .. unit
@@ -578,6 +677,244 @@ local function telemetryBox(x,y,w,h,title,value,unit,smallbox,alarm,minimum,maxi
 
 	end
 	
+end
+
+function logsBOX()
+
+    local theme = getThemeInfo()
+    local w, h = lcd.getWindowSize()	
+	boxW = w - math.floor((w * 2)/100)
+	boxH = h - math.floor((h * 4)/100)
+
+
+	--draw the background
+	if isDARKMODE then
+		lcd.color(lcd.RGB(40, 40, 40,50))
+	else
+		lcd.color(lcd.RGB(240, 240, 240,50))
+	end
+	lcd.drawFilledRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
+
+	--draw the border
+	lcd.color(lcd.RGB(248, 176, 56))
+	lcd.drawRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
+
+	--draw the title
+	lcd.color(lcd.RGB(248, 176, 56))
+	lcd.drawFilledRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH/9)
+
+	if isDARKMODE then
+		-- dark theme
+		lcd.color(lcd.RGB(0, 0, 0, 1))
+	else
+		-- light theme
+		lcd.color(lcd.RGB(255, 255, 255))
+	end
+	str = "Log History"
+	lcd.font(theme.fontPopupTitle)
+	tsizeW, tsizeH = lcd.getTextSize(str)
+	boxTh = boxH/9	
+	boxTy = h / 2 - boxH / 2
+	boxTx = w / 2 - boxW / 2
+	lcd.drawText((w / 2) - tsizeW / 2, boxTy + (boxTh / 2) - tsizeH / 2, str)
+	
+	-- close button
+    lcd.drawBitmap(boxTx + boxW - boxTh, boxTy, gfx_close, boxTh, boxTh)	
+	closeButtonX = math.floor(boxTx + boxW - boxTh)
+	closeButtonY = math.floor(boxTy) + theme.widgetTitleOffset
+	closeButtonW = math.floor(boxTh)
+	closeButtonH = math.floor(boxTh)
+
+	lcd.color(lcd.RGB(255, 255, 255))
+	
+
+
+
+	--[[ header column format 
+		TIME VOLTAGE AMPS RPM LQ MCU ESC
+	]]--
+	colW = boxW/7
+
+
+	col1x = boxTx
+	col2x = boxTx + theme.logsCOL1w
+	col3x = boxTx + theme.logsCOL1w + theme.logsCOL2w
+	col4x = boxTx + theme.logsCOL1w + theme.logsCOL2w + theme.logsCOL3w
+	col5x = boxTx + theme.logsCOL1w + theme.logsCOL2w + theme.logsCOL3w + theme.logsCOL4w
+	col6x = boxTx + theme.logsCOL1w + theme.logsCOL2w + theme.logsCOL3w + theme.logsCOL4w + theme.logsCOL5w
+	col7x = boxTx + theme.logsCOL1w + theme.logsCOL2w + theme.logsCOL3w + theme.logsCOL4w + theme.logsCOL5w + theme.logsCOL6w
+	
+	lcd.color(lcd.RGB(90, 90, 90))
+
+	--LINES
+	lcd.drawLine(boxTx + boxTh/2, boxTy + (boxTh*2), boxTx + boxW - (boxTh/2), boxTy + (boxTh*2))
+		
+	lcd.drawLine(col2x, boxTy + boxTh + boxTh/2, col2x, boxTy + boxH - (boxTh/2))			
+	lcd.drawLine(col3x, boxTy + boxTh + boxTh/2, col3x, boxTy + boxH - (boxTh/2))		
+	lcd.drawLine(col4x, boxTy + boxTh + boxTh/2, col4x, boxTy + boxH - (boxTh/2))
+	lcd.drawLine(col5x, boxTy + boxTh + boxTh/2, col5x, boxTy + boxH - (boxTh/2))		
+	lcd.drawLine(col6x, boxTy + boxTh + boxTh/2, col6x, boxTy + boxH - (boxTh/2))	
+	lcd.drawLine(col7x, boxTy + boxTh + boxTh/2, col7x, boxTy + boxH - (boxTh/2))
+	
+	--HEADER text
+	if isDARKMODE then
+		-- dark theme
+		lcd.color(lcd.RGB(255, 255, 255, 1))
+	else
+		-- light theme
+		lcd.color(lcd.RGB(0, 0, 0))
+	end
+	lcd.font(theme.fontPopupTitle)
+	
+
+	
+	
+	str = "TIME"
+	tsizeW, tsizeH = lcd.getTextSize(str)					 
+	lcd.drawText(col1x + (theme.logsCOL1w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + ((boxTh/2) - (tsizeH / 2)) , str)
+
+	str = "VOLTAGE"
+	tsizeW, tsizeH = lcd.getTextSize(str)
+	lcd.drawText((col2x) + (theme.logsCOL2w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+
+	str = "AMPS"
+	tsizeW, tsizeH = lcd.getTextSize(str)
+	lcd.drawText((col3x) + (theme.logsCOL3w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+
+	str = "RPM"
+	tsizeW, tsizeH = lcd.getTextSize(str)
+	lcd.drawText((col4x) + (theme.logsCOL4w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+
+	str = "LQ"
+	tsizeW, tsizeH = lcd.getTextSize(str)
+	lcd.drawText((col5x) + (theme.logsCOL5w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+
+	str = "MCU"
+	tsizeW, tsizeH = lcd.getTextSize(str)
+	lcd.drawText((col6x) + (theme.logsCOL6w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)	
+
+	str = "ESC"
+	tsizeW, tsizeH = lcd.getTextSize(str)
+	lcd.drawText((col7x) + (theme.logsCOL7w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+	
+	c = 0
+	for index,value in pairs(maxminFinals) do
+		if value ~= nil then
+			if value ~= "" and value ~= nil then
+				rowH = c * boxTh
+
+
+				
+				local rowData = explode(value,",")
+	
+				--[[ rowData is a csv string as follows
+				
+						theTIME,sensorVoltageMin,sensorVoltageMax,sensorFuelMin,sensorFuelMax,
+						sensorRPMMin,sensorRPMMax,sensorCurrentMin,sensorCurrentMax,sensorRSSIMin,
+						sensorRSSIMax,sensorTempMCUMin,sensorTempMCUMax,sensorTempESCMin,sensorTempESCMax	
+				]]--
+				-- loop of rowData and extract each value bases on idx
+				if rowData ~= nil then
+				
+					for idx,snsr in pairs(rowData) do
+					
+						snsr = snsr:gsub("%s+", "")
+					
+						if snsr ~= nil and snsr ~= "" then			
+							-- time
+							if idx == 1 then
+								str = SecondsToClockAlt(snsr)
+								tsizeW, tsizeH = lcd.getTextSize(str)
+								lcd.drawText(col1x + (theme.logsCOL1w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)					
+							end
+							-- voltagemin
+							if idx == 2 then
+								vstr = snsr
+							end
+							-- voltagemax
+							if idx == 3 then
+								str = round(vstr/100,1) .. 'v / ' .. round(snsr/100,1) .. 'v'
+								tsizeW, tsizeH = lcd.getTextSize(str)
+								lcd.drawText(col2x + (theme.logsCOL2w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)	
+							end			
+							-- fuelmin
+							if idx == 4 then
+								local logFUELmin = snsr
+							end					
+							-- fuelmax
+							if idx == 5 then
+								local logFUELmax = snsr
+							end					
+							-- rpmmin
+							if idx == 6 then
+								rstr = snsr
+							end					
+							-- rpmmax
+							if idx == 7 then
+								str = rstr .. 'rpm / ' .. snsr .. 'rpm'
+								tsizeW, tsizeH = lcd.getTextSize(str)
+								lcd.drawText(col4x + (theme.logsCOL4w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)	
+							end							
+							-- currentmin
+							if idx == 8 then
+								cstr = snsr
+							end					
+							-- currentmax
+							if idx == 9 then
+								str = math.floor(cstr/100) .. 'A / ' .. math.floor(snsr/100) .. 'A'
+								tsizeW, tsizeH = lcd.getTextSize(str)
+								lcd.drawText(col3x + (theme.logsCOL3w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)	
+							end							
+							-- rssimin
+							if idx == 10 then
+								lqstr = snsr
+								
+							end					
+							-- rssimax
+							if idx == 11 then
+								str = lqstr .. '% / ' .. snsr .. '%'
+								tsizeW, tsizeH = lcd.getTextSize(str)
+								lcd.drawText(col5x + (theme.logsCOL5w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)
+							end				
+							-- mcumin
+							if idx == 12 then
+								mcustr = snsr
+							end					
+							-- mcumax
+							if idx == 13 then
+								str = mcustr .. '° / ' .. snsr .. '°'
+								strf = mcustr .. '. / ' .. snsr .. '.'
+								tsizeW, tsizeH = lcd.getTextSize(strf)
+								lcd.drawText(col6x + (theme.logsCOL6w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)
+							end		
+							-- escmin
+							if idx == 14 then
+								escstr = snsr
+							end					
+							-- escmax
+							if idx == 15 then
+								str = escstr .. '° / ' .. snsr .. '°'
+								strf = escstr .. '. / ' .. snsr .. '.'
+								tsizeW, tsizeH = lcd.getTextSize(strf)
+								lcd.drawText(col7x + (theme.logsCOL7w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)
+							end
+						end	
+					-- end loop of each storage line		
+					end			
+					c = c+1
+					
+					if c > 7 then
+						break
+					end
+					--end of each log storage slot
+				end
+			end	
+		end	
+	end
+
+
+	--lcd.drawText((w / 2) - tsizeW / 2, (h / 2) - tsizeH / 2, str)
+return
 end
 
 local function telemetryBoxImage(x,y,w,h,gfx)
@@ -983,6 +1320,7 @@ local function paint(widget)
             str = "00:00:00"
         end
 		
+		
 		if titleParam == 1 then
 			sensorTITLE = theme.title_time
 		else
@@ -1025,6 +1363,10 @@ local function paint(widget)
         if linkUP == 0 then
 			noTelem()
 		end
+		
+		if showLOGS then
+			logsBOX()
+		end
 
 	end
 		
@@ -1036,9 +1378,15 @@ local function paint(widget)
         end
 
         if sensors.govmode == "IDLE" then
-            stopTimer = true
-            stopTIME = os.clock()
-            theTIME = 0
+			if timerWASActive == true then
+				stopTimer = true
+				stopTIME = os.clock()
+			
+			else	
+				stopTimer = true
+				stopTIME = os.clock()
+				theTIME = 0			
+			end		
         end
 
         if sensors.govmode == "ACTIVE" then
@@ -1048,6 +1396,8 @@ local function paint(widget)
             end
 
             theTIME = os.clock() - startTIME
+			timerWASActive = true
+			
         end
     else
         -- default as no timer not not yet spooled up
@@ -1102,7 +1452,14 @@ local function paint(widget)
     end
 end
 
-
+function ReverseTable(t)
+    local reversedTable = {}
+    local itemCount = #t
+    for k, v in ipairs(t) do
+        reversedTable[itemCount + 1 - k] = v
+    end
+    return reversedTable
+end
 
 function getSensors()
     if isInConfiguration == true then
@@ -1118,9 +1475,9 @@ function getSensors()
 			tv = math.random(2100, 2274)
 			voltage = tv
 			rpm = math.random(0, 1510)		
-			current = math.random(0, 17)
-			temp_esc = math.random(1510, 1520)
-			temp_mcu = math.random(1510, 1520)
+			current = math.random(1000, 2000)
+			temp_esc = math.random(1510, 2250)
+			temp_mcu = math.random(1510, 1850)
 			fuel = math.floor(math.random(15, 25))
 			mah = math.random(10000, 10100)
 			govmode = "IDLE"
@@ -1131,9 +1488,9 @@ function getSensors()
 			tv = math.random(2100, 2274)
 			voltage = tv
 			rpm = math.random(0, 1510)		
-			current = math.random(0, 17)
-			temp_esc = math.random(1510, 1520)
-			temp_mcu = math.random(1510, 1520)
+			current = math.random(1000, 2000)
+			temp_esc = math.random(1510, 2250)
+			temp_mcu = math.random(1510, 1850)
 			fuel = math.floor(math.random(15, 25))
 			mah = math.random(10000, 10100)
 			govmode = "ACTIVE"
@@ -1472,6 +1829,46 @@ function sensorsMAXMIN(sensors)
 
 
     if linkUP ~= 0 then
+	
+	
+		-- store the last values
+		if govWasActive and sensors.govmode == 'IDLE' then
+		
+	
+			--if maxminFinals == nil then 
+			--	maxminFinals = {}
+			--end	
+			
+			table.sort(maxminFinals)
+				
+			local maxminRow = theTIME .. "," 
+						.. sensorVoltageMin .. "," 
+						.. sensorVoltageMax .. ","
+						.. sensorFuelMin .. ","
+						.. sensorFuelMax .. ","
+						.. sensorRPMMin .. ","
+						.. sensorRPMMax .. ","
+						.. sensorCurrentMin .. ","
+						.. sensorCurrentMax .. ","
+						.. sensorRSSIMin .. ","
+						.. sensorRSSIMax .. ","
+						.. sensorTempMCUMin .. ","
+						.. sensorTempMCUMax .. ","
+						.. sensorTempESCMin .. ","
+						.. sensorTempESCMax
+
+			table.insert(maxminFinals,1,maxminRow)
+		
+			if tablelength(maxminFinals) >= 9 then
+				table.remove(maxminFinals,9)
+			end
+	
+			writeHistory()
+			
+			govWasActive = false
+		end
+	
+	
         if sensors.govmode == "SPOOLUP" then
             govNearlyActive = 1
         end
@@ -1512,6 +1909,7 @@ function sensorsMAXMIN(sensors)
                 sensorTempESCMin = round(sensors.temp_esc / 100, 0)
                 sensorTempESCMax = round(sensors.temp_esc / 100, 0)
                 govNearlyActive = 0
+				govWasActive = true
             end
 
             if sensors.voltage < sensorVoltageMin then
@@ -1553,6 +1951,12 @@ function sensorsMAXMIN(sensors)
             if sensors.temp_mcu > sensorTempMCUMax then
                 sensorTempMCUMax = round(sensors.temp_mcu / 100, 0)
             end
+            if sensors.temp_esc < sensorTempESCMin then
+                sensorTempESCMin = round(sensors.temp_esc / 100, 0)
+            end
+            if sensors.temp_esc > sensorTempESCMax then
+                sensorTempESCMax = round(sensors.temp_esc / 100, 0)
+            end
         end
     else
         sensorVoltageMax = 0
@@ -1569,6 +1973,35 @@ function sensorsMAXMIN(sensors)
         sensorTempESCMax = 0
     end
 
+end
+
+function tablelength(T)
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
+end
+
+function print_r(arr, indentLevel)
+    local str = ""
+    local indentStr = "#"
+
+    if(indentLevel == nil) then
+        print(print_r(arr, 0))
+        return
+    end
+
+    for i = 0, indentLevel do
+        indentStr = indentStr.."\t"
+    end
+
+    for index,value in pairs(arr) do
+        if type(value) == "table" then
+            str = str..indentStr..index..": \n"..print_r(value, (indentLevel + 1))
+        else 
+            str = str..indentStr..index..": "..value.."\n"
+        end
+    end
+    return str
 end
 
 function kalmanCurrent(new, old)
@@ -1707,6 +2140,19 @@ function SecondsToClock(seconds)
     end
 end
 
+function SecondsToClockAlt(seconds)
+    local seconds = tonumber(seconds)
+
+    if seconds <= 0 then
+        return "00:00"
+    else
+        hours = string.format("%02.f", math.floor(seconds / 3600))
+        mins = string.format("%02.f", math.floor(seconds / 60 - (hours * 60)))
+        secs = string.format("%02.f", math.floor(seconds - hours * 3600 - mins * 60))
+        return  mins .. ":" .. secs
+    end
+end
+
 function SecondsFromTime(seconds)
     local seconds = tonumber(seconds)
 
@@ -1720,30 +2166,155 @@ function SecondsFromTime(seconds)
     end
 end
 
-local function read(widget)
-    fmsrcParam = storage.read("fmsrc")
-    btypeParam = storage.read("btype")
-    lowfuelParam = storage.read("lowfuel")
-    alertintParam = storage.read("alertint")
-    alrthptParam = storage.read("alrthptc")
-    maxminParam = storage.read("maxmin")
-    titleParam = storage.read("title")
-    cellsParam = storage.read("cells")
-    triggerswitchParam = storage.read("triggerswitch")
-    govmodeParam = storage.read("govmode")
+function spairs(t, order)
+    -- collect the keys
+    local keys = {}
+    for k in pairs(t) do keys[#keys+1] = k end
+
+    -- if order function given, sort by it by passing the table and keys a, b,
+    -- otherwise just sort the keys 
+    if order then
+        table.sort(keys, function(a,b) return order(t, a, b) end)
+    else
+        table.sort(keys)
+    end
+
+    -- return the iterator function
+    local i = 0
+    return function()
+        i = i + 1
+        if keys[i] then
+            return keys[i], t[keys[i]]
+        end
+    end
 end
 
-local function write(widget)
-    storage.write("fmsrc", fmsrcParam)
-    storage.write("btype", btypeParam)
-    storage.write("lowfuel", lowfuelParam)
-    storage.write("alertint", alertintParam)
-    storage.write("alrthptc", alrthptParam)
-    storage.write("maxmin", maxminParam)
-    storage.write("title", titleParam)
-    storage.write("cells", cellsParam)
-    storage.write("triggerswitch", triggerswitchParam)
-    storage.write("govmode", govmodeParam)
+function explode (inputstr, sep)
+        if sep == nil then
+                sep = "%s"
+        end
+        local t={}
+        for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+                table.insert(t, str)
+        end
+        return t
+end
+
+function ReadLine(f, line)
+    local i = 1 -- line counter
+    for l in f:lines() do -- lines iterator, "l" returns the line
+        if i == line then return l end -- we found this line, return it
+        i = i + 1 -- counting lines
+    end
+    return "" -- Doesn't have that line
+end
+
+
+function readHistory()
+
+
+		--[[
+		maxminFinals1 = storage.read("hs1")
+		maxminFinals2 = storage.read("hs2")
+		maxminFinals3 = storage.read("hs3")
+		maxminFinals4 = storage.read("hs4")
+		maxminFinals5 = storage.read("hs5")
+		maxminFinals6 = storage.read("hs6")
+		maxminFinals7 = storage.read("hs7")
+		maxminFinals8 = storage.read("hs8")
+		
+		table.insert(maxminFinals,maxminFinals1)
+		table.insert(maxminFinals,maxminFinals2)
+		table.insert(maxminFinals,maxminFinals3)
+		table.insert(maxminFinals,maxminFinals4)
+		table.insert(maxminFinals,maxminFinals5)
+		table.insert(maxminFinals,maxminFinals6)
+		table.insert(maxminFinals,maxminFinals7)
+		table.insert(maxminFinals,maxminFinals8)	
+		]]--		
+	
+		print("Reading history")
+		
+		name = model.name()		
+		file = "/scripts/rf2status/logs/" .. name .. ".log"
+		local f = assert(io.open(file, "rb"))
+
+		local rData
+		c = 0
+		tc = 1
+		while c <= 10 do
+			rData = io.read(f,"L")
+			if rData ~= "" or rData ~= nil then
+				maxminFinals[tc] = rData
+				tc = tc+1
+			end
+			c = c+1
+        end
+		io.close(f)
+		--table.sort(maxminFinals)
+
+		print_r(maxminFinals)
+		
+	
+
+end
+
+function writeHistory()
+
+		print("Writing history")
+		
+		name = model.name()
+		file = "/scripts/rf2status/logs/" .. name .. ".log"	
+		f = io.open(file,'w')
+		f:write("")
+		
+		f = io.open(file,'a')
+		for k,v in ipairs(maxminFinals) do
+			if v ~= nil then
+				v = v:gsub("%s+", "")
+				if v ~= "" then
+					print(v)
+					f:write(v .. "\n")
+				end
+			end
+		end
+		io.close(f)
+
+end
+
+local function read()
+		fmsrcParam = storage.read("fmsrc")
+		btypeParam = storage.read("btype")
+		lowfuelParam = storage.read("lowfuel")
+		alertintParam = storage.read("alertint")
+		alrthptParam = storage.read("alrthptc")
+		maxminParam = storage.read("maxmin")
+		titleParam = storage.read("title")
+		cellsParam = storage.read("cells")
+		triggerswitchParam = storage.read("triggerswitch")
+		govmodeParam = storage.read("govmode")
+				
+		readHistory()		
+
+		resetALL()
+end
+
+local function write()
+	
+
+
+		storage.write("fmsrc", fmsrcParam)
+		storage.write("btype", btypeParam)
+		storage.write("lowfuel", lowfuelParam)
+		storage.write("alertint", alertintParam)
+		storage.write("alrthptc", alrthptParam)
+		storage.write("maxmin", maxminParam)
+		storage.write("title", titleParam)
+		storage.write("cells", cellsParam)
+		storage.write("triggerswitch", triggerswitchParam)
+		storage.write("govmode", govmodeParam)	
+
+	
 end
 
 function playVoltage(widget)
@@ -1787,9 +2358,41 @@ end
 
 local function event(widget, category, value, x, y)
 
-  -- if in sumlation we capture a press long press php/down to trigger a fake govenor spool up
-  if environment.simulation == true then
 	print("Event received:", category, value, x, y)
+	
+	-- disable menu if governor active
+	--[[
+	if sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or
+                sensors.govmode == "ACTIVE" or
+                sensors.govmode == "LOST-HS" or
+                sensors.govmode == "BAILOUT" or
+                sensors.govmode == "RECOVERY" then
+		if category == EVT_TOUCH then
+			return true
+		end
+	end	
+		]]--
+	
+	if showLOGS then
+		if value == 35 then
+			showLOGS = false
+		end
+		
+		if category == EVT_TOUCH then		
+			if (x >= (closeButtonX) and  (x <= (closeButtonX + closeButtonW))) and 
+			   (y >= (closeButtonY) and  (y <= (closeButtonY + closeButtonH))) then
+				showLOGS = false		
+			end
+			return true
+		end	
+	end
+  	
+
+
+  -- if in sumlation we capture a press long press php/down to trigger a fake govenor spool up
+   
+  if environment.simulation == true then
+
 	
 	-- turn off governor
 	if sensors.govmode == 'ACTIVE' and value == 32 then
@@ -1809,6 +2412,7 @@ local function event(widget, category, value, x, y)
 	
 	
   end	
+  
 end
 
 local function wakeup(widget)
@@ -1826,18 +2430,34 @@ local function wakeup(widget)
     return
 end
 
+local function viewLogs()
+	showLOGS = true
+end
+
+local function menu(widget)
+
+return {
+      { "View logs", function() viewLogs() end},
+    }
+	
+end
+
+
 local function init()
     system.registerWidget(
         {
             key = "xkshss",
-            name = "RF2 Flight Status",
+            name = "Rotorflight Flight Status",
             create = create,
             configure = configure,
             paint = paint,
             wakeup = wakeup,
             read = read,
             write = write,
-			event = event
+			event = event,
+			menu = menu,
+			title = true,
+			persistent = false,
         }
     )
 
