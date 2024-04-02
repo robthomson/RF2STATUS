@@ -432,13 +432,13 @@ function getThemeInfo()
             fontTITLE = 768,
 			fontPopupTitle = FONT_S,
 			widgetTitleOffset = 20,
-			logsCOL1w = 100,
-			logsCOL2w = 120,
+			logsCOL1w = 50,
+			logsCOL2w = 100,
 			logsCOL3w = 100,
-			logsCOL4w = 100,
-			logsCOL5w = 100,
-			logsCOL6w = 100,
-			logsCOL7w = 100,
+			logsCOL4w = 140,
+			logsCOL5w = 0,
+			logsCOL6w = 0,
+			logsCOL7w = 75,
 			logsHeaderOffset = 5
         }
     end
@@ -465,13 +465,13 @@ function getThemeInfo()
             fontTITLE = 768,
 			fontPopupTitle = FONT_S,
 			widgetTitleOffset = 20,
-			logsCOL1w = 100,
-			logsCOL2w = 100,
-			logsCOL3w = 100,
-			logsCOL4w = 100,
-			logsCOL5w = 100,
-			logsCOL6w = 100,
-			logsCOL7w = 100,
+			logsCOL1w = 60,
+			logsCOL2w = 120,
+			logsCOL3w = 120,
+			logsCOL4w = 170,
+			logsCOL5w = 110,
+			logsCOL6w = 90,
+			logsCOL7w = 90,
 			logsHeaderOffset = 5
         }
     end
@@ -498,13 +498,13 @@ function getThemeInfo()
             fontTITLE = 768,
 			fontPopupTitle = FONT_S,
 			widgetTitleOffset = 20,
-			logsCOL1w = 100,
+			logsCOL1w = 50,
 			logsCOL2w = 100,
 			logsCOL3w = 100,
-			logsCOL4w = 100,
-			logsCOL5w = 100,
-			logsCOL6w = 100,
-			logsCOL7w = 100,
+			logsCOL4w = 140,
+			logsCOL5w = 0,
+			logsCOL6w = 0,
+			logsCOL7w = 75,
 			logsHeaderOffset = 5
         }
     end
@@ -531,13 +531,13 @@ function getThemeInfo()
             fontTITLE = FONT_XS,
 			fontPopupTitle = FONT_S,
 			widgetTitleOffset = 20,
-			logsCOL1w = 100,
+			logsCOL1w = 50,
 			logsCOL2w = 100,
 			logsCOL3w = 100,
-			logsCOL4w = 100,
-			logsCOL5w = 100,
-			logsCOL6w = 100,
-			logsCOL7w = 100,
+			logsCOL4w = 140,
+			logsCOL5w = 0,
+			logsCOL6w = 0,
+			logsCOL7w = 75,
 			logsHeaderOffset = 5
         }
     end
@@ -682,10 +682,17 @@ end
 function logsBOX()
 
     local theme = getThemeInfo()
-    local w, h = lcd.getWindowSize()	
-	boxW = w - math.floor((w * 2)/100)
-	boxH = h - math.floor((h * 4)/100)
-
+    local w, h = lcd.getWindowSize()
+	if w < 500 then
+		boxW = w
+	else
+		boxW = w - math.floor((w * 2)/100)	
+	end
+	if h < 200 then
+		boxH = h-2
+	else
+		boxH = h - math.floor((h * 4)/100)
+	end
 
 	--draw the background
 	if isDARKMODE then
@@ -713,6 +720,7 @@ function logsBOX()
 	str = "Log History"
 	lcd.font(theme.fontPopupTitle)
 	tsizeW, tsizeH = lcd.getTextSize(str)
+	
 	boxTh = boxH/9	
 	boxTy = h / 2 - boxH / 2
 	boxTx = w / 2 - boxW / 2
@@ -749,7 +757,7 @@ function logsBOX()
 	--LINES
 	lcd.drawLine(boxTx + boxTh/2, boxTy + (boxTh*2), boxTx + boxW - (boxTh/2), boxTy + (boxTh*2))
 		
-	lcd.drawLine(col2x, boxTy + boxTh + boxTh/2, col2x, boxTy + boxH - (boxTh/2))			
+	lcd.drawLine(col2x, boxTy + boxTh + boxTh/2, col2x, boxTy + boxH - (boxTh/2))
 	lcd.drawLine(col3x, boxTy + boxTh + boxTh/2, col3x, boxTy + boxH - (boxTh/2))		
 	lcd.drawLine(col4x, boxTy + boxTh + boxTh/2, col4x, boxTy + boxH - (boxTh/2))
 	lcd.drawLine(col5x, boxTy + boxTh + boxTh/2, col5x, boxTy + boxH - (boxTh/2))		
@@ -768,34 +776,47 @@ function logsBOX()
 	
 
 	
+	if theme.logsCOL1w ~= 0 then
+		str = "TIME"
+		tsizeW, tsizeH = lcd.getTextSize(str)					 
+		lcd.drawText(col1x + (theme.logsCOL1w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + ((boxTh/2) - (tsizeH / 2)) , str)
+	end
+
+	if theme.logsCOL2w ~= 0 then
+		str = "VOLTAGE"
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		lcd.drawText((col2x) + (theme.logsCOL2w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+	end
 	
-	str = "TIME"
-	tsizeW, tsizeH = lcd.getTextSize(str)					 
-	lcd.drawText(col1x + (theme.logsCOL1w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + ((boxTh/2) - (tsizeH / 2)) , str)
+	if theme.logsCOL3w ~= 0 then	
+		str = "AMPS"
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		lcd.drawText((col3x) + (theme.logsCOL3w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+	end
 
-	str = "VOLTAGE"
-	tsizeW, tsizeH = lcd.getTextSize(str)
-	lcd.drawText((col2x) + (theme.logsCOL2w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+	if theme.logsCOL4w ~= 0 then
+		str = "RPM"
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		lcd.drawText((col4x) + (theme.logsCOL4w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+	end
 
-	str = "AMPS"
-	tsizeW, tsizeH = lcd.getTextSize(str)
-	lcd.drawText((col3x) + (theme.logsCOL3w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+	if theme.logsCOL5w ~= 0 then
+		str = "LQ"
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		lcd.drawText((col5x) + (theme.logsCOL5w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+	end
 
-	str = "RPM"
-	tsizeW, tsizeH = lcd.getTextSize(str)
-	lcd.drawText((col4x) + (theme.logsCOL4w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+	if theme.logsCOL6w ~= 0 then
+		str = "MCU"
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		lcd.drawText((col6x) + (theme.logsCOL6w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)	
+	end
 
-	str = "LQ"
-	tsizeW, tsizeH = lcd.getTextSize(str)
-	lcd.drawText((col5x) + (theme.logsCOL5w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
-
-	str = "MCU"
-	tsizeW, tsizeH = lcd.getTextSize(str)
-	lcd.drawText((col6x) + (theme.logsCOL6w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)	
-
-	str = "ESC"
-	tsizeW, tsizeH = lcd.getTextSize(str)
-	lcd.drawText((col7x) + (theme.logsCOL7w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+	if theme.logsCOL7w ~= 0 then	
+		str = "ESC"
+		tsizeW, tsizeH = lcd.getTextSize(str)
+		lcd.drawText((col7x) + (theme.logsCOL7w/2) - (tsizeW / 2), theme.logsHeaderOffset +(boxTy + boxTh)  + (boxTh/2) - (tsizeH / 2) , str)
+	end
 	
 	c = 0
 	for index,value in pairs(maxminFinals) do
@@ -822,7 +843,7 @@ function logsBOX()
 					
 						if snsr ~= nil and snsr ~= "" then			
 							-- time
-							if idx == 1 then
+							if idx == 1 and theme.logsCOL1w ~= 0 then
 								str = SecondsToClockAlt(snsr)
 								tsizeW, tsizeH = lcd.getTextSize(str)
 								lcd.drawText(col1x + (theme.logsCOL1w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)					
@@ -832,7 +853,7 @@ function logsBOX()
 								vstr = snsr
 							end
 							-- voltagemax
-							if idx == 3 then
+							if idx == 3 and theme.logsCOL2w ~= 0 then
 								str = round(vstr/100,1) .. 'v / ' .. round(snsr/100,1) .. 'v'
 								tsizeW, tsizeH = lcd.getTextSize(str)
 								lcd.drawText(col2x + (theme.logsCOL2w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)	
@@ -850,7 +871,7 @@ function logsBOX()
 								rstr = snsr
 							end					
 							-- rpmmax
-							if idx == 7 then
+							if idx == 7 and theme.logsCOL4w ~= 0 then
 								str = rstr .. 'rpm / ' .. snsr .. 'rpm'
 								tsizeW, tsizeH = lcd.getTextSize(str)
 								lcd.drawText(col4x + (theme.logsCOL4w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)	
@@ -860,7 +881,7 @@ function logsBOX()
 								cstr = snsr
 							end					
 							-- currentmax
-							if idx == 9 then
+							if idx == 9 and theme.logsCOL3w ~= 0 then
 								str = math.floor(cstr/100) .. 'A / ' .. math.floor(snsr/100) .. 'A'
 								tsizeW, tsizeH = lcd.getTextSize(str)
 								lcd.drawText(col3x + (theme.logsCOL3w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)	
@@ -871,7 +892,7 @@ function logsBOX()
 								
 							end					
 							-- rssimax
-							if idx == 11 then
+							if idx == 11 and theme.logsCOL5w ~= 0 then
 								str = lqstr .. '% / ' .. snsr .. '%'
 								tsizeW, tsizeH = lcd.getTextSize(str)
 								lcd.drawText(col5x + (theme.logsCOL5w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)
@@ -881,7 +902,7 @@ function logsBOX()
 								mcustr = snsr
 							end					
 							-- mcumax
-							if idx == 13 then
+							if idx == 13 and theme.logsCOL6w ~= 0 then
 								str = mcustr .. '° / ' .. snsr .. '°'
 								strf = mcustr .. '. / ' .. snsr .. '.'
 								tsizeW, tsizeH = lcd.getTextSize(strf)
@@ -892,7 +913,7 @@ function logsBOX()
 								escstr = snsr
 							end					
 							-- escmax
-							if idx == 15 then
+							if idx == 15 and theme.logsCOL7w ~= 0 then
 								str = escstr .. '° / ' .. snsr .. '°'
 								strf = escstr .. '. / ' .. snsr .. '.'
 								tsizeW, tsizeH = lcd.getTextSize(strf)
@@ -902,9 +923,15 @@ function logsBOX()
 					-- end loop of each storage line		
 					end			
 					c = c+1
-					
-					if c > 7 then
-						break
+				
+					if h < 200 then
+						if c > 5 then
+							break
+						end						
+					else
+						if c > 7 then
+							break
+						end
 					end
 					--end of each log storage slot
 				end
@@ -1483,6 +1510,21 @@ function getSensors()
 			govmode = "IDLE"
 			fm = "DISABLED"
 			rssi = math.random(90, 100)		
+		elseif simDoSPOOLDOWN == true then
+			-- we are running simulation
+			tv = math.random(2100, 2274)
+			voltage = tv
+			rpm = math.random(0, 1510)		
+			current = math.random(1000, 2000)
+			temp_esc = math.random(1510, 2250)
+			temp_mcu = math.random(1510, 1850)
+			fuel = math.floor(math.random(15, 25))
+			mah = math.random(10000, 10100)
+			govmode = "THR-OFF"
+			fm = "DISABLED"
+			rssi = math.random(90, 100)
+			
+			simDoSPOOLDOWN	= true		
 		else
 			-- we are running simulation
 			tv = math.random(2100, 2274)
@@ -2361,34 +2403,48 @@ local function event(widget, category, value, x, y)
 	print("Event received:", category, value, x, y)
 	
 	-- disable menu if governor active
-	--[[
-	if sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or
-                sensors.govmode == "ACTIVE" or
-                sensors.govmode == "LOST-HS" or
-                sensors.govmode == "BAILOUT" or
-                sensors.govmode == "RECOVERY" then
-		if category == EVT_TOUCH then
-			return true
-		end
-	end	
-		]]--
+	if environment.simulation ~= true then
+		if sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or
+					sensors.govmode == "ACTIVE" or
+					sensors.govmode == "LOST-HS" or
+					sensors.govmode == "BAILOUT" or
+					sensors.govmode == "RECOVERY" then
+			if category == EVT_TOUCH then
+				return true
+			end
+		end	
+	end
+
+	if closingLOGS then
+		if category == EVT_TOUCH and (value == 16640 or value == 16641)  then				
+				closingLOGS = false
+				return true
+		end	
+		
+	end
+		
 	
 	if showLOGS then
 		if value == 35 then
 			showLOGS = false
 		end
 		
-		if category == EVT_TOUCH then		
+		if category == EVT_TOUCH and (value == 16640 or value == 16641)  then		
 			if (x >= (closeButtonX) and  (x <= (closeButtonX + closeButtonW))) and 
 			   (y >= (closeButtonY) and  (y <= (closeButtonY + closeButtonH))) then
 				showLOGS = false		
+				closingLOGS = true
 			end
 			return true
+		else
+			if category == EVT_TOUCH then
+				return true
+			end
 		end	
+		
 	end
+	
   	
-
-
   -- if in sumlation we capture a press long press php/down to trigger a fake govenor spool up
    
   if environment.simulation == true then
@@ -2396,6 +2452,7 @@ local function event(widget, category, value, x, y)
 	
 	-- turn off governor
 	if sensors.govmode == 'ACTIVE' and value == 32 then
+		simDoSPOOLDOWN = true
 		simDoSPOOLUP = false
 	end
 	
