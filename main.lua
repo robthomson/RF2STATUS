@@ -2513,7 +2513,6 @@ local function init()
             write = write,
 			event = event,
 			menu = menu,
-			title = true,
 			persistent = false,
         }
     )
