@@ -1832,7 +1832,7 @@ function sensorsMAXMIN(sensors)
 	
 	
 		-- store the last values
-		if govWasActive and sensors.govmode == 'IDLE' then
+		if govWasActive and sensors.govmode == 'THR-OFF' then
 		
 	
 			--if maxminFinals == nil then 
