@@ -882,7 +882,7 @@ function logsBOX()
 							end					
 							-- currentmax
 							if idx == 9 and theme.logsCOL3w ~= 0 then
-								str = math.floor(cstr/100) .. 'A / ' .. math.floor(snsr/100) .. 'A'
+								str = math.floor(cstr/10) .. 'A / ' .. math.floor(snsr/10) .. 'A'
 								tsizeW, tsizeH = lcd.getTextSize(str)
 								lcd.drawText(col3x + (theme.logsCOL3w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)	
 							end							
@@ -1222,7 +1222,7 @@ local function paint(widget)
 	
 			
 
-			sensorVALUE = sensors.current/100
+			sensorVALUE = sensors.current/10
 			
 			if titleParam == 1 then
 				sensorTITLE = theme.title_current
@@ -1233,13 +1233,13 @@ local function paint(widget)
 			if sensorCurrentMin == 0 or sensorCurrentMin == nil then
 					sensorMIN = "-"
 			else 
-					sensorMIN = sensorCurrentMin
+					sensorMIN = sensorCurrentMin/10
 			end
 			
 			if sensorCurrentMax == 0 or sensorCurrentMax == nil then
 					sensorMAX = "-"
 			else 
-					sensorMAX = sensorCurrentMax
+					sensorMAX = sensorCurrentMax/10
 			end
 	
 			telemetryBox(posX,posY,boxW,boxH,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
@@ -1910,13 +1910,9 @@ function sensorsMAXMIN(sensors)
 	
 	
 		-- store the last values
+	
 		if govWasActive and (sensors.govmode == 'OFF' or sensors.govmode == 'DISABLED' or sensors.govmode == 'DISARMED' or sensors.govmode == 'UNKNOWN') then
 		
-	
-			--if maxminFinals == nil then 
-			--	maxminFinals = {}
-			--end	
-			
 			table.sort(maxminFinals)
 				
 			local maxminRow = theTIME .. "," 
@@ -2290,26 +2286,6 @@ end
 
 function readHistory()
 
-
-		--[[
-		maxminFinals1 = storage.read("hs1")
-		maxminFinals2 = storage.read("hs2")
-		maxminFinals3 = storage.read("hs3")
-		maxminFinals4 = storage.read("hs4")
-		maxminFinals5 = storage.read("hs5")
-		maxminFinals6 = storage.read("hs6")
-		maxminFinals7 = storage.read("hs7")
-		maxminFinals8 = storage.read("hs8")
-		
-		table.insert(maxminFinals,maxminFinals1)
-		table.insert(maxminFinals,maxminFinals2)
-		table.insert(maxminFinals,maxminFinals3)
-		table.insert(maxminFinals,maxminFinals4)
-		table.insert(maxminFinals,maxminFinals5)
-		table.insert(maxminFinals,maxminFinals6)
-		table.insert(maxminFinals,maxminFinals7)
-		table.insert(maxminFinals,maxminFinals8)	
-		]]--		
 	
 		print("Reading history")
 		
@@ -2321,7 +2297,11 @@ function readHistory()
 		c = 0
 		tc = 1
 		while c <= 10 do
-			rData = io.read(f,"L")
+			if c == 0 then
+				rData = io.read(f,"l")
+			else
+				rData = io.read(f,"L")
+			end
 			if rData ~= "" or rData ~= nil then
 				maxminFinals[tc] = rData
 				tc = tc+1
