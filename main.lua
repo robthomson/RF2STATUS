@@ -46,10 +46,13 @@ local govmodeParam = 0
 
 local timerWASActive = false
 local govWasActive = false
+local maxMinSaved = false
+
 local simPreSPOOLUP=false
 local simDoSPOOLUP=false
 local simDODISARM=false
 local simDoSPOOLUPCount = 0
+
 
 local maxminFinals = {}
 local maxminFinals1 = nil
@@ -1909,40 +1912,6 @@ function sensorsMAXMIN(sensors)
     if linkUP ~= 0 then
 	
 	
-		-- store the last values
-	
-		if govWasActive and (sensors.govmode == 'OFF' or sensors.govmode == 'DISABLED' or sensors.govmode == 'DISARMED' or sensors.govmode == 'UNKNOWN') then
-		
-			table.sort(maxminFinals)
-				
-			local maxminRow = theTIME .. "," 
-						.. sensorVoltageMin .. "," 
-						.. sensorVoltageMax .. ","
-						.. sensorFuelMin .. ","
-						.. sensorFuelMax .. ","
-						.. sensorRPMMin .. ","
-						.. sensorRPMMax .. ","
-						.. sensorCurrentMin .. ","
-						.. sensorCurrentMax .. ","
-						.. sensorRSSIMin .. ","
-						.. sensorRSSIMax .. ","
-						.. sensorTempMCUMin .. ","
-						.. sensorTempMCUMax .. ","
-						.. sensorTempESCMin .. ","
-						.. sensorTempESCMax
-
-			table.insert(maxminFinals,1,maxminRow)
-		
-			if tablelength(maxminFinals) >= 9 then
-				table.remove(maxminFinals,9)
-			end
-	
-			writeHistory()
-			
-			govWasActive = false
-		end
-	
-	
         if sensors.govmode == "SPOOLUP" then
             govNearlyActive = 1
         end
@@ -1983,7 +1952,6 @@ function sensorsMAXMIN(sensors)
                 sensorTempESCMin = round(sensors.temp_esc / 100, 0)
                 sensorTempESCMax = round(sensors.temp_esc / 100, 0)
                 govNearlyActive = 0
-				govWasActive = true
             end
 
             if sensors.voltage < sensorVoltageMin then
@@ -2031,7 +1999,63 @@ function sensorsMAXMIN(sensors)
             if sensors.temp_esc > sensorTempESCMax then
                 sensorTempESCMax = round(sensors.temp_esc / 100, 0)
             end
+			
+			govWasActive = true
         end
+		
+		-- store the last values
+		if govWasActive and (sensors.govmode == 'OFF' or sensors.govmode == 'DISABLED' or sensors.govmode == 'DISARMED' or sensors.govmode == 'UNKNOWN') then
+			govWasActive = false	
+
+			local maxminRow = theTIME .. "," 
+						.. sensorVoltageMin .. "," 
+						.. sensorVoltageMax .. ","
+						.. sensorFuelMin .. ","
+						.. sensorFuelMax .. ","
+						.. sensorRPMMin .. ","
+						.. sensorRPMMax .. ","
+						.. sensorCurrentMin .. ","
+						.. sensorCurrentMax .. ","
+						.. sensorRSSIMin .. ","
+						.. sensorRSSIMax .. ","
+						.. sensorTempMCUMin .. ","
+						.. sensorTempMCUMax .. ","
+						.. sensorTempESCMin .. ","
+						.. sensorTempESCMax
+		
+			print("Row: ".. maxminRow )
+
+			table.insert(maxminFinals,1,maxminRow)
+			table.sort(maxminFinals)
+			if tablelength(maxminFinals) >= 9 then
+				table.remove(maxminFinals,9)			
+			end
+
+			print("Writing history")
+
+			name = string.gsub(model.name(), "%s+", "_")	
+			name = string.gsub(name, "%W", "_")		
+			
+			file = "/scripts/rf2status/logs/" .. name .. ".log"	
+			f = io.open(file,'w')
+			f:write("")
+			io.close(f)	
+			
+			f = io.open(file,'a')
+			for k,v in ipairs(maxminFinals) do
+				if v ~= nil then
+					v = v:gsub("%s+", "")
+					--if v ~= "" then
+						print(v)
+						f:write(v .. "\n")
+					--end
+				end
+			end
+			io.close(f)			
+		
+				
+		end		
+		
     else
         sensorVoltageMax = 0
         sensorVoltageMin = 0
@@ -2289,7 +2313,8 @@ function readHistory()
 	
 		print("Reading history")
 		
-		name = model.name()		
+		name = string.gsub(model.name(), "%s+", "_")	
+		name = string.gsub(name, "%W", "_")
 		file = "/scripts/rf2status/logs/" .. name .. ".log"
 		local f = assert(io.open(file, "rb"))
 
@@ -2309,7 +2334,7 @@ function readHistory()
 			c = c+1
         end
 		io.close(f)
-		--table.sort(maxminFinals)
+
 
 		print_r(maxminFinals)
 		
@@ -2317,28 +2342,7 @@ function readHistory()
 
 end
 
-function writeHistory()
 
-		print("Writing history")
-		
-		name = model.name()
-		file = "/scripts/rf2status/logs/" .. name .. ".log"	
-		f = io.open(file,'w')
-		f:write("")
-		
-		f = io.open(file,'a')
-		for k,v in ipairs(maxminFinals) do
-			if v ~= nil then
-				v = v:gsub("%s+", "")
-				if v ~= "" then
-					print(v)
-					f:write(v .. "\n")
-				end
-			end
-		end
-		io.close(f)
-
-end
 
 local function read()
 		fmsrcParam = storage.read("fmsrc")
