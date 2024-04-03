@@ -55,7 +55,7 @@ local simPreSPOOLUP=false
 local simDoSPOOLUP=false
 local simDODISARM=false
 local simDoSPOOLUPCount = 0
-
+local actTime
 
 local maxminFinals1 = nil
 local maxminFinals2 = nil
@@ -682,12 +682,10 @@ function logsBOX()
 
 	if readLOGS == false then
 		local history = readHistory()	
-		table.sort(history)
 		readLOGSlast = history
 		readLOGS = true
 	else	
 		history = readLOGSlast
-		table.sort(history)
 	end
 
     local theme = getThemeInfo()
@@ -831,7 +829,7 @@ function logsBOX()
 
 
 	
-	for index,value in pairs(history) do
+	for index,value in ipairs(history) do
 		
 
 		if value ~= nil then
@@ -1567,7 +1565,9 @@ function getSensors()
 			current = math.random(1100, 1150)					
 			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
 		end
-
+		
+		
+		
 		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 20 then
 			govmode = "ACTIVE"
 			rpm = math.random(810, 820)	
@@ -1575,21 +1575,22 @@ function getSensors()
 			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
 		end		
 
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 100 then
+		
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= actTime + 10 then
 			govmode = "THR-OFF"
 			rpm = math.random(200, 300)	
 			current = math.random(100, 200)				
 			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
 		end		
 
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 120 then
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= actTime + 20 then
 			govmode = "IDLE"
 			rpm = math.random(0, 0)	
 			current = math.random(20, 20)				
 			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
 		end		
 
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 150 then
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= actTime + 50 then
 			govmode = "OFF"
 			simDoSPOOLUPCount = 0
 			simDoSPOOLUP = false
@@ -2046,7 +2047,6 @@ function sensorsMAXMIN(sensors)
 			print("Row: ".. maxminRow )
 
 			table.insert(maxminFinals,1,maxminRow)
-			table.sort(maxminFinals)
 			if tablelength(maxminFinals) >= 9 then
 				table.remove(maxminFinals,9)			
 			end
@@ -2074,6 +2074,9 @@ function sensorsMAXMIN(sensors)
 			io.close(f)			
 		
 			readLOGS = false	
+			
+			system.playFile("/scripts/rf2status/sounds/savelog.wav")
+			
 		end		
 		
     else
@@ -2112,7 +2115,7 @@ function print_r(arr, indentLevel)
         indentStr = indentStr.."\t"
     end
 
-    for index,value in pairs(arr) do
+    for index,value in ipairs(arr) do
         if type(value) == "table" then
             str = str..indentStr..index..": \n"..print_r(value, (indentLevel + 1))
         else 
@@ -2497,7 +2500,8 @@ local function event(widget, category, value, x, y)
 	if (sensors.govmode == 'OFF' or sensors.govmode == 'DISABLED' or sensors.govmode == 'DISARMED' or sensors.govmode == 'UNKNOWN') and value == 32 then
 		simDoSPOOLUP = true
 		govNearlyActive = 1
-		timerNearlyActive = 1		
+		timerNearlyActive = 1
+		actTime = math.random(200,400) -- random run time when simulation of govener
 	end
 		
 	
