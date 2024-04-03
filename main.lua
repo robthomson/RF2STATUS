@@ -46,6 +46,7 @@ local titleParam = 1
 local cellsParam = 6
 local triggerswitchParam = nil
 local govmodeParam = 0
+local govParam = 1
 
 local timerWASActive = false
 local govWasActive = false
@@ -94,6 +95,7 @@ temp_mcuNoiseQ = 500
 temp_escNoiseQ = 500
 rssiNoiseQ = 50
 currentNoiseQ = 150
+
 
 local function create(widget)
     gfx_model = lcd.loadBitmap(model.bitmap())
@@ -216,6 +218,20 @@ local function configure(widget)
         end,
         function(newValue)
             alrthptParam = newValue
+        end
+    )
+
+    -- TITLE DISPLAY
+    line = form.addLine("GOV. ANNOUNCEMENTS")
+    form.addChoiceField(
+        line,
+        nil,
+        {{"NO", 0}, {"YES", 1}},
+        function()
+            return govParam
+        end,
+        function(newValue)
+            govParam = newValue
         end
     )
 
@@ -1928,10 +1944,21 @@ function sensorsMAXMIN(sensors)
 
 
     if linkUP ~= 0 then
+
+		if sensors.govmode == "OFF" then
+			spoolupNearlyActive = 1
+		end
 	
 	
         if sensors.govmode == "SPOOLUP" then
             govNearlyActive = 1
+			
+			if spoolupNearlyActive == 1 then
+				if govParam == 1 then
+						system.playFile("/scripts/rf2status/sounds/sup.wav")
+				end		
+				spoolupNearlyActive = 0				
+			end	
         end
 
 	
@@ -1970,6 +1997,11 @@ function sensorsMAXMIN(sensors)
                 sensorTempESCMin = round(sensors.temp_esc / 100, 0)
                 sensorTempESCMax = round(sensors.temp_esc / 100, 0)
                 govNearlyActive = 0
+				
+				if govParam == 1 then
+						system.playFile("/scripts/rf2status/sounds/hs.wav")
+				end
+				
             end
 
             if sensors.voltage < sensorVoltageMin then
@@ -2024,6 +2056,10 @@ function sensorsMAXMIN(sensors)
 		-- store the last values
 		if govWasActive and (sensors.govmode == 'OFF' or sensors.govmode == 'DISABLED' or sensors.govmode == 'DISARMED' or sensors.govmode == 'UNKNOWN') then
 			govWasActive = false	
+
+				if govParam == 1 then
+						system.playFile("/scripts/rf2status/sounds/sdwn.wav")
+				end
 
 			local maxminFinals = readHistory()	
 
@@ -2383,6 +2419,7 @@ local function read()
 		cellsParam = storage.read("cells")
 		triggerswitchParam = storage.read("triggerswitch")
 		govmodeParam = storage.read("govmode")
+		govParam = storage.read("governoralerts")
 				
 		resetALL()
 end
@@ -2401,7 +2438,7 @@ local function write()
 		storage.write("cells", cellsParam)
 		storage.write("triggerswitch", triggerswitchParam)
 		storage.write("govmode", govmodeParam)	
-
+		storage.write("governoralerts",govParam)
 	
 end
 
