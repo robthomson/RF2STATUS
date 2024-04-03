@@ -465,13 +465,13 @@ function getThemeInfo()
             fontTITLE = 768,
 			fontPopupTitle = FONT_S,
 			widgetTitleOffset = 20,
-			logsCOL1w = 60,
-			logsCOL2w = 120,
+			logsCOL1w = 70,
+			logsCOL2w = 140,
 			logsCOL3w = 120,
 			logsCOL4w = 170,
-			logsCOL5w = 110,
-			logsCOL6w = 90,
-			logsCOL7w = 90,
+			logsCOL5w = 0,
+			logsCOL6w = 0,
+			logsCOL7w = 120,
 			logsHeaderOffset = 5
         }
     end
@@ -1524,43 +1524,52 @@ function getSensors()
 		temp_mcu = math.random(1510, 1850)
 		mah = math.random(10000, 10100)
 		fuel = 0
-
+		fm = "DISABLED"
+		rssi = math.random(90, 100)		
 
 		if simDoSPOOLUP == false then
 			-- these ones do a scale up in simulation
 			rpm = math.random(0, 0)		
 			current = math.random(10, 20)
 			govmode = "OFF"
-			fm = "DISABLED"
-			rssi = math.random(90, 100)		
 		end
 		
 		if simDoSPOOLUP == true and simDoSPOOLUPCount == 0 then
 			govmode = "SPOOLUP"
+			rpm = math.random(750, 800)		
+			current = math.random(1000, 1100)			
 			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
 		end
 
 		if simDoSPOOLUP == true and simDoSPOOLUPCount ~= 0 then
 			govmode = "SPOOLUP"
+			rpm = math.random(800, 810)	
+			current = math.random(1100, 1150)					
 			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
 		end
 
 		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 20 then
 			govmode = "ACTIVE"
+			rpm = math.random(810, 820)	
+			current = math.random(1150, 1200)			
 			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
 		end		
 
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 50 then
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 100 then
 			govmode = "THR-OFF"
+			rpm = math.random(200, 300)	
+			current = math.random(100, 200)				
 			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
 		end		
 
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 55 then
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 120 then
 			govmode = "IDLE"
+			rpm = math.random(0, 0)	
+			current = math.random(20, 20)				
 			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
 		end		
 
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 60 then
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 150 then
 			govmode = "OFF"
 			simDoSPOOLUPCount = 0
 			simDoSPOOLUP = false
