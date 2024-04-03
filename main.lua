@@ -677,6 +677,7 @@ end
 function logsBOX()
 
 	local history = readHistory()	
+	table.sort(history)
 
     local theme = getThemeInfo()
     local w, h = lcd.getWindowSize()
