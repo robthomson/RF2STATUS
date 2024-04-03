@@ -49,7 +49,7 @@ local govWasActive = false
 local simPreSPOOLUP=false
 local simDoSPOOLUP=false
 local simDODISARM=false
-
+local simDoSPOOLUPCount = 0
 
 local maxminFinals = {}
 local maxminFinals1 = nil
@@ -1108,9 +1108,9 @@ local function paint(widget)
 				sensorWARN = true	
 			end
 		
-			if sensors.fuel > 5 then
-				sensorVALUE = sensors.fuel
-			else
+			sensorVALUE = sensors.fuel
+		
+			if sensors.fuel < 5 then
 				sensorVALUE = "0"
 			end
 		
@@ -1131,7 +1131,7 @@ local function paint(widget)
 			else 
 					sensorMAX = sensorFuelMax
 			end
-			
+
 			telemetryBox(posX,posY,boxW,boxH,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
 		end
 
@@ -1143,8 +1143,12 @@ local function paint(widget)
 			sensorUNIT = "rpm"
 			sensorWARN = false
 			smallBOX = false
-		
+
 			sensorVALUE = sensors.rpm
+			
+			if sensors.rpm < 5 then
+				sensorVALUE = 0
+			end
 		
 			if titleParam == 1 then
 				sensorTITLE = theme.title_rpm
@@ -1181,6 +1185,10 @@ local function paint(widget)
 			end
 		
 			sensorVALUE = sensors.voltage/100
+			
+			if sensorVALUE < 1 then
+				sensorVALUE = 0
+			end
 		
 			if titleParam == 1 then
 				sensorTITLE = theme.title_voltage
@@ -1212,6 +1220,7 @@ local function paint(widget)
 			sensorWARN = false	
 			smallBOX = false
 	
+			
 
 			sensorVALUE = sensors.current/100
 			
@@ -1246,6 +1255,10 @@ local function paint(widget)
 			smallBOX = true	
 	
 			sensorVALUE = round(sensors.temp_esc/100,0)
+			
+			if sensorVALUE < 1 then
+				sensorVALUE = 0 
+			end
 		
 			if titleParam == 1 then
 				sensorTITLE = theme.title_tempESC
@@ -1278,6 +1291,10 @@ local function paint(widget)
 			smallBOX = true	
 	
 			sensorVALUE = round(sensors.temp_mcu/100,0)
+		
+			if sensorVALUE < 1 then
+				sensorVALUE = 0 
+			end
 			
 			if titleParam == 1 then
 				sensorTITLE = theme.title_tempMCU
@@ -1310,6 +1327,10 @@ local function paint(widget)
 			smallBOX = true	
 	
 			sensorVALUE = sensors.rssi
+			
+			if sensorVALUE < 1 then
+				sensorVALUE = 0 
+			end
 			
 			if titleParam == 1 then
 				sensorTITLE = theme.title_rssi
@@ -1497,49 +1518,53 @@ function getSensors()
 	
 		lcd.resetFocusTimeout()	
 
+		tv = math.random(2100, 2274)
+		voltage = tv
+		temp_esc = math.random(1510, 2250)
+		temp_mcu = math.random(1510, 1850)
+		mah = math.random(10000, 10100)
+		fuel = 0
+
+
 		if simDoSPOOLUP == false then
-			-- we are running simulation
-			tv = math.random(2100, 2274)
-			voltage = tv
-			rpm = math.random(0, 1510)		
-			current = math.random(1000, 2000)
-			temp_esc = math.random(1510, 2250)
-			temp_mcu = math.random(1510, 1850)
-			fuel = math.floor(math.random(15, 25))
-			mah = math.random(10000, 10100)
-			govmode = "IDLE"
+			-- these ones do a scale up in simulation
+			rpm = math.random(0, 0)		
+			current = math.random(10, 20)
+			govmode = "OFF"
 			fm = "DISABLED"
 			rssi = math.random(90, 100)		
-		elseif simDoSPOOLDOWN == true then
-			-- we are running simulation
-			tv = math.random(2100, 2274)
-			voltage = tv
-			rpm = math.random(0, 1510)		
-			current = math.random(1000, 2000)
-			temp_esc = math.random(1510, 2250)
-			temp_mcu = math.random(1510, 1850)
-			fuel = math.floor(math.random(15, 25))
-			mah = math.random(10000, 10100)
-			govmode = "THR-OFF"
-			fm = "DISABLED"
-			rssi = math.random(90, 100)
-			
-			simDoSPOOLDOWN	= true		
-		else
-			-- we are running simulation
-			tv = math.random(2100, 2274)
-			voltage = tv
-			rpm = math.random(0, 1510)		
-			current = math.random(1000, 2000)
-			temp_esc = math.random(1510, 2250)
-			temp_mcu = math.random(1510, 1850)
-			fuel = math.floor(math.random(15, 25))
-			mah = math.random(10000, 10100)
-			govmode = "ACTIVE"
-			fm = "DISABLED"
-			rssi = math.random(90, 100)
+		end
+		
+		if simDoSPOOLUP == true and simDoSPOOLUPCount == 0 then
+			govmode = "SPOOLUP"
+			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
 		end
 
+		if simDoSPOOLUP == true and simDoSPOOLUPCount ~= 0 then
+			govmode = "SPOOLUP"
+			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
+		end
+
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 20 then
+			govmode = "ACTIVE"
+			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
+		end		
+
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 50 then
+			govmode = "THR-OFF"
+			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
+		end		
+
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 55 then
+			govmode = "IDLE"
+			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
+		end		
+
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 60 then
+			govmode = "OFF"
+			simDoSPOOLUPCount = 0
+			simDoSPOOLUP = false
+		end			
 		
 		
     elseif linkUP ~= 0 then
@@ -1787,12 +1812,14 @@ function getSensors()
         rssi = linkUP
     end
 
+
+
     if voltage ~= 0 and (fuel == 0) then
         maxCellVoltage = 4.196
         minCellVoltage = 3.2
         avgCellVoltage = voltage / cellsParam
         batteryPercentage = 100 * (avgCellVoltage - minCellVoltage) / (maxCellVoltage - minCellVoltage)
-        sensors.fuel = batteryPercentage
+        fuel = batteryPercentage
         if fuel > 100 then
             fuel = 100
         end
@@ -2445,28 +2472,18 @@ local function event(widget, category, value, x, y)
 	end
 	
   	
-  -- if in sumlation we capture a press long press php/down to trigger a fake govenor spool up
+  -- if in simlation we capture a  page  press  to trigger a fake govenor spool up and then down
    
   if environment.simulation == true then
 
 	
-	-- turn off governor
-	if sensors.govmode == 'ACTIVE' and value == 32 then
-		simDoSPOOLDOWN = true
-		simDoSPOOLUP = false
-	end
-	
-	if sensors.govmode == 'IDLE' and category == 0 and value == 64 then
-		-- flag that release of pgdown = start spoolup
-		simPreSPOOLUP = true
-		govNearlyActive = 1
-		timerNearlyActive = 1
-	end
-	if sensors.govmode == 'IDLE' and category == 0 and value == 32 and simPreSPOOLUP == true then
-		-- flag that release of pgdown = start spoolup
+	-- fire up  governor
+	if (sensors.govmode == 'OFF' or sensors.govmode == 'DISABLED' or sensors.govmode == 'DISARMED' or sensors.govmode == 'UNKNOWN') and value == 32 then
 		simDoSPOOLUP = true
-	end	
-	
+		govNearlyActive = 1
+		timerNearlyActive = 1		
+	end
+		
 	
   end	
   
