@@ -33,6 +33,7 @@ local fuelIsLow = false
 
 local showLOGS=false
 
+
 local fmsrcParam = 0
 local btypeParam = 0
 local lowfuelParam = 20
@@ -54,7 +55,6 @@ local simDODISARM=false
 local simDoSPOOLUPCount = 0
 
 
-local maxminFinals = {}
 local maxminFinals1 = nil
 local maxminFinals2 = nil
 local maxminFinals3 = nil
@@ -116,14 +116,6 @@ local function create(widget)
         cells = 6,
         triggerswitch = nil,
         govmode = 0,
-		maxminFinals1 = nil,
-		maxminFinals2 = nil,
-		maxminFinals3 = nil,
-		maxminFinals4 = nil,
-		maxminFinals5 = nil,
-		maxminFinals6 = nil,
-		maxminFinals7 = nil,
-		maxminFinals8 = nil
     }
 end
 
@@ -684,6 +676,8 @@ end
 
 function logsBOX()
 
+	local history = readHistory()	
+
     local theme = getThemeInfo()
     local w, h = lcd.getWindowSize()
 	if w < 500 then
@@ -822,7 +816,12 @@ function logsBOX()
 	end
 	
 	c = 0
-	for index,value in pairs(maxminFinals) do
+
+
+	
+	for index,value in pairs(history) do
+		
+
 		if value ~= nil then
 			if value ~= "" and value ~= nil then
 				rowH = c * boxTh
@@ -830,6 +829,7 @@ function logsBOX()
 
 				
 				local rowData = explode(value,",")
+	
 	
 				--[[ rowData is a csv string as follows
 				
@@ -842,6 +842,7 @@ function logsBOX()
 				
 					for idx,snsr in pairs(rowData) do
 					
+					
 						snsr = snsr:gsub("%s+", "")
 					
 						if snsr ~= nil and snsr ~= "" then			
@@ -849,7 +850,7 @@ function logsBOX()
 							if idx == 1 and theme.logsCOL1w ~= 0 then
 								str = SecondsToClockAlt(snsr)
 								tsizeW, tsizeH = lcd.getTextSize(str)
-								lcd.drawText(col1x + (theme.logsCOL1w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)					
+								lcd.drawText(col1x + (theme.logsCOL1w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)
 							end
 							-- voltagemin
 							if idx == 2 then
@@ -1223,9 +1224,13 @@ local function paint(widget)
 			sensorWARN = false	
 			smallBOX = false
 	
-			
-
+	
 			sensorVALUE = sensors.current/10
+
+			if sensorVALUE <= 0.5 then
+				sensorVALUE = 0
+			end
+
 			
 			if titleParam == 1 then
 				sensorTITLE = theme.title_current
@@ -2007,6 +2012,9 @@ function sensorsMAXMIN(sensors)
 		if govWasActive and (sensors.govmode == 'OFF' or sensors.govmode == 'DISABLED' or sensors.govmode == 'DISARMED' or sensors.govmode == 'UNKNOWN') then
 			govWasActive = false	
 
+			local maxminFinals = readHistory()	
+
+
 			local maxminRow = theTIME .. "," 
 						.. sensorVoltageMin .. "," 
 						.. sensorVoltageMax .. ","
@@ -2310,14 +2318,16 @@ end
 
 function readHistory()
 
+	local history = {}
+	print("Reading history")
 	
-		print("Reading history")
-		
-		name = string.gsub(model.name(), "%s+", "_")	
-		name = string.gsub(name, "%W", "_")
-		file = "/scripts/rf2status/logs/" .. name .. ".log"
-		local f = assert(io.open(file, "rb"))
-
+	name = string.gsub(model.name(), "%s+", "_")	
+	name = string.gsub(name, "%W", "_")
+	file = "/scripts/rf2status/logs/" .. name .. ".log"
+	local f = io.open(file, "rb")
+	
+	if f ~= nil then
+		--file exists
 		local rData
 		c = 0
 		tc = 1
@@ -2328,15 +2338,18 @@ function readHistory()
 				rData = io.read(f,"L")
 			end
 			if rData ~= "" or rData ~= nil then
-				maxminFinals[tc] = rData
+				history[tc] = rData
 				tc = tc+1
 			end
 			c = c+1
-        end
+		end
 		io.close(f)
+	else
+		return history
+	end	
 
 
-		print_r(maxminFinals)
+	return history
 		
 	
 
@@ -2356,8 +2369,6 @@ local function read()
 		triggerswitchParam = storage.read("triggerswitch")
 		govmodeParam = storage.read("govmode")
 				
-		readHistory()		
-
 		resetALL()
 end
 
@@ -2487,6 +2498,7 @@ local function wakeup(widget)
 
     linkUP = getRSSI()
     sensors = getSensors()
+	
 
     if refresh == true then
         sensorsMAXMIN(sensors)	
@@ -2499,6 +2511,7 @@ end
 
 local function viewLogs()
 	showLOGS = true
+	
 end
 
 local function menu(widget)
