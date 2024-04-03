@@ -32,6 +32,8 @@ local voltageIsLow = false
 local fuelIsLow = false
 
 local showLOGS=false
+local readLOGS=false
+local readLOGSlast = {}
 
 
 local fmsrcParam = 0
@@ -676,8 +678,17 @@ end
 
 function logsBOX()
 
-	local history = readHistory()	
-	table.sort(history)
+	
+
+	if readLOGS == false then
+		local history = readHistory()	
+		table.sort(history)
+		readLOGSlast = history
+		readLOGS = true
+	else	
+		history = readLOGSlast
+		table.sort(history)
+	end
 
     local theme = getThemeInfo()
     local w, h = lcd.getWindowSize()
@@ -2062,7 +2073,7 @@ function sensorsMAXMIN(sensors)
 			end
 			io.close(f)			
 		
-				
+			readLOGS = false	
 		end		
 		
     else
