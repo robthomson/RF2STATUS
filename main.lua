@@ -35,6 +35,8 @@ local showLOGS=false
 local readLOGS=false
 local readLOGSlast = {}
 
+local playGovernorCount = 0
+local playGovernorLastState = nil
 
 local fmsrcParam = 0
 local btypeParam = 0
@@ -46,7 +48,7 @@ local titleParam = 1
 local cellsParam = 6
 local triggerswitchParam = nil
 local govmodeParam = 0
-local govParam = 1
+local governorAlertsParam = 1
 
 local timerWASActive = false
 local govWasActive = false
@@ -222,18 +224,19 @@ local function configure(widget)
     )
 
     -- TITLE DISPLAY
-    line = form.addLine("GOV. ANNOUNCEMENTS")
+    line = form.addLine("GOV. ALERTS")
     form.addChoiceField(
         line,
         nil,
         {{"NO", 0}, {"YES", 1}},
         function()
-            return govParam
+            return governorAlertsParam
         end,
         function(newValue)
-            govParam = newValue
+            governorAlertsParam = newValue
         end
     )
+		
 
     -- FLIGHT MODE SOURCE
     line = form.addLine("FLIGHT MODE SOURCE")
@@ -1592,21 +1595,21 @@ function getSensors()
 		end		
 
 		
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= actTime + 10 then
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= actTime + 20 then
 			govmode = "THR-OFF"
 			rpm = math.random(200, 300)	
 			current = math.random(100, 200)				
 			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
 		end		
 
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= actTime + 20 then
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= actTime + 40 then
 			govmode = "IDLE"
 			rpm = math.random(0, 0)	
 			current = math.random(20, 20)				
 			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
 		end		
 
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= actTime + 50 then
+		if simDoSPOOLUP == true and simDoSPOOLUPCount >= actTime + 70 then
 			govmode = "OFF"
 			simDoSPOOLUPCount = 0
 			simDoSPOOLUP = false
@@ -1954,9 +1957,6 @@ function sensorsMAXMIN(sensors)
             govNearlyActive = 1
 			
 			if spoolupNearlyActive == 1 then
-				if govParam == 1 then
-						system.playFile("/scripts/rf2status/sounds/sup.wav")
-				end		
 				spoolupNearlyActive = 0				
 			end	
         end
@@ -1997,11 +1997,7 @@ function sensorsMAXMIN(sensors)
                 sensorTempESCMin = round(sensors.temp_esc / 100, 0)
                 sensorTempESCMax = round(sensors.temp_esc / 100, 0)
                 govNearlyActive = 0
-				
-				if govParam == 1 then
-						system.playFile("/scripts/rf2status/sounds/hs.wav")
-				end
-				
+						
             end
 
             if sensors.voltage < sensorVoltageMin then
@@ -2053,13 +2049,13 @@ function sensorsMAXMIN(sensors)
 			govWasActive = true
         end
 		
+
+		
 		-- store the last values
 		if govWasActive and (sensors.govmode == 'OFF' or sensors.govmode == 'DISABLED' or sensors.govmode == 'DISARMED' or sensors.govmode == 'UNKNOWN') then
 			govWasActive = false	
 
-				if govParam == 1 then
-						system.playFile("/scripts/rf2status/sounds/sdwn.wav")
-				end
+
 
 			local maxminFinals = readHistory()	
 
@@ -2080,22 +2076,24 @@ function sensorsMAXMIN(sensors)
 						.. sensorTempESCMin .. ","
 						.. sensorTempESCMax
 		
-			print("Row: ".. maxminRow )
+			print("Last data: ".. maxminRow )
 
 			table.insert(maxminFinals,1,maxminRow)
 			if tablelength(maxminFinals) >= 9 then
 				table.remove(maxminFinals,9)			
 			end
 
-			print("Writing history")
+
 
 			name = string.gsub(model.name(), "%s+", "_")	
 			name = string.gsub(name, "%W", "_")		
-			
+		
 			file = "/scripts/rf2status/logs/" .. name .. ".log"	
 			f = io.open(file,'w')
 			f:write("")
 			io.close(f)	
+
+			print("Writing history to: " .. file)
 			
 			f = io.open(file,'a')
 			for k,v in ipairs(maxminFinals) do
@@ -2110,8 +2108,6 @@ function sensorsMAXMIN(sensors)
 			io.close(f)			
 		
 			readLOGS = false	
-			
-			system.playFile("/scripts/rf2status/sounds/savelog.wav")
 			
 		end		
 		
@@ -2419,7 +2415,7 @@ local function read()
 		cellsParam = storage.read("cells")
 		triggerswitchParam = storage.read("triggerswitch")
 		govmodeParam = storage.read("govmode")
-		govParam = storage.read("governoralerts")
+		governorAlertsParam = storage.read("governor")
 				
 		resetALL()
 end
@@ -2438,7 +2434,7 @@ local function write()
 		storage.write("cells", cellsParam)
 		storage.write("triggerswitch", triggerswitchParam)
 		storage.write("govmode", govmodeParam)	
-		storage.write("governoralerts",govParam)
+		storage.write("governoralerts",governorAlertsParam)
 	
 end
 
@@ -2483,7 +2479,7 @@ end
 
 local function event(widget, category, value, x, y)
 
-	print("Event received:", category, value, x, y)
+	--print("Event received:", category, value, x, y)
 	
 	-- disable menu if governor active
 	if environment.simulation ~= true then
@@ -2546,6 +2542,29 @@ local function event(widget, category, value, x, y)
   
 end
 
+--local playGovernorCount = 0
+--local playGovernorLastState = nil
+
+local function playGovernor()
+	if governorAlertsParam == 1 then
+		if playGovernorLastState == nil then
+			playGovernorLastState = sensors.govmode
+		end
+		
+		if sensors.govmode ~= playGovernorLastState then
+			playGovernorCount = 0
+			playGovernorLastState = sensors.govmode
+		end
+		
+		if playGovernorCount == 0 then
+				print("Governor: " .. sensors.govmode)
+				playGovernorCount = 1
+				system.playFile("/scripts/rf2status/sounds/"..string.lower(sensors.govmode)..".wav")
+		end
+	
+	end
+end
+
 local function wakeup(widget)
     refresh = false
 
@@ -2558,7 +2577,11 @@ local function wakeup(widget)
         lcd.invalidate()
     end
 
+	-- voltage alerts
     playVoltage(widget)
+	-- governor callouts
+	playGovernor(widget)
+	
     return
 end
 
