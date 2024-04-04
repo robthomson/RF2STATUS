@@ -35,6 +35,8 @@ local showLOGS=false
 local readLOGS=false
 local readLOGSlast = {}
 
+linkUPTime = 0
+
 local playGovernorCount = 0
 local playGovernorLastState = nil
 
@@ -56,6 +58,7 @@ local governorAlertsParam = 1
 local triggerswitchParam = nil
 local govmodeParam = 0
 local governorAlertsParam = 1
+local adjFunctionParam = 1
 
 local timerWASActive = false
 local govWasActive = false
@@ -75,6 +78,15 @@ local maxminFinals5 = nil
 local maxminFinals6 = nil
 local maxminFinals7 = nil
 local maxminFinals8 = nil
+
+local oldADJSOURCE = 0
+local oldADJVALUE = 0
+local adjfuncIdChanged = false
+local adjfuncValueChanged = false
+local adjJUSTUP = false	
+local ADJSOURCE = nil
+local ADJVALUE = nil
+local noTelemTimer = 0
 
 closeButtonX = 0
 closeButtonY = 0 
@@ -104,6 +116,90 @@ temp_mcuNoiseQ = 500
 temp_escNoiseQ = 500
 rssiNoiseQ = 50
 currentNoiseQ = 150
+
+
+local adjfunctions = {
+    -- rates
+    id5 =  { name = "Pitch Rate", wavs = { "pitch", "rate" } },
+    id6 =  { name = "Roll Rate", wavs = { "roll", "rate" } },
+    id7 =  { name = "Yaw Rate", wavs = { "yaw", "rate" } },
+    id8 =  { name = "Pitch RC Rate", wavs = { "pitch", "rc", "rate" } },
+    id9 =  { name = "Roll RC Rate", wavs = { "roll", "rc", "rate" } },
+    id10 = { name = "Yaw RC Rate", wavs = { "yaw", "rc", "rate" } },
+    id11 = { name = "Pitch RC Expo", wavs = { "pitch", "rc", "expo" } },
+    id12 = { name = "Roll RC Expo", wavs = { "roll", "rc", "expo" } },
+    id13 = { name = "Yaw RC Expo", wavs = { "yaw", "rc", "expo" } },
+
+    -- pids
+    id14 = { name = "Pitch P Gain", wavs = { "pitch", "p", "gain" } },
+    id15 = { name = "Pitch I Gain", wavs = { "pitch", "i", "gain" } },
+    id16 = { name = "Pitch D Gain", wavs = { "pitch", "d", "gain" } },
+    id17 = { name = "Pitch F Gain", wavs = { "pitch", "f", "gain" } },
+    id18 = { name = "Roll P Gain", wavs = { "roll", "p", "gain" } },
+    id19 = { name = "Roll I Gain", wavs = { "roll", "i", "gain" } },
+    id20 = { name = "Roll D Gain", wavs = { "roll", "d", "gain" } },
+    id21 = { name = "Roll F Gain", wavs = { "roll", "f", "gain" } },
+    id22 = { name = "Yaw P Gain", wavs = { "yaw", "p", "gain" } },
+    id23 = { name = "Yaw I Gain", wavs = { "yaw", "i", "gain" } },
+    id24 = { name = "Yaw D Gain", wavs = { "yaw", "d", "gain" } },
+    id25 = { name = "Yaw F Gain", wavs = { "yaw", "f", "gain" } },
+
+    id26 = { name = "Yaw CW Gain", wavs = { "yaw", "cw", "gain" } },
+    id27 = { name = "Yaw CCW Gain", wavs = { "yaw", "ccw", "gain" } },
+    id28 = { name = "Yaw Cyclic FF", wavs = { "yaw", "cyclic", "ff" } },
+    id29 = { name = "Yaw Coll FF", wavs = { "yaw", "collective", "ff" } },
+    id30 = { name = "Yaw Coll Dyn", wavs = { "yaw", "collective", "dyn" } },
+    id31 = { name = "Yaw Coll Decay", wavs = { "yaw", "collective", "decay" } },
+    id32 = { name = "Pitch Coll FF", wavs = { "pitch", "collective", "ff" } },
+
+    -- gyro cutoffs
+    id33 = { name = "Pitch Gyro Cutoff", wavs = { "pitch", "gyro", "cutoff" } },
+    id34 = { name = "Roll Gyro Cutoff", wavs = { "roll", "gyro", "cutoff" } },
+    id35 = { name = "Yaw Gyro Cutoff", wavs = { "yaw", "gyro", "cutoff" } },
+
+    -- dterm cutoffs
+    id36 = { name = "Pitch D-term Cutoff", wavs = { "pitch", "dterm", "cutoff" } },
+    id37 = { name = "Roll D-term Cutoff", wavs = { "roll", "dterm", "cutoff" } },
+    id38 = { name = "Yaw D-term Cutoff", wavs = { "yaw", "dterm", "cutoff" } },
+
+    -- rescue
+    id39 = { name = "Rescue Climb Coll", wavs = { "rescue", "climb", "collective" } },
+    id40 = { name = "Rescue Hover Coll", wavs = { "rescue", "hover", "collective" } },
+    id41 = { name = "Rescue Hover Alt", wavs = { "rescue", "hover", "alt" } },
+    id42 = { name = "Rescue Alt P Gain", wavs = { "rescue", "alt", "p", "gain" } },
+    id43 = { name = "Rescue Alt I Gain", wavs = { "rescue", "alt", "i", "gain" } },
+    id44 = { name = "Rescue Alt D Gain", wavs = { "rescue", "alt", "d", "gain" } },
+
+    -- leveling
+    id45 = { name = "Angle Level Gain", wavs = { "angle", "level", "gain" } },
+    id46 = { name = "Horizon Level Gain", wavs = { "horizon", "level", "gain" } },
+    id47 = { name = "Acro Trainer Gain", wavs = { "acro", "gain" } },
+
+    -- governor
+    id48 = { name = "Governor Gain", wavs = { "gov", "gain" } },
+    id49 = { name = "Governor P Gain", wavs = { "gov", "p", "gain" } },
+    id50 = { name = "Governor I Gain", wavs = { "gov", "i", "gain" } },
+    id51 = { name = "Governor D Gain", wavs = { "gov", "d", "gain" } },
+    id52 = { name = "Governor F Gain", wavs = { "gov", "f", "gain" } },
+    id53 = { name = "Governor TTA Gain", wavs = { "gov", "tta", "gain" } },
+    id54 = { name = "Governor Cyclic FF", wavs = { "gov", "cyclic", "ff" } },
+    id55 = { name = "Governor Coll FF", wavs = { "gov", "collective", "ff" } },
+
+    -- boost gains
+    id56 = { name = "Pitch B Gain", wavs = { "pitch", "b", "gain" } },
+    id57 = { name = "Roll B Gain", wavs = { "roll", "b", "gain" } },
+    id58 = { name = "Yaw B Gain", wavs = { "yaw", "b", "gain" } },
+
+    -- offset gains
+    id59 = { name = "Pitch O Gain", wavs = { "pitch", "o", "gain" } },
+    id60 = { name = "Roll O Gain", wavs = { "roll", "o", "gain" } },
+
+    -- cross-coupling
+    id61 = { name = "Cross Coup Gain", wavs = { "crossc", "gain" } },
+    id62 = { name = "Cross Coup Ratio", wavs = { "crossc", "ratio" } },
+    id63 = { name = "Cross Coup Cutoff", wavs = { "crossc", "cutoff" } }
+}
+
 
 
 local function create(widget)
@@ -275,7 +371,20 @@ local function configure(widget)
     )
     field:default(25)
 	field:decimals(1)
-	
+
+    -- TITLE DISPLAY
+    line = form.addLine("ADJFUNC ALERTS")
+    form.addChoiceField(
+        line,
+        nil,
+        {{"NO", 0}, {"YES", 1}},
+        function()
+            return adjFunctionParam
+        end,
+        function(newValue)
+            adjFunctionParam = newValue
+        end
+    )	
 
     -- FLIGHT MODE SOURCE
     line = form.addLine("FLIGHT MODE SOURCE")
@@ -382,6 +491,9 @@ function resetALL()
 end
 
 function noTelem()
+
+
+
 	lcd.font(FONT_STD)
 	str = "NO DATA"
 	
@@ -1491,6 +1603,7 @@ local function paint(widget)
 		if showLOGS then
 			logsBOX()
 		end
+			
 
 	end
 		
@@ -1765,6 +1878,11 @@ function getSensors()
             else
                 rssi = 0
             end
+			
+			-- note.
+			-- need to modify firmware to allow this to work for crsf correctly
+			adjsource = 0
+			adjvalue = 0
         else
             -- we are run sport
             voltageSOURCE = system.getSource("VFAS")
@@ -1882,6 +2000,14 @@ function getSensors()
             else
                 fm = ""
             end
+            local adjSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5110})
+            if adjSOURCE ~= nil then
+                adjsource = adjSOURCE:value()
+			end	
+            local adjVALUE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5111})
+            if adjVALUE ~= nil then
+                adjvalue = adjVALUE:value()
+			end	
 
             rssi = linkUP
 						
@@ -1898,6 +2024,8 @@ function getSensors()
         govmode = "-"
         fm = "-"
         rssi = linkUP
+		adjsource = 0
+		adjvalue = 0
     end
 
 
@@ -1933,6 +2061,7 @@ function getSensors()
 
     rssi = kalmanRSSI(rssi, oldsensors.rssi)
     rssi = round(rssi, 0)
+	
 
     if oldsensors.voltage ~= voltage then
         refresh = true
@@ -1975,7 +2104,9 @@ function getSensors()
         temp_mcu = temp_mcu,
         fuel = fuel,
         mah = mah,
-        rssi = rssi
+        rssi = rssi,
+		adjsource = adjsource,
+		adjvalue = adjvalue
     }
     oldsensors = ret
 
@@ -2457,6 +2588,7 @@ local function read()
 		governorAlertsParam = storage.read("governoralerts")
 		rpmAlertsParam = storage.read("rpmalerts")				
 		rpmAlertsPercentageParam = storage.read("rpmaltp")	
+		adjFunctionParam = storage.read("adjfunc")	
 		resetALL()
 end
 
@@ -2474,6 +2606,8 @@ local function write()
 		storage.write("governoralerts",governorAlertsParam)
 		storage.write("rpmalerts",rpmAlertsParam)
 		storage.write("rpmaltp",rpmAlertsPercentageParam)
+		storage.write("adjfunc",adjFunctionParam)
+		
 	
 end
 
@@ -2642,24 +2776,95 @@ local function playRPM()
 end
 
 
+local adjTimerStart = os.time()
+local adjJUSTUPCounter = 0
+local function playADJ()
+
+
+	if adjFunctionParam  == 1 then
+
+		ADJSOURCE = math.floor(sensors.adjsource)
+		ADJVALUE = math.floor(sensors.adjvalue)
+		
+		if oldADJSOURCE ~= ADJSOURCE then
+				adjfuncIdChanged = true
+		end
+		if oldADJVALUE ~= ADJVALUE then
+				adjfuncValueChanged = true
+		end
+		
+		if adjJUSTUP == true then
+			adjJUSTUPCounter = adjJUSTUPCounter + 1
+			adjfuncIdChanged = false
+			adjfuncValueChanged = false
+			
+			if adjJUSTUPCounter == 10 then
+				adjJUSTUP = false
+			end
+			
+		else
+			adjJUSTUPCounter = 0
+			if (os.time() - adjTimerStart >= 1) then
+				if adjfuncIdChanged == true then
+					-- play function that has changed
+					adjfunction = adjfunctions["id"..ADJSOURCE]
+					if adjfunction ~= nil then
+						print("ADJfunc triggered for: " .. "id".. ADJSOURCE)
+						for wavi, wavv in ipairs(adjfunction.wavs) do
+							system.playFile("/scripts/rf2status/sounds/"..wavv..".wav")
+						end
+					end	
+					adjfuncIdChanged = false
+				end
+				if adjfuncValueChanged == true or adjfuncIdChanged == true then	
+						showADJWAITINGAlert = true
+						system.playNumber(ADJVALUE)
+
+						adjfuncValueChanged = false
+						adjTimerStart = os.time()
+						
+				end	
+			end
+		end
+		
+		oldADJSOURCE = ADJSOURCE
+		oldADJVALUE = ADJVALUE
+
+	end
+
+end
+
+
 local function wakeup(widget)
     refresh = false
 
     linkUP = getRSSI()
     sensors = getSensors()
 	
-
     if refresh == true then
         sensorsMAXMIN(sensors)	
         lcd.invalidate()
     end
-
-	-- voltage alerts
-    playVoltage(widget)
-	-- governor callouts
-	playGovernor(widget)
-	-- rpm ALERTS
-	playRPM(widget)	
+	
+	if linkUP == 0 then
+		linkUPTime = os.clock()
+	end
+	
+	if linkUP ~= 0 then
+	
+		 if ((tonumber(os.clock()) - tonumber(linkUPTime)) >= 5) then
+			-- voltage alerts
+			playVoltage(widget)
+			-- governor callouts
+			playGovernor(widget)
+			-- rpm ALERTS
+			playRPM(widget)	
+			-- adjValues
+			playADJ(widget)
+		else
+			adjJUSTUP = true	
+		end	
+	end
 	
     return
 end
