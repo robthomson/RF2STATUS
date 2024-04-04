@@ -372,19 +372,23 @@ local function configure(widget)
     field:default(25)
 	field:decimals(1)
 
+
     -- TITLE DISPLAY
-    line = form.addLine("ADJFUNC ALERTS")
-    form.addChoiceField(
-        line,
-        nil,
-        {{"NO", 0}, {"YES", 1}},
-        function()
-            return adjFunctionParam
-        end,
-        function(newValue)
-            adjFunctionParam = newValue
-        end
-    )	
+
+	if system.getSource("Rx RSSI1") == nil then -- currently only supported with fport
+		line = form.addLine("ADJFUNC ALERTS")
+		form.addChoiceField(
+			line,
+			nil,
+			{{"NO", 0}, {"YES", 1}},
+			function()
+				return adjFunctionParam
+			end,
+			function(newValue)
+				adjFunctionParam = newValue
+			end
+		)	
+	end
 
     -- FLIGHT MODE SOURCE
     line = form.addLine("FLIGHT MODE SOURCE")
