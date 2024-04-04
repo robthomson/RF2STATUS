@@ -38,6 +38,10 @@ local readLOGSlast = {}
 local playGovernorCount = 0
 local playGovernorLastState = nil
 
+local playRPMCount = 0
+local playRPMLastState = nil
+local playRPMCounter = 0
+
 local fmsrcParam = 0
 local btypeParam = 0
 local lowfuelParam = 20
@@ -46,6 +50,9 @@ local alrthptcParam = 1
 local maxminParam = 1
 local titleParam = 1
 local cellsParam = 6
+local rpmAlertsParam = 1
+local rpmAlertsPercentageParam = 10
+local governorAlertsParam = 1
 local triggerswitchParam = nil
 local govmodeParam = 0
 local governorAlertsParam = 1
@@ -236,7 +243,37 @@ local function configure(widget)
             governorAlertsParam = newValue
         end
     )
-		
+
+    -- TITLE DISPLAY
+    line = form.addLine("RPM. ALERTS")
+    form.addChoiceField(
+        line,
+        nil,
+        {{"NO", 0}, {"YES", 1}},
+        function()
+            return rpmAlertsParam
+        end,
+        function(newValue)
+            rpmAlertsParam = newValue
+        end
+    )
+
+    -- TITLE DISPLAY
+    line = form.addLine("RPM. ALERT% ")
+    field =
+        form.addNumberField(
+        line,
+        nil,
+        0,
+        100,
+        function()
+            return rpmAlertsPercentageParam
+        end,
+        function(value)
+            rpmAlertsPercentageParam = value
+        end
+    )
+    field:default(10)		
 
     -- FLIGHT MODE SOURCE
     line = form.addLine("FLIGHT MODE SOURCE")
@@ -2415,15 +2452,13 @@ local function read()
 		cellsParam = storage.read("cells")
 		triggerswitchParam = storage.read("triggerswitch")
 		govmodeParam = storage.read("govmode")
-		governorAlertsParam = storage.read("governor")
-				
+		governorAlertsParam = storage.read("governoralerts")
+		rpmAlertsParam = storage.read("rpmalerts")				
+		rpmAlertsPercentageParam = storage.read("rpmaltp")	
 		resetALL()
 end
 
 local function write()
-	
-
-
 		storage.write("fmsrc", fmsrcParam)
 		storage.write("btype", btypeParam)
 		storage.write("lowfuel", lowfuelParam)
@@ -2435,6 +2470,8 @@ local function write()
 		storage.write("triggerswitch", triggerswitchParam)
 		storage.write("govmode", govmodeParam)	
 		storage.write("governoralerts",governorAlertsParam)
+		storage.write("rpmalerts",rpmAlertsParam)
+		storage.write("rpmaltp",rpmAlertsPercentageParam)
 	
 end
 
@@ -2542,8 +2579,7 @@ local function event(widget, category, value, x, y)
   
 end
 
---local playGovernorCount = 0
---local playGovernorLastState = nil
+
 
 local function playGovernor()
 	if governorAlertsParam == 1 then
@@ -2565,6 +2601,45 @@ local function playGovernor()
 	end
 end
 
+local function playRPM()
+	if rpmAlertsParam == 1 then
+	
+	    if sensors.govmode == "ACTIVE" or sensors.govmode == "LOST-HS" or sensors.govmode == "BAILOUT" or sensors.govmode == "RECOVERY" then
+	
+			if playRPMLastState == nil then
+				playRPMLastState = sensors.rpm
+			end
+		
+			-- we take a reading every 5 second
+			if (tonumber(os.clock()) - tonumber(playRPMCounter)) >= 5 then
+				playRPMCounter = os.clock()
+				playRPMLastState = sensors.rpm
+			end
+			
+			-- check if current state withing % of last state
+			local percentageDiff = 0
+			if sensors.rpm > playRPMLastState then
+				percentageDiff = math.abs(100 - math.floor((sensors.rpm / playRPMLastState) * 100))
+			elseif playRPMLastState < sensors.rpm then
+				percentage = math.abs(100 - math.floor((playRPMLastState/sensors.rpm) * 100))
+			else
+				percentageDiff = 0
+			end		
+
+			if percentageDiff > rpmAlertsPercentageParam then
+				playRPMCount = 0
+			end
+
+			if playRPMCount == 0 then
+					print("RPM Difference: " .. percentageDiff)
+					playRPMCount = 1
+					system.playNumber(sensors.rpm ,  UNIT_RPM, 2)
+			end		
+		end
+	end
+end
+
+
 local function wakeup(widget)
     refresh = false
 
@@ -2581,6 +2656,8 @@ local function wakeup(widget)
     playVoltage(widget)
 	-- governor callouts
 	playGovernor(widget)
+	-- rpm ALERTS
+	playRPM(widget)	
 	
     return
 end
