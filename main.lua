@@ -38,7 +38,7 @@ local readLOGSlast = {}
 local playGovernorCount = 0
 local playGovernorLastState = nil
 
-local playRPMCount = 0
+local playRPMCount = 1
 local playRPMLastState = nil
 local playRPMCounter = 0
 
@@ -51,7 +51,7 @@ local maxminParam = 1
 local titleParam = 1
 local cellsParam = 6
 local rpmAlertsParam = 1
-local rpmAlertsPercentageParam = 10
+local rpmAlertsPercentageParam = 2.5
 local governorAlertsParam = 1
 local triggerswitchParam = nil
 local govmodeParam = 0
@@ -259,13 +259,13 @@ local function configure(widget)
     )
 
     -- TITLE DISPLAY
-    line = form.addLine("RPM. ALERT% ")
+    line = form.addLine("RPM. ALERTS % DIFFERENCE")
     field =
         form.addNumberField(
         line,
         nil,
         0,
-        100,
+        50,
         function()
             return rpmAlertsPercentageParam
         end,
@@ -273,7 +273,9 @@ local function configure(widget)
             rpmAlertsPercentageParam = value
         end
     )
-    field:default(10)		
+    field:default(25)
+	field:decimals(1)
+	
 
     -- FLIGHT MODE SOURCE
     line = form.addLine("FLIGHT MODE SOURCE")
@@ -2619,14 +2621,14 @@ local function playRPM()
 			-- check if current state withing % of last state
 			local percentageDiff = 0
 			if sensors.rpm > playRPMLastState then
-				percentageDiff = math.abs(100 - math.floor((sensors.rpm / playRPMLastState) * 100))
+				percentageDiff = math.abs(100 - (sensors.rpm / playRPMLastState * 100))
 			elseif playRPMLastState < sensors.rpm then
-				percentage = math.abs(100 - math.floor((playRPMLastState/sensors.rpm) * 100))
+				percentage = math.abs(100 - (playRPMLastState/sensors.rpm * 100))
 			else
 				percentageDiff = 0
 			end		
 
-			if percentageDiff > rpmAlertsPercentageParam then
+			if percentageDiff > rpmAlertsPercentageParam/10 then
 				playRPMCount = 0
 			end
 
