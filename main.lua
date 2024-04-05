@@ -111,6 +111,7 @@ local triggerMCUSwitchParam = nil
 local triggerTimerSwitchParam = nil
 local filteringParam = 1
 local lowvoltagsenseParam = 2
+local triggerIntervalParam = 30
 
 local govmodeParam = 0
 local governorAlertsParam = 1
@@ -296,7 +297,8 @@ local function create(widget)
 		triggerswitchtmr = nil,
 		filtering = 1,
 		sag = 5,
-		lvsense = 2
+		lvsense = 2,
+		triggerint = 30
     }
 end
 
@@ -671,6 +673,34 @@ local function configure(widget)
     )
     field:default(5)
 	--field:decimals(1)
+
+   -- LVTRIGGER DISPLAY
+    line = form.addLine("Trigger interval",advpanel)
+    form.addChoiceField(
+        line,
+        nil,
+        {
+			{"5s", 5}, 
+			{"10s", 10}, 
+			{"15s", 15}, 
+			{"20s", 20}, 
+			{"25s", 25}, 
+			{"30s", 30},
+			{"35s", 35}, 			
+			{"40s", 40},
+			{"45s", 45},
+			{"50s", 50},
+			{"55s", 55},
+			{"60s", 60},
+			{"No repeat", 50000}			
+		},
+        function()
+            return triggerIntervalParam
+        end,
+        function(newValue)
+            triggerIntervalParam = newValue
+        end
+    )
 
 
 	resetALL()
@@ -2880,6 +2910,8 @@ local function read()
 		filteringParam = storage.read("filtering")		
 		sagParam = storage.read("sag")	
 		lowvoltagsenseParam = storage.read("lvsense")		
+		triggerIntervalParam = storage.read("triggerint")	
+		
 		resetALL()
 		updateFILTERING()		
 end
@@ -2909,6 +2941,7 @@ local function write()
 		storage.write("filtering",filteringParam)	
 		storage.write("sag",sagParam)
 		storage.write("lvsense",lowvoltagsenseParam)
+		storage.write("triggerint",triggerIntervalParam)
 		
 		updateFILTERING()		
 end
@@ -2929,6 +2962,8 @@ function playCurrent(widget)
                     --start timer
                     if currentTriggerTimerStart == nil and currentDoneFirst == false then
                         currentTriggerTimerStart = os.time()
+						currentaudioTriggerCounter = os.clock()
+						print ("Play Current Alert (first)")
                         system.playNumber(sensors.current/10, UNIT_AMPERE, 2)
                         currentDoneFirst = true
                     end
@@ -2938,7 +2973,8 @@ function playCurrent(widget)
 
                 if currentTriggerTimerStart ~= nil then
                     if currentDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(currentaudioTriggerCounter)) >= 30) then
+                        if ((tonumber(os.clock()) - tonumber(currentaudioTriggerCounter)) >= triggerIntervalParam) then
+							print ("Play Current Alert (repeat)")
                             currentaudioTriggerCounter = os.clock()
                             system.playNumber(sensors.current/10, UNIT_AMPERE, 2)
                         end
@@ -2968,7 +3004,8 @@ function playLQ(widget)
                     --start timer
                     if lqTriggerTimerStart == nil and lqDoneFirst == false then
                         lqTriggerTimerStart = os.time()
-						print ("Play LQ Alert")
+						lqaudioTriggerCounter = os.clock()
+						print ("Play LQ Alert (first)")
 						system.playFile("/scripts/rf2status/sounds/alerts/lq.wav")						
                         system.playNumber(sensors.rssi, UNIT_PERCENT, 2)
                         lqDoneFirst = true
@@ -2979,9 +3016,9 @@ function playLQ(widget)
 
                 if lqTriggerTimerStart ~= nil then
                     if lqDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(lqaudioTriggerCounter)) >= 30) then
+                        if ((tonumber(os.clock()) - tonumber(lqaudioTriggerCounter)) >= triggerIntervalParam) then
                             lqaudioTriggerCounter = os.clock()
-							print ("Play LQ Alert")
+							print ("Play LQ Alert (repeat)")
 							system.playFile("/scripts/rf2status/sounds/alerts/lq.wav")
                             system.playNumber(sensors.rssi, UNIT_PERCENT, 2)
                         end
@@ -3011,7 +3048,8 @@ function playMCU(widget)
                     --start timer
                     if mcuTriggerTimerStart == nil and mcuDoneFirst == false then
                         mcuTriggerTimerStart = os.time()
-						print ("Playing MCU")
+						mcuaudioTriggerCounter = os.clock()
+						print ("Playing MCU (first)")
 						system.playFile("/scripts/rf2status/sounds/alerts/mcu.wav")
                         system.playNumber(sensors.temp_mcu/100, UNIT_DEGREE, 2)
                         mcuDoneFirst = true
@@ -3022,9 +3060,9 @@ function playMCU(widget)
 
                 if mcuTriggerTimerStart ~= nil then
                     if mcuDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(mcuaudioTriggerCounter)) >= 30) then
+                        if ((tonumber(os.clock()) - tonumber(mcuaudioTriggerCounter)) >= triggerIntervalParam) then
                             mcuaudioTriggerCounter = os.clock()
-							print ("Playing MCU")
+							print ("Playing MCU (repeat)")
 							system.playFile("/scripts/rf2status/sounds/alerts/mcu.wav")
                             system.playNumber(sensors.temp_mcu/100, UNIT_DEGREE, 2)
                         end
@@ -3054,7 +3092,8 @@ function playESC(widget)
                     --start timer
                     if escTriggerTimerStart == nil and escDoneFirst == false then
                         escTriggerTimerStart = os.time()
-						print ("Playing ESC")
+						escaudioTriggerCounter = os.clock()
+						print ("Playing ESC (first)")
 						system.playFile("/scripts/rf2status/sounds/alerts/esc.wav")
                         system.playNumber(sensors.temp_esc/100, UNIT_DEGREE, 2)
                         escDoneFirst = true
@@ -3065,9 +3104,9 @@ function playESC(widget)
 
                 if escTriggerTimerStart ~= nil then
                     if escDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(escaudioTriggerCounter)) >= 30) then
+                        if ((tonumber(os.clock()) - tonumber(escaudioTriggerCounter)) >= triggerIntervalParam) then
                             escaudioTriggerCounter = os.clock()
-							print ("Playing ESC")
+							print ("Playing ESC (repeat)")
 							system.playFile("/scripts/rf2status/sounds/alerts/esc.wav")
                             system.playNumber(sensors.temp_esc/100, UNIT_DEGREE, 2)
                         end
@@ -3111,7 +3150,8 @@ function playTIMER(widget)
                     --start timer
                     if timerTriggerTimerStart == nil and timerDoneFirst == false then
                         timerTriggerTimerStart = os.time()
-						print ("Playing TIMER " .. alertTIME)
+						timeraudioTriggerCounter = os.clock()
+						print ("Playing TIMER (first)" .. alertTIME)
 	
 						if mins ~= "00" then
 							system.playNumber(mins, UNIT_MINUTE, 2)
@@ -3126,9 +3166,9 @@ function playTIMER(widget)
 
                 if timerTriggerTimerStart ~= nil then
                     if timerDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(timeraudioTriggerCounter)) >= 30) then
+                        if ((tonumber(os.clock()) - tonumber(timeraudioTriggerCounter)) >= triggerIntervalParam) then
                             timeraudioTriggerCounter = os.clock()
-							print ("Playing TIMER " .. alertTIME)
+							print ("Playing TIMER (repeat)" .. alertTIME)
 							if mins ~= "00" then
 								system.playNumber(mins, UNIT_MINUTE, 2)
 							end
@@ -3160,7 +3200,8 @@ function playFuel(widget)
                     --start timer
                     if fuelTriggerTimerStart == nil and fuelDoneFirst == false then
                         fuelTriggerTimerStart = os.time()
-						print("Play fuel alert")
+						fuelaudioTriggerCounter = os.clock()
+						print("Play fuel alert (first)")
 						system.playFile("/scripts/rf2status/sounds/alerts/fuel.wav")	
                         system.playNumber(sensors.fuel, UNIT_PERCENT, 2)				
                         fuelDoneFirst = true
@@ -3171,9 +3212,9 @@ function playFuel(widget)
 
                 if fuelTriggerTimerStart ~= nil then
                     if fuelDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(fuelaudioTriggerCounter)) >= 30) then
+                        if ((tonumber(os.clock()) - tonumber(fuelaudioTriggerCounter)) >= triggerIntervalParam) then
                             fuelaudioTriggerCounter = os.clock()
-							print("Play fuel alert")
+							print("Play fuel alert (repeat)")
 							system.playFile("/scripts/rf2status/sounds/alerts/fuel.wav")	
                             system.playNumber(sensors.fuel, UNIT_PERCENT, 2)
 													
@@ -3204,7 +3245,8 @@ function playRPM(widget)
                     --start timer
                     if rpmTriggerTimerStart == nil and rpmDoneFirst == false then
                         rpmTriggerTimerStart = os.time()
-						print("Play rpm alert")
+						rpmaudioTriggerCounter = os.clock()
+						print("Play rpm alert (first)")
                         system.playNumber(sensors.rpm, UNIT_RPM, 2)
                         rpmDoneFirst = true
                     end
@@ -3214,8 +3256,8 @@ function playRPM(widget)
 
                 if rpmTriggerTimerStart ~= nil then
                     if rpmDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(rpmaudioTriggerCounter)) >= 30) then
-							print("Play rpm alert")
+                        if ((tonumber(os.clock()) - tonumber(rpmaudioTriggerCounter)) >= triggerIntervalParam) then
+							print("Play rpm alert (repeat)")
                             rpmaudioTriggerCounter = os.clock()
                             system.playNumber(sensors.rpm, UNIT_RPM, 2)
                         end
@@ -3245,9 +3287,10 @@ function playVoltage(widget)
                     --start timer
                     if lvTriggerTimerStart == nil and voltageDoneFirst == false then
                         lvTriggerTimerStart = os.time()
-						print("Play voltage alert")
+						lvaudioTriggerCounter = os.clock()
+						print("Play voltage alert (first)")
 						--system.playFile("/scripts/rf2status/sounds/alerts/voltage.wav")						
-                        --system.playNumber(sensors.voltage / 100, 2, 2)
+                        system.playNumber(sensors.voltage / 100, 2, 2)
                         voltageDoneFirst = true
                     end
                 else
@@ -3256,9 +3299,9 @@ function playVoltage(widget)
 
                 if lvTriggerTimerStart ~= nil then
                     if voltageDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(lvaudioTriggerCounter)) >= 30) then
+                        if ((tonumber(os.clock()) - tonumber(lvaudioTriggerCounter)) >= triggerIntervalParam) then
                             lvaudioTriggerCounter = os.clock()
-							--print("Play voltage alert")
+							print("Play voltage alert (repeat)")
 							--system.playFile("/scripts/rf2status/sounds/alerts/voltage.wav")								
                             system.playNumber(sensors.voltage / 100, 2, 2)
                         end
