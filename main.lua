@@ -170,9 +170,9 @@ local lastMaxMin = 0
 local voltageNoiseQ = 100
 local fuelNoiseQ = 100
 local rpmNoiseQ = 100
-local temp_mcuNoiseQ = 400
-local temp_escNoiseQ = 400
-local rssiNoiseQ = 20
+local temp_mcuNoiseQ = 100
+local temp_escNoiseQ = 100
+local rssiNoiseQ = 100
 local currentNoiseQ = 100
 
 
@@ -1737,13 +1737,13 @@ local function paint(widget)
 			if sensorTempESCMin == 0 or sensorTempESCMin == nil then
 					sensorMIN = "-"
 			else 
-					sensorMIN = sensorTempESCMin
+					sensorMIN = round(sensorTempESCMin/100,0)
 			end
 			
 			if sensorTempESCMax == 0 or sensorTempESCMax == nil then
 					sensorMAX = "-"
 			else 
-					sensorMAX = sensorTempESCMax
+					sensorMAX = round(sensorTempESCMax/100,0)
 			end
 	
 			telemetryBox(posX,posY,boxWs,boxHs,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
@@ -1773,14 +1773,15 @@ local function paint(widget)
 			if sensorTempMCUMin == 0 or sensorTempMCUMin == nil then
 					sensorMIN = "-"
 			else 
-					sensorMIN = sensorTempMCUMin
+					sensorMIN = round(sensorTempMCUMin/100,0)
 			end
 			
 			if sensorTempMCUMax == 0 or sensorTempMCUMax == nil then
 					sensorMAX = "-"
 			else 
-					sensorMAX = sensorTempMCUMax
+					sensorMAX = round(sensorTempMCUMax/100,0)
 			end
+
 	
 			telemetryBox(posX,posY,boxWs,boxHs,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
 		end	
@@ -1989,12 +1990,14 @@ function getSensors()
 
 		tv = math.random(2100, 2274)
 		voltage = tv
-		temp_esc = math.random(1510, 2250)
-		temp_mcu = math.random(1510, 1850)
+		temp_esc = math.random(500, 2250)*10
+		temp_mcu = math.random(500, 1850)*10
 		mah = math.random(10000, 10100)
 		fuel = 0
 		fm = "DISABLED"
-		rssi = math.random(90, 100)		
+		rssi = math.random(90, 100)	
+		adjsource = 0
+		adjvalue = 0
 
 		if simDoSPOOLUP == false then
 			-- these ones do a scale up in simulation
@@ -2442,10 +2445,10 @@ function sensorsMAXMIN(sensors)
                 sensorCurrentMax = sensors.current
                 sensorRSSIMin = sensors.rssi
                 sensorRSSIMax = sensors.rssi
-                sensorTempMCUMin = round(sensors.temp_mcu / 100, 0)
-                sensorTempMCUMax = round(sensors.temp_mcu / 100, 0)
-                sensorTempESCMin = round(sensors.temp_esc / 100, 0)
-                sensorTempESCMax = round(sensors.temp_esc / 100, 0)
+                sensorTempMCUMin = sensors.temp_mcu 
+                sensorTempMCUMax = sensors.temp_mcu
+                sensorTempESCMin = sensors.temp_esc
+                sensorTempESCMax = sensors.temp_esc
                 govNearlyActive = 0
 						
             end
@@ -2484,16 +2487,16 @@ function sensorsMAXMIN(sensors)
                 sensorRSSIMax = sensors.rssi
             end
             if sensors.temp_mcu < sensorTempMCUMin then
-                sensorTempMCUMin = round(sensors.temp_mcu / 100, 0)
+                sensorTempMCUMin = sensors.temp_mcu
             end
             if sensors.temp_mcu > sensorTempMCUMax then
-                sensorTempMCUMax = round(sensors.temp_mcu / 100, 0)
+                sensorTempMCUMax = sensors.temp_mcu
             end
             if sensors.temp_esc < sensorTempESCMin then
-                sensorTempESCMin = round(sensors.temp_esc / 100, 0)
+                sensorTempESCMin = sensors.temp_esc
             end
             if sensors.temp_esc > sensorTempESCMax then
-                sensorTempESCMax = round(sensors.temp_esc / 100, 0)
+                sensorTempESCMax = sensors.temp_esc
             end
 			
 			govWasActive = true
@@ -2613,27 +2616,27 @@ local function updateFILTERING()
 		local voltageNoiseQ = 150
 		local fuelNoiseQ = 150
 		local rpmNoiseQ = 150
-		local temp_mcuNoiseQ = 500
-		local temp_escNoiseQ = 500
-		local rssiNoiseQ = 50
+		local temp_mcuNoiseQ = 150
+		local temp_escNoiseQ = 150
+		local rssiNoiseQ = 150
 		local currentNoiseQ = 150
 	elseif filteringParam == 3 then
 		print("Filtering: high")
 		local voltageNoiseQ = 200
 		local fuelNoiseQ = 200
 		local rpmNoiseQ = 200
-		local temp_mcuNoiseQ = 600
-		local temp_escNoiseQ = 600
-		local rssiNoiseQ = 100
+		local temp_mcuNoiseQ = 200
+		local temp_escNoiseQ = 200
+		local rssiNoiseQ = 200
 		local currentNoiseQ = 200
 	else
 		print("Filtering: low")
 		local voltageNoiseQ = 100
 		local fuelNoiseQ = 100
 		local rpmNoiseQ = 100
-		local temp_mcuNoiseQ = 400
-		local temp_escNoiseQ = 400
-		local rssiNoiseQ = 20
+		local temp_mcuNoiseQ = 100
+		local temp_escNoiseQ = 100
+		local rssiNoiseQ = 100
 		local currentNoiseQ = 100
 	end
 end
