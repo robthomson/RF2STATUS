@@ -1359,8 +1359,8 @@ function logsBOX()
 							end					
 							-- mcumax
 							if idx == 13 and theme.logsCOL6w ~= 0 then
-								str = mcustr .. '° / ' .. snsr .. '°'
-								strf = mcustr .. '. / ' .. snsr .. '.'
+								str = round(mcustr/100,0) .. '° / ' .. round(snsr/100,0) .. '°'
+								strf = round(mcustr/100,0) .. '. / ' .. round(snsr/100,0) .. '.'
 								tsizeW, tsizeH = lcd.getTextSize(strf)
 								lcd.drawText(col6x + (theme.logsCOL6w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)
 							end		
@@ -1370,8 +1370,8 @@ function logsBOX()
 							end					
 							-- escmax
 							if idx == 15 and theme.logsCOL7w ~= 0 then
-								str = escstr .. '° / ' .. snsr .. '°'
-								strf = escstr .. '. / ' .. snsr .. '.'
+								str = round(escstr/100,0) .. '° / ' .. round(snsr/100,0) .. '°'
+								strf = round(escstr/100,0) .. '. / ' .. round(snsr/100,0) .. '.'
 								tsizeW, tsizeH = lcd.getTextSize(strf)
 								lcd.drawText(col7x + (theme.logsCOL7w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)
 							end
