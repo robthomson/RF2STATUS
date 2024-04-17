@@ -809,6 +809,7 @@ function getThemeInfo()
     environment = system.getVersion()
     local w, h = lcd.getWindowSize()
 
+
     -- first one is unsporrted
 
     if
@@ -819,7 +820,7 @@ function getThemeInfo()
         ret = {
             supportedRADIO = true,
             colSpacing = 4,
-            fullBoxW = 262,
+            fullBoxW = (w+4)/3,
             fullBoxH = h / 2,
             smallBoxSensortextOFFSET = -5,
             title_voltage = "VOLTAGE",
@@ -853,8 +854,8 @@ function getThemeInfo()
         ret = {
             supportedRADIO = true,
             colSpacing = 2,
-            fullBoxW = 158,
-            fullBoxH = 97,
+            fullBoxW = (w+2)/3,
+            fullBoxH =  h/2,
             smallBoxSensortextOFFSET = -8,
             title_voltage = "VOLTAGE",
             title_fuel = "FUEL",
@@ -886,8 +887,8 @@ function getThemeInfo()
         ret = {
             supportedRADIO = true,
             colSpacing = 3,
-            fullBoxW = 210,
-            fullBoxH = 120,
+            fullBoxW = (w+3)/3,
+            fullBoxH =  h/2,
             smallBoxSensortextOFFSET = -10,
             title_voltage = "VOLTAGE",
             title_fuel = "FUEL",
@@ -919,8 +920,8 @@ function getThemeInfo()
         ret = {
             supportedRADIO = true,
             colSpacing = 2,
-            fullBoxW = 158,
-            fullBoxH = 96,
+            fullBoxW = (w+2)/3,
+            fullBoxH = h/2,
             smallBoxSensortextOFFSET = -10,
             title_voltage = "VOLTAGE",
             title_fuel = "FUEL",
@@ -952,8 +953,8 @@ function getThemeInfo()
         ret = {
             supportedRADIO = true,
             colSpacing = 2,
-            fullBoxW = 158,
-            fullBoxH = 79,
+            fullBoxW = (w+2)/3,
+            fullBoxH =  h/2,
             smallBoxSensortextOFFSET = -10,
             title_voltage = "VOLTAGE",
             title_fuel = "FUEL",
@@ -1504,6 +1505,8 @@ local function paint(widget)
             screenError("UNKNOWN " .. environment.board)
             return
         end
+		
+		--print(w .. "x" .. h)
 
         -- widget size
         if
@@ -1512,33 +1515,53 @@ local function paint(widget)
                 environment.board == "X20PRO" or
                 environment.board == "X20PROAW"
          then
-            if w ~= 784 and h ~= 294 then
+            if w == 784 and h == 294 then
+				-- we are ok
+			elseif w == 800 and h == 458 then
+				-- we are ok
+			else
                 screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
         if environment.board == "X18" or environment.board == "X18S" then
             smallTEXT = true
-            if w ~= 472 and h ~= 191 then
+            if w == 472 and h == 191 then
+				-- we are ok
+			elseif w == 480 and h == 301 then
+				-- we are ok
+			else			
                 screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
         if environment.board == "X14" or environment.board == "X14S" then
-            if w ~= 630 and h ~= 236 then
+            if w == 630 and h == 236 then
+				-- we are ok
+			elseif w == 640 and h == 338 then
+				-- we are ok
+			else			
                 screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
         if environment.board == "TWXLITE" or environment.board == "TWXLITES" then
-            if w ~= 472 and h ~= 191 then
+            if w == 472 and h == 191 then
+				-- we are ok
+			elseif w == 480 and h == 301 then
+				-- we are ok			
+			else
                 screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
         if environment.board == "X10EXPRESS" then
-            if w ~= 472 and h ~= 158 then
+            if w == 472 and h == 158 then
                 screenError("DISPLAY SIZE INVALID")
+				-- we are ok
+			elseif w == 480 and h == 256 then
+				-- we are ok
+			else				
                 return
             end
         end
