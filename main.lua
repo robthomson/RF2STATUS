@@ -2191,7 +2191,8 @@ function getSensors()
 			adjvalue = 0
         else
             -- we are run sport
-            voltageSOURCE = system.getSource("VFAS")
+            --voltageSOURCE = system.getSource("VFAS")
+	        voltageSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0210})		
             if voltageSOURCE ~= nil then
                 voltage = voltageSOURCE:value()
                 if voltage ~= nil then
@@ -2257,7 +2258,8 @@ function getSensors()
             else
                 fuel = 0
             end
-            local mahSOURCE = system.getSource("Consumption")
+            --local mahSOURCE = system.getSource("Consumption")
+			local mahSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5250})
             if mahSOURCE ~= nil then
                 mah = mahSOURCE:value()
                 if mah ~= nil then
