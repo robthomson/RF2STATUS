@@ -100,6 +100,7 @@ local alrthptcParam = 1
 local maxminParam = 1
 local titleParam = 1
 local cellsParam = 6
+local lowVoltageGovernorParam = 0
 local sagParam = 5
 local rpmAlertsParam = 1
 local rpmAlertsPercentageParam = 2.5
@@ -679,6 +680,27 @@ local function configure(widget)
     )
     field:default(5)
 	--field:decimals(1)
+
+
+   -- LVTRIGGER DISPLAY
+    line = form.addLine("LV Governor filter",advpanel)
+    form.addChoiceField(
+        line,
+        nil,
+        {
+			{"YES", 0},
+			{"NO", 1},			
+		},
+        function()
+            return lowVoltageGovernorParam
+        end,
+        function(newValue)
+            lowVoltageGovernorParam = newValue
+        end
+    )
+
+
+
 
    -- LVTRIGGER DISPLAY
     line = form.addLine("Trigger interval",advpanel)
@@ -1935,7 +1957,8 @@ local function paint(widget)
                 sensors.govmode == "ACTIVE" or
                 sensors.govmode == "LOST-HS" or
                 sensors.govmode == "BAILOUT" or
-                sensors.govmode == "RECOVERY"
+                sensors.govmode == "RECOVERY" or
+				lowVoltageGovernorParam == 1
          then
             if (voltageIsLow) or (sensors.fuel <= lowfuelParam) then
                 lvTimer = true
@@ -2920,6 +2943,7 @@ local function read()
 		sagParam = storage.read("sag")	
 		lowvoltagsenseParam = storage.read("lvsense")		
 		triggerIntervalParam = storage.read("triggerint")	
+		lowVoltageGovernorParam = storage.read("lvgovernor")
 		
 		rf2status.resetALL()
 		updateFILTERING()		
@@ -2951,6 +2975,7 @@ local function write()
 		storage.write("sag",sagParam)
 		storage.write("lvsense",lowvoltagsenseParam)
 		storage.write("triggerint",triggerIntervalParam)
+		storage.write("lvgovernor",lowVoltageGovernorParam)
 		
 		updateFILTERING()		
 end
