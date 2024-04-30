@@ -12,6 +12,9 @@ local oldsensors = {
     "fm",
     "govmode"
 }
+
+rf2status = {}
+
 local loopCounter = 0
 local sensors
 local supportedRADIO = false
@@ -263,13 +266,13 @@ local adjfunctions = {
 
 local function create(widget)
     gfx_model = lcd.loadBitmap(model.bitmap())
-    gfx_heli = lcd.loadBitmap("/scripts/rf2status/gfx/heli.png")
-	gfx_close = lcd.loadBitmap("/scripts/rf2status/gfx/close.png")
-    rssiSensor = getRssiSensor()
+    gfx_heli = lcd.loadBitmap("/scripts/RF2STATUS/gfx/heli.png")
+	gfx_close = lcd.loadBitmap("/scripts/RF2STATUS/gfx/close.png")
+    rssiSensor = rf2status.getRssiSensor()
 
 
-    if tonumber(sensorMakeNumber(environment.version)) < 152 then
-        screenError("ETHOS < V1.5.2")
+    if tonumber(rf2status.sensorMakeNumber(environment.version)) < 152 then
+        rf2status.screenError("ETHOS < V1.5.2")
         return
     end
 	
@@ -302,7 +305,10 @@ local function create(widget)
     }
 end
 
-
+function loadScriptRF2STATUS(script) 
+	system.compile(script)
+	return loadfile(script) 
+end
 
 local function configure(widget)
     isInConfiguration = true
@@ -703,12 +709,12 @@ local function configure(widget)
     )
 
 
-	resetALL()
+	rf2status.resetALL()
 
     return widget
 end
 
-function getRssiSensor()
+function rf2status.getRssiSensor()
     local rssiNames = {"RSSI", "RSSI 2.4G", "RSSI 900M", "Rx RSSI1", "Rx RSSI2"}
     for i, name in ipairs(rssiNames) do
         rssiSensor = system.getSource(name)
@@ -718,7 +724,7 @@ function getRssiSensor()
     end
 end
 
-function getRSSI()
+function rf2status.getRSSI()
 	if environment.simulation == true then
 		return 100
 	end
@@ -728,7 +734,7 @@ function getRSSI()
     return 0
 end
 
-function screenError(msg)
+function rf2status.screenError(msg)
     local w, h = lcd.getWindowSize()
 	isDARKMODE = lcd.darkMode()
     lcd.font(FONT_STD)
@@ -746,7 +752,7 @@ function screenError(msg)
     return
 end
 
-function resetALL()
+function rf2status.resetALL()
 	showLOGS = false
 	sensorVoltageMax = 0
 	sensorVoltageMin = 0
@@ -762,20 +768,20 @@ function resetALL()
 	sensorTempESCMax = 0
 end
 
-function noTelem()
+function rf2status.noTelem()
 
 
 
 	lcd.font(FONT_STD)
 	str = "NO DATA"
 	
-    local theme = getThemeInfo()
+    local theme = rf2status.getThemeInfo()
     local w, h = lcd.getWindowSize()	
 	boxW = math.floor(w / 2)
 	boxH = 45
 	tsizeW, tsizeH = lcd.getTextSize(str)
 
-	--draw the background
+	--draw the backgrf2status.round
 	if isDARKMODE then
 		lcd.color(lcd.RGB(40, 40, 40))
 	else
@@ -805,10 +811,9 @@ return
 end
 
 
-function getThemeInfo()
+function rf2status.getThemeInfo()
     environment = system.getVersion()
     local w, h = lcd.getWindowSize()
-
 
     -- first one is unsporrted
 
@@ -820,7 +825,7 @@ function getThemeInfo()
         ret = {
             supportedRADIO = true,
             colSpacing = 4,
-            fullBoxW = (w+4)/3,
+            fullBoxW = 262,
             fullBoxH = h / 2,
             smallBoxSensortextOFFSET = -5,
             title_voltage = "VOLTAGE",
@@ -854,8 +859,8 @@ function getThemeInfo()
         ret = {
             supportedRADIO = true,
             colSpacing = 2,
-            fullBoxW = (w+2)/3,
-            fullBoxH =  h/2,
+            fullBoxW = 158,
+            fullBoxH = 97,
             smallBoxSensortextOFFSET = -8,
             title_voltage = "VOLTAGE",
             title_fuel = "FUEL",
@@ -887,8 +892,8 @@ function getThemeInfo()
         ret = {
             supportedRADIO = true,
             colSpacing = 3,
-            fullBoxW = (w+3)/3,
-            fullBoxH =  h/2,
+            fullBoxW = 210,
+            fullBoxH = 120,
             smallBoxSensortextOFFSET = -10,
             title_voltage = "VOLTAGE",
             title_fuel = "FUEL",
@@ -920,8 +925,8 @@ function getThemeInfo()
         ret = {
             supportedRADIO = true,
             colSpacing = 2,
-            fullBoxW = (w+2)/3,
-            fullBoxH = h/2,
+            fullBoxW = 158,
+            fullBoxH = 96,
             smallBoxSensortextOFFSET = -10,
             title_voltage = "VOLTAGE",
             title_fuel = "FUEL",
@@ -953,8 +958,8 @@ function getThemeInfo()
         ret = {
             supportedRADIO = true,
             colSpacing = 2,
-            fullBoxW = (w+2)/3,
-            fullBoxH =  h/2,
+            fullBoxW = 158,
+            fullBoxH = 79,
             smallBoxSensortextOFFSET = -10,
             title_voltage = "VOLTAGE",
             title_fuel = "FUEL",
@@ -991,7 +996,7 @@ local function telemetryBox(x,y,w,h,title,value,unit,smallbox,alarm,minimum,maxi
 
 	isVisible = lcd.isVisible()
 	isDARKMODE = lcd.darkMode()
-    local theme = getThemeInfo()
+    local theme = rf2status.getThemeInfo()
 	
 	if isDARKMODE then
 		lcd.color(lcd.RGB(40, 40, 40))
@@ -999,7 +1004,7 @@ local function telemetryBox(x,y,w,h,title,value,unit,smallbox,alarm,minimum,maxi
 		lcd.color(lcd.RGB(240, 240, 240))
 	end
 		
-	-- draw box background	
+	-- draw box backgrf2status.round	
 	lcd.drawFilledRectangle(x, y, w, h) 
 
 
@@ -1119,19 +1124,19 @@ local function telemetryBox(x,y,w,h,title,value,unit,smallbox,alarm,minimum,maxi
 	
 end
 
-function logsBOX()
+function rf2status.logsBOX()
 
 	
 
 	if readLOGS == false then
-		local history = readHistory()	
+		local history = rf2status.readHistory()	
 		readLOGSlast = history
 		readLOGS = true
 	else	
 		history = readLOGSlast
 	end
 
-    local theme = getThemeInfo()
+    local theme = rf2status.getThemeInfo()
     local w, h = lcd.getWindowSize()
 	if w < 500 then
 		boxW = w
@@ -1144,7 +1149,7 @@ function logsBOX()
 		boxH = h - math.floor((h * 4)/100)
 	end
 
-	--draw the background
+	--draw the backgrf2status.round
 	if isDARKMODE then
 		lcd.color(lcd.RGB(40, 40, 40,50))
 	else
@@ -1281,7 +1286,7 @@ function logsBOX()
 
 
 				
-				local rowData = explode(value,",")
+				local rowData = rf2status.explode(value,",")
 	
 	
 				--[[ rowData is a csv string as follows
@@ -1301,7 +1306,7 @@ function logsBOX()
 						if snsr ~= nil and snsr ~= "" then			
 							-- time
 							if idx == 1 and theme.logsCOL1w ~= 0 then
-								str = SecondsToClockAlt(snsr)
+								str = rf2status.SecondsToClockAlt(snsr)
 								tsizeW, tsizeH = lcd.getTextSize(str)
 								lcd.drawText(col1x + (theme.logsCOL1w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)
 							end
@@ -1311,7 +1316,7 @@ function logsBOX()
 							end
 							-- voltagemax
 							if idx == 3 and theme.logsCOL2w ~= 0 then
-								str = round(vstr/100,1) .. 'v / ' .. round(snsr/100,1) .. 'v'
+								str = rf2status.round(vstr/100,1) .. 'v / ' .. rf2status.round(snsr/100,1) .. 'v'
 								tsizeW, tsizeH = lcd.getTextSize(str)
 								lcd.drawText(col2x + (theme.logsCOL2w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)	
 							end			
@@ -1360,8 +1365,8 @@ function logsBOX()
 							end					
 							-- mcumax
 							if idx == 13 and theme.logsCOL6w ~= 0 then
-								str = round(mcustr/100,0) .. '° / ' .. round(snsr/100,0) .. '°'
-								strf = round(mcustr/100,0) .. '. / ' .. round(snsr/100,0) .. '.'
+								str = rf2status.round(mcustr/100,0) .. '° / ' .. rf2status.round(snsr/100,0) .. '°'
+								strf = rf2status.round(mcustr/100,0) .. '. / ' .. rf2status.round(snsr/100,0) .. '.'
 								tsizeW, tsizeH = lcd.getTextSize(strf)
 								lcd.drawText(col6x + (theme.logsCOL6w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)
 							end		
@@ -1371,8 +1376,8 @@ function logsBOX()
 							end					
 							-- escmax
 							if idx == 15 and theme.logsCOL7w ~= 0 then
-								str = round(escstr/100,0) .. '° / ' .. round(snsr/100,0) .. '°'
-								strf = round(escstr/100,0) .. '. / ' .. round(snsr/100,0) .. '.'
+								str = rf2status.round(escstr/100,0) .. '° / ' .. rf2status.round(snsr/100,0) .. '°'
+								strf = rf2status.round(escstr/100,0) .. '. / ' .. rf2status.round(snsr/100,0) .. '.'
 								tsizeW, tsizeH = lcd.getTextSize(strf)
 								lcd.drawText(col7x + (theme.logsCOL7w/2) - (tsizeW / 2), boxTy + tsizeH/2 + (boxTh *2) + rowH , str)
 							end
@@ -1405,7 +1410,7 @@ local function telemetryBoxImage(x,y,w,h,gfx)
 
 	isVisible = lcd.isVisible()
 	isDARKMODE = lcd.darkMode()
-    local theme = getThemeInfo()
+    local theme = rf2status.getThemeInfo()
 	
 	if isDARKMODE then
 		lcd.color(lcd.RGB(40, 40, 40))
@@ -1413,7 +1418,7 @@ local function telemetryBoxImage(x,y,w,h,gfx)
 		lcd.color(lcd.RGB(240, 240, 240))
 	end
 		
-	-- draw box background	
+	-- draw box backgrf2status.round	
 	lcd.drawFilledRectangle(x, y, w, h) 
 
     lcd.drawBitmap(x, y, gfx, w-theme.colSpacing, h-theme.colSpacing)
@@ -1486,7 +1491,7 @@ local function paint(widget)
     -- write values to boxes
     -- -----------------------------------------------------------------------------------------------
 
-    local theme = getThemeInfo()
+    local theme = rf2status.getThemeInfo()
     local w, h = lcd.getWindowSize()
 
     if isVisible then
@@ -1502,11 +1507,9 @@ local function paint(widget)
 
         -- hard error
         if theme.supportedRADIO ~= true then
-            screenError("UNKNOWN " .. environment.board)
+            rf2status.screenError("UNKNOWN " .. environment.board)
             return
         end
-		
-		--print(w .. "x" .. h)
 
         -- widget size
         if
@@ -1515,53 +1518,33 @@ local function paint(widget)
                 environment.board == "X20PRO" or
                 environment.board == "X20PROAW"
          then
-            if w == 784 and h == 294 then
-				-- we are ok
-			elseif w == 800 and h == 458 then
-				-- we are ok
-			else
-                screenError("DISPLAY SIZE INVALID")
+            if w ~= 784 and h ~= 294 then
+                rf2status.screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
         if environment.board == "X18" or environment.board == "X18S" then
             smallTEXT = true
-            if w == 472 and h == 191 then
-				-- we are ok
-			elseif w == 480 and h == 301 then
-				-- we are ok
-			else			
-                screenError("DISPLAY SIZE INVALID")
+            if w ~= 472 and h ~= 191 then
+                rf2status.screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
         if environment.board == "X14" or environment.board == "X14S" then
-            if w == 630 and h == 236 then
-				-- we are ok
-			elseif w == 640 and h == 338 then
-				-- we are ok
-			else			
-                screenError("DISPLAY SIZE INVALID")
+            if w ~= 630 and h ~= 236 then
+                rf2status.screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
         if environment.board == "TWXLITE" or environment.board == "TWXLITES" then
-            if w == 472 and h == 191 then
-				-- we are ok
-			elseif w == 480 and h == 301 then
-				-- we are ok			
-			else
-                screenError("DISPLAY SIZE INVALID")
+            if w ~= 472 and h ~= 191 then
+                rf2status.screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
         if environment.board == "X10EXPRESS" then
-            if w == 472 and h == 158 then
-                screenError("DISPLAY SIZE INVALID")
-				-- we are ok
-			elseif w == 480 and h == 256 then
-				-- we are ok
-			else				
+            if w ~= 472 and h ~= 158 then
+                rf2status.screenError("DISPLAY SIZE INVALID")
                 return
             end
         end
@@ -1745,7 +1728,7 @@ local function paint(widget)
 			sensorWARN = false
 			smallBOX = true	
 	
-			sensorVALUE = round(sensors.temp_esc/100,0)
+			sensorVALUE = rf2status.round(sensors.temp_esc/100,0)
 			
 			if sensorVALUE < 1 then
 				sensorVALUE = 0 
@@ -1760,13 +1743,13 @@ local function paint(widget)
 			if sensorTempESCMin == 0 or sensorTempESCMin == nil then
 					sensorMIN = "-"
 			else 
-					sensorMIN = round(sensorTempESCMin/100,0)
+					sensorMIN = rf2status.round(sensorTempESCMin/100,0)
 			end
 			
 			if sensorTempESCMax == 0 or sensorTempESCMax == nil then
 					sensorMAX = "-"
 			else 
-					sensorMAX = round(sensorTempESCMax/100,0)
+					sensorMAX = rf2status.round(sensorTempESCMax/100,0)
 			end
 	
 			telemetryBox(posX,posY,boxWs,boxHs,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
@@ -1781,7 +1764,7 @@ local function paint(widget)
 			sensorWARN = false
 			smallBOX = true	
 	
-			sensorVALUE = round(sensors.temp_mcu/100,0)
+			sensorVALUE = rf2status.round(sensors.temp_mcu/100,0)
 		
 			if sensorVALUE < 1 then
 				sensorVALUE = 0 
@@ -1796,13 +1779,13 @@ local function paint(widget)
 			if sensorTempMCUMin == 0 or sensorTempMCUMin == nil then
 					sensorMIN = "-"
 			else 
-					sensorMIN = round(sensorTempMCUMin/100,0)
+					sensorMIN = rf2status.round(sensorTempMCUMin/100,0)
 			end
 			
 			if sensorTempMCUMax == 0 or sensorTempMCUMax == nil then
 					sensorMAX = "-"
 			else 
-					sensorMAX = round(sensorTempMCUMax/100,0)
+					sensorMAX = rf2status.round(sensorTempMCUMax/100,0)
 			end
 
 	
@@ -1855,7 +1838,7 @@ local function paint(widget)
 		sensorMAX = nil
 	
         if theTIME ~= nil or theTIME == 0 then
-            str = SecondsToClock(theTIME)
+            str = rf2status.SecondsToClock(theTIME)
         else
             str = "00:00:00"
         end
@@ -1901,11 +1884,11 @@ local function paint(widget)
 
 		--if linkUP == 0 then
         if linkUP == 0 then
-			noTelem()
+			rf2status.noTelem()
 		end
 		
 		if showLOGS then
-			logsBOX()
+			rf2status.logsBOX()
 		end
 			
 
@@ -1980,7 +1963,7 @@ local function paint(widget)
             -- only trigger if we have been on for 5 seconds or more
             if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >= alertintParam then
                 audioAlertCounter = os.clock()
-                system.playFile("/scripts/rf2status/sounds/alerts/lowvoltage.wav")
+                system.playFile("/scripts/RF2STATUS/sounds/alerts/lowvoltage.wav")
                 --system.playNumber(sensors.voltage / 100, 2, 2)
                 if alrthptParam == 1 then
                     system.playHaptic("- . -")
@@ -1993,7 +1976,7 @@ local function paint(widget)
     end
 end
 
-function ReverseTable(t)
+function rf2status.ReverseTable(t)
     local reversedTable = {}
     local itemCount = #t
     for k, v in ipairs(t) do
@@ -2002,7 +1985,7 @@ function ReverseTable(t)
     return reversedTable
 end
 
-function getSensors()
+function rf2status.getSensors()
     if isInConfiguration == true then
         return oldsensors
     end
@@ -2191,8 +2174,7 @@ function getSensors()
 			adjvalue = 0
         else
             -- we are run sport
-            --voltageSOURCE = system.getSource("VFAS")
-	        voltageSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0210})		
+            voltageSOURCE = system.getSource("VFAS")
             if voltageSOURCE ~= nil then
                 voltage = voltageSOURCE:value()
                 if voltage ~= nil then
@@ -2258,8 +2240,7 @@ function getSensors()
             else
                 fuel = 0
             end
-            --local mahSOURCE = system.getSource("Consumption")
-			local mahSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5250})
+            local mahSOURCE = system.getSource("Consumption")
             if mahSOURCE ~= nil then
                 mah = mahSOURCE:value()
                 if mah ~= nil then
@@ -2352,23 +2333,23 @@ function getSensors()
 
     -- set flag to refresh screen or not
 
-    voltage = kalmanVoltage(voltage, oldsensors.voltage)
-    voltage = round(voltage, 0)
+    voltage = rf2status.kalmanVoltage(voltage, oldsensors.voltage)
+    voltage = rf2status.round(voltage, 0)
 
-    rpm = kalmanRPM(rpm, oldsensors.rpm)
-    rpm = round(rpm, 0)
+    rpm = rf2status.kalmanRPM(rpm, oldsensors.rpm)
+    rpm = rf2status.round(rpm, 0)
 
-    temp_mcu = kalmanTempMCU(temp_mcu, oldsensors.temp_mcu)
-    temp_mcu = round(temp_mcu, 0)
+    temp_mcu = rf2status.kalmanTempMCU(temp_mcu, oldsensors.temp_mcu)
+    temp_mcu = rf2status.round(temp_mcu, 0)
 
-    temp_esc = kalmanTempESC(temp_esc, oldsensors.temp_esc)
-    temp_esc = round(temp_esc, 0)
+    temp_esc = rf2status.kalmanTempESC(temp_esc, oldsensors.temp_esc)
+    temp_esc = rf2status.round(temp_esc, 0)
 
-    current = kalmanCurrent(current, oldsensors.current)
-    current = round(current, 0)
+    current = rf2status.kalmanCurrent(current, oldsensors.current)
+    current = rf2status.round(current, 0)
 
-    rssi = kalmanRSSI(rssi, oldsensors.rssi)
-    rssi = round(rssi, 0)
+    rssi = rf2status.kalmanRSSI(rssi, oldsensors.rssi)
+    rssi = rf2status.round(rssi, 0)
 	
 
     if oldsensors.voltage ~= voltage then
@@ -2535,7 +2516,7 @@ function sensorsMAXMIN(sensors)
 
 
 
-			local maxminFinals = readHistory()	
+			local maxminFinals = rf2status.readHistory()	
 
 
 			local maxminRow = theTIME .. "," 
@@ -2566,7 +2547,7 @@ function sensorsMAXMIN(sensors)
 			name = string.gsub(model.name(), "%s+", "_")	
 			name = string.gsub(name, "%W", "_")		
 		
-			file = "/scripts/rf2status/logs/" .. name .. ".log"	
+			file = "/scripts/RF2STATUS/logs/" .. name .. ".log"	
 			f = io.open(file,'w')
 			f:write("")
 			io.close(f)	
@@ -2666,7 +2647,7 @@ local function updateFILTERING()
 	end
 end
 
-function kalmanCurrent(new, old)
+function rf2status.kalmanCurrent(new, old)
     if old == nil then
         old = 0
     end
@@ -2683,7 +2664,7 @@ function kalmanCurrent(new, old)
     return x
 end
 
-function kalmanRSSI(new, old)
+function rf2status.kalmanRSSI(new, old)
     if old == nil then
         old = 0
     end
@@ -2700,7 +2681,7 @@ function kalmanRSSI(new, old)
     return x
 end
 
-function kalmanTempMCU(new, old)
+function rf2status.kalmanTempMCU(new, old)
     if old == nil then
         old = 0
     end
@@ -2717,7 +2698,7 @@ function kalmanTempMCU(new, old)
     return x
 end
 
-function kalmanTempESC(new, old)
+function rf2status.kalmanTempESC(new, old)
     if old == nil then
         old = 0
     end
@@ -2734,7 +2715,7 @@ function kalmanTempESC(new, old)
     return x
 end
 
-function kalmanRPM(new, old)
+function rf2status.kalmanRPM(new, old)
     if old == nil then
         old = 0
     end
@@ -2751,7 +2732,7 @@ function kalmanRPM(new, old)
     return x
 end
 
-function kalmanVoltage(new, old)
+function rf2status.kalmanVoltage(new, old)
     if old == nil then
         old = 0
     end
@@ -2768,7 +2749,7 @@ function kalmanVoltage(new, old)
     return x
 end
 
-function sensorMakeNumber(x)
+function rf2status.sensorMakeNumber(x)
     if x == nil or x == "" then
         x = 0
     end
@@ -2782,14 +2763,14 @@ function sensorMakeNumber(x)
     return x
 end
 
-function round(number, precision)
+function rf2status.round(number, precision)
     local fmtStr = string.format("%%0.%sf", precision)
     number = string.format(fmtStr, number)
     number = tonumber(number)
     return number
 end
 
-function SecondsToClock(seconds)
+function rf2status.SecondsToClock(seconds)
     local seconds = tonumber(seconds)
 
     if seconds <= 0 then
@@ -2802,7 +2783,7 @@ function SecondsToClock(seconds)
     end
 end
 
-function SecondsToClockAlt(seconds)
+function rf2status.SecondsToClockAlt(seconds)
     local seconds = tonumber(seconds)
 
     if seconds <= 0 then
@@ -2815,7 +2796,7 @@ function SecondsToClockAlt(seconds)
     end
 end
 
-function SecondsFromTime(seconds)
+function rf2status.SecondsFromTime(seconds)
     local seconds = tonumber(seconds)
 
     if seconds <= 0 then
@@ -2828,7 +2809,7 @@ function SecondsFromTime(seconds)
     end
 end
 
-function spairs(t, order)
+function rf2status.spairs(t, order)
     -- collect the keys
     local keys = {}
     for k in pairs(t) do keys[#keys+1] = k end
@@ -2851,7 +2832,7 @@ function spairs(t, order)
     end
 end
 
-function explode (inputstr, sep)
+function rf2status.explode (inputstr, sep)
         if sep == nil then
                 sep = "%s"
         end
@@ -2862,7 +2843,7 @@ function explode (inputstr, sep)
         return t
 end
 
-function ReadLine(f, line)
+function rf2status.ReadLine(f, line)
     local i = 1 -- line counter
     for l in f:lines() do -- lines iterator, "l" returns the line
         if i == line then return l end -- we found this line, return it
@@ -2872,14 +2853,14 @@ function ReadLine(f, line)
 end
 
 
-function readHistory()
+function rf2status.readHistory()
 
 	local history = {}
 	print("Reading history")
 	
 	name = string.gsub(model.name(), "%s+", "_")	
 	name = string.gsub(name, "%W", "_")
-	file = "/scripts/rf2status/logs/" .. name .. ".log"
+	file = "/scripts/RF2STATUS/logs/" .. name .. ".log"
 	local f = io.open(file, "rb")
 	
 	if f ~= nil then
@@ -2940,7 +2921,7 @@ local function read()
 		lowvoltagsenseParam = storage.read("lvsense")		
 		triggerIntervalParam = storage.read("triggerint")	
 		
-		resetALL()
+		rf2status.resetALL()
 		updateFILTERING()		
 end
 
@@ -2974,7 +2955,7 @@ local function write()
 		updateFILTERING()		
 end
 
-function playCurrent(widget)
+function rf2status.playCurrent(widget)
     if triggerCurrentSwitchParam ~= nil then
         if triggerCurrentSwitchParam:state() then
             currentTriggerTimer = true
@@ -3016,7 +2997,7 @@ function playCurrent(widget)
     end
 end
 
-function playLQ(widget)
+function rf2status.playLQ(widget)
     if triggerLQSwitchParam ~= nil then
         if triggerLQSwitchParam:state() then
             lqTriggerTimer = true
@@ -3034,7 +3015,7 @@ function playLQ(widget)
                         lqTriggerTimerStart = os.time()
 						lqaudioTriggerCounter = os.clock()
 						print ("Play LQ Alert (first)")
-						system.playFile("/scripts/rf2status/sounds/alerts/lq.wav")						
+						system.playFile("/scripts/RF2STATUS/sounds/alerts/lq.wav")						
                         system.playNumber(sensors.rssi, UNIT_PERCENT, 2)
                         lqDoneFirst = true
                     end
@@ -3047,7 +3028,7 @@ function playLQ(widget)
                         if ((tonumber(os.clock()) - tonumber(lqaudioTriggerCounter)) >= triggerIntervalParam) then
                             lqaudioTriggerCounter = os.clock()
 							print ("Play LQ Alert (repeat)")
-							system.playFile("/scripts/rf2status/sounds/alerts/lq.wav")
+							system.playFile("/scripts/RF2STATUS/sounds/alerts/lq.wav")
                             system.playNumber(sensors.rssi, UNIT_PERCENT, 2)
                         end
                     end
@@ -3060,7 +3041,7 @@ function playLQ(widget)
     end
 end
 
-function playMCU(widget)
+function rf2status.playMCU(widget)
     if triggerMCUSwitchParam ~= nil then
         if triggerMCUSwitchParam:state() then
             mcuTriggerTimer = true
@@ -3078,7 +3059,7 @@ function playMCU(widget)
                         mcuTriggerTimerStart = os.time()
 						mcuaudioTriggerCounter = os.clock()
 						print ("Playing MCU (first)")
-						system.playFile("/scripts/rf2status/sounds/alerts/mcu.wav")
+						system.playFile("/scripts/RF2STATUS/sounds/alerts/mcu.wav")
                         system.playNumber(sensors.temp_mcu/100, UNIT_DEGREE, 2)
                         mcuDoneFirst = true
                     end
@@ -3091,7 +3072,7 @@ function playMCU(widget)
                         if ((tonumber(os.clock()) - tonumber(mcuaudioTriggerCounter)) >= triggerIntervalParam) then
                             mcuaudioTriggerCounter = os.clock()
 							print ("Playing MCU (repeat)")
-							system.playFile("/scripts/rf2status/sounds/alerts/mcu.wav")
+							system.playFile("/scripts/RF2STATUS/sounds/alerts/mcu.wav")
                             system.playNumber(sensors.temp_mcu/100, UNIT_DEGREE, 2)
                         end
                     end
@@ -3104,7 +3085,7 @@ function playMCU(widget)
     end
 end
 
-function playESC(widget)
+function rf2status.playESC(widget)
     if triggerESCSwitchParam ~= nil then
         if triggerESCSwitchParam:state() then
             escTriggerTimer = true
@@ -3122,7 +3103,7 @@ function playESC(widget)
                         escTriggerTimerStart = os.time()
 						escaudioTriggerCounter = os.clock()
 						print ("Playing ESC (first)")
-						system.playFile("/scripts/rf2status/sounds/alerts/esc.wav")
+						system.playFile("/scripts/RF2STATUS/sounds/alerts/esc.wav")
                         system.playNumber(sensors.temp_esc/100, UNIT_DEGREE, 2)
                         escDoneFirst = true
                     end
@@ -3135,7 +3116,7 @@ function playESC(widget)
                         if ((tonumber(os.clock()) - tonumber(escaudioTriggerCounter)) >= triggerIntervalParam) then
                             escaudioTriggerCounter = os.clock()
 							print ("Playing ESC (repeat)")
-							system.playFile("/scripts/rf2status/sounds/alerts/esc.wav")
+							system.playFile("/scripts/RF2STATUS/sounds/alerts/esc.wav")
                             system.playNumber(sensors.temp_esc/100, UNIT_DEGREE, 2)
                         end
                     end
@@ -3148,7 +3129,7 @@ function playESC(widget)
     end
 end
 
-function playTIMER(widget)
+function rf2status.playTIMER(widget)
     if triggerTimerSwitchParam ~= nil then
 
         if triggerTimerSwitchParam:state() then
@@ -3212,7 +3193,7 @@ function playTIMER(widget)
     end
 end
 
-function playFuel(widget)
+function rf2status.playFuel(widget)
     if triggerFuelSwitchParam ~= nil then
         if triggerFuelSwitchParam:state() then
             fuelTriggerTimer = true
@@ -3230,7 +3211,7 @@ function playFuel(widget)
                         fuelTriggerTimerStart = os.time()
 						fuelaudioTriggerCounter = os.clock()
 						print("Play fuel alert (first)")
-						system.playFile("/scripts/rf2status/sounds/alerts/fuel.wav")	
+						system.playFile("/scripts/RF2STATUS/sounds/alerts/fuel.wav")	
                         system.playNumber(sensors.fuel, UNIT_PERCENT, 2)				
                         fuelDoneFirst = true
                     end
@@ -3243,7 +3224,7 @@ function playFuel(widget)
                         if ((tonumber(os.clock()) - tonumber(fuelaudioTriggerCounter)) >= triggerIntervalParam) then
                             fuelaudioTriggerCounter = os.clock()
 							print("Play fuel alert (repeat)")
-							system.playFile("/scripts/rf2status/sounds/alerts/fuel.wav")	
+							system.playFile("/scripts/RF2STATUS/sounds/alerts/fuel.wav")	
                             system.playNumber(sensors.fuel, UNIT_PERCENT, 2)
 													
                         end
@@ -3257,7 +3238,7 @@ function playFuel(widget)
     end
 end
 
-function playRPM(widget)
+function rf2status.playRPM(widget)
     if triggerRPMSwitchParam ~= nil then
         if triggerRPMSwitchParam:state() then
             rpmTriggerTimer = true
@@ -3299,7 +3280,7 @@ function playRPM(widget)
     end
 end
 
-function playVoltage(widget)
+function rf2status.playVoltage(widget)
     if triggerVoltageSwitchParam ~= nil then
         if triggerVoltageSwitchParam:state() then
             lvTriggerTimer = true
@@ -3317,7 +3298,7 @@ function playVoltage(widget)
                         lvTriggerTimerStart = os.time()
 						lvaudioTriggerCounter = os.clock()
 						print("Play voltage alert (first)")
-						--system.playFile("/scripts/rf2status/sounds/alerts/voltage.wav")						
+						--system.playFile("/scripts/RF2STATUS/sounds/alerts/voltage.wav")						
                         system.playNumber(sensors.voltage / 100, 2, 2)
                         voltageDoneFirst = true
                     end
@@ -3330,7 +3311,7 @@ function playVoltage(widget)
                         if ((tonumber(os.clock()) - tonumber(lvaudioTriggerCounter)) >= triggerIntervalParam) then
                             lvaudioTriggerCounter = os.clock()
 							print("Play voltage alert (repeat)")
-							--system.playFile("/scripts/rf2status/sounds/alerts/voltage.wav")								
+							--system.playFile("/scripts/RF2STATUS/sounds/alerts/voltage.wav")								
                             system.playNumber(sensors.voltage / 100, 2, 2)
                         end
                     end
@@ -3345,7 +3326,7 @@ end
 
 local function event(widget, category, value, x, y)
 
-	print("Event received:", category, value, x, y)
+	--print("Event received:", category, value, x, y)
 	
 	-- disable menu if governor active
 		if sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or
@@ -3421,13 +3402,15 @@ local function playGovernor()
 		if playGovernorCount == 0 then
 				print("Governor: " .. sensors.govmode)
 				playGovernorCount = 1
-				system.playFile("/scripts/rf2status/sounds/gov/"..string.lower(sensors.govmode)..".wav")
+				system.playFile("/scripts/RF2STATUS/sounds/gov/"..string.lower(sensors.govmode)..".wav")
 		end
 	
 	end
 end
 
-local function playRPMDiff()
+
+
+function rf2status.playRPMDiff()
 	if rpmAlertsParam == 1 then
 	
 	    if sensors.govmode == "ACTIVE" or sensors.govmode == "LOST-HS" or sensors.govmode == "BAILOUT" or sensors.govmode == "RECOVERY" then
@@ -3437,17 +3420,17 @@ local function playRPMDiff()
 			end
 		
 			-- we take a reading every 5 second
-			if (tonumber(os.clock()) - tonumber(playRPMDiffCounter)) >= 5 then
+			if (tonumber(os.clock()) - tonumber(rf2status.playRPMDiffCounter)) >= 5 then
 				playRPMDiffCounter = os.clock()
 				playRPMDiffLastState = sensors.rpm
 			end
 			
 			-- check if current state withing % of last state
 			local percentageDiff = 0
-			if sensors.rpm > playRPMDiffLastState then
-				percentageDiff = math.abs(100 - (sensors.rpm / playRPMDiffLastState * 100))
-			elseif playRPMDiffLastState < sensors.rpm then
-				percentage = math.abs(100 - (playRPMDiffLastState/sensors.rpm * 100))
+			if sensors.rpm > rf2status.playRPMDiffLastState then
+				percentageDiff = math.abs(100 - (sensors.rpm / rf2status.playRPMDiffLastState * 100))
+			elseif rf2status.playRPMDiffLastState < sensors.rpm then
+				percentage = math.abs(100 - (rf2status.playRPMDiffLastState/sensors.rpm * 100))
 			else
 				percentageDiff = 0
 			end		
@@ -3501,7 +3484,7 @@ local function playADJ()
 					if adjfunction ~= nil then
 						print("ADJfunc triggered for: " .. "id".. ADJSOURCE)
 						for wavi, wavv in ipairs(adjfunction.wavs) do
-							system.playFile("/scripts/rf2status/sounds/adjfunc/"..wavv..".wav")
+							system.playFile("/scripts/RF2STATUS/sounds/adjfunc/"..wavv..".wav")
 						end
 					end	
 					adjfuncIdChanged = false
@@ -3528,8 +3511,8 @@ end
 local function wakeup(widget)
     refresh = false
 
-    linkUP = getRSSI()
-    sensors = getSensors()
+    linkUP = rf2status.getRSSI()
+    sensors = rf2status.getSensors()
 	
     if refresh == true then
         sensorsMAXMIN(sensors)	
@@ -3544,25 +3527,25 @@ local function wakeup(widget)
 	
 		 if ((tonumber(os.clock()) - tonumber(linkUPTime)) >= 5) then
 			-- voltage alerts
-			playVoltage(widget)
+			rf2status.playVoltage(widget)
 			-- governor callouts
 			playGovernor(widget)
 			-- rpm diff
-			playRPMDiff(widget)	
+			rf2status.playRPMDiff(widget)	
 			-- rpm
-			playRPM(widget)	
+			rf2status.playRPM(widget)	
 			-- current
-			playCurrent(widget)	
+			rf2status.playCurrent(widget)	
 			-- fuel
-			playFuel(widget)	
+			rf2status.playFuel(widget)	
 			-- lq
-			playLQ(widget)	
+			rf2status.playLQ(widget)	
 			-- esc
-			playESC(widget)
+			rf2status.playESC(widget)
 			-- mcu
-			playMCU(widget)
+			rf2status.playMCU(widget)
 			-- timer
-			playTIMER(widget)
+			rf2status.playTIMER(widget)
 			-- adjValues
 			playADJ(widget)
 		else
@@ -3604,7 +3587,7 @@ local function init()
         }
     )
 
-    system.compile("/scripts/rf2status/main.lua")
+    system.compile("/scripts/RF2STATUS/main.lua")
 end
 
 return {init = init}
