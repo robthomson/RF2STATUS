@@ -2341,10 +2341,38 @@ function rf2status.getSensors()
     end
 
 
-
+	--calc fuel percentage if needed
     if voltage ~= 0 and (fuel == 0) then
-        maxCellVoltage = 4.196
-        minCellVoltage = 3.2
+	
+        if btypeParam == 0 then
+            --LiPo
+			maxCellVoltage = 4.2
+			minCellVoltage = 3.2
+        elseif btypeParam == 1 then
+            --LiHv
+			maxCellVoltage = 4.35
+			minCellVoltage = 3.4
+        elseif btypeParam == 2 then
+            --Lion
+			maxCellVoltage = 2.4
+			minCellVoltage = 3
+        elseif btypeParam == 3 then
+            --LiFe
+			maxCellVoltage = 3.65
+			minCellVoltage = 2.5
+        elseif btypeParam == 4 then
+            --NiMh
+			maxCellVoltage = 1.2
+			minCellVoltage = 0.9
+        else
+            --LiPo (default)
+			maxCellVoltage = 4.196
+			minCellVoltage = 3.2
+        end	
+	
+	
+        --maxCellVoltage = 4.196
+        --minCellVoltage = 3.2
         avgCellVoltage = voltage / cellsParam
         batteryPercentage = 100 * (avgCellVoltage - minCellVoltage) / (maxCellVoltage - minCellVoltage)
         fuel = batteryPercentage
