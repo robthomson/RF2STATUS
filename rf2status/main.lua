@@ -93,7 +93,7 @@ local playRPMDiffLastState = nil
 local playRPMDiffCounter = 0
 
 
-local lowvoltagStickParam = 1
+local lowvoltagStickParam = 0
 local fmsrcParam = 0
 local btypeParam = 0
 local lowfuelParam = 20
@@ -2388,21 +2388,6 @@ function rf2status.getSensors()
 		adjvalue = 0
     end
 
-	-- do / dont do voltage based on stick position
-	if(lowvoltagStickParam ~= 0) then
-			lvStickTrigger = false
-			for i, v in ipairs(lvStickOrder[lowvoltagStickParam]) do
-				if lvStickTrigger == false then  -- we skip more if any stick has resulted in trigger
-					if math.abs(getChannelValue(v)) >= 80 then 
-							lvStickTrigger = true
-							
-					end
-				end
-			end
-	end		
-	
-
-
 	--calc fuel percentage if needed
     if voltage ~= 0 and (fuel == 0) then
 	
@@ -2431,7 +2416,6 @@ function rf2status.getSensors()
 			maxCellVoltage = 4.196
 			minCellVoltage = 3.2
         end	
-	
 
         --maxCellVoltage = 4.196
         --minCellVoltage = 3.2
@@ -2463,6 +2447,23 @@ function rf2status.getSensors()
 
     rssi = rf2status.kalmanRSSI(rssi, oldsensors.rssi)
     rssi = rf2status.round(rssi, 0)
+	
+	-- do / dont do voltage based on stick position
+	if lowvoltagStickParam == nil then
+		lowvoltagStickParam = 0
+	end
+	if(lowvoltagStickParam ~= 0) then
+			lvStickTrigger = false
+			for i, v in ipairs(lvStickOrder[lowvoltagStickParam]) do
+				if lvStickTrigger == false then  -- we skip more if any stick has resulted in trigger
+					if math.abs(getChannelValue(v)) >= 80 then 
+							lvStickTrigger = true
+							
+					end
+				end
+			end
+	end		
+
 	
 
     if oldsensors.voltage ~= voltage then
