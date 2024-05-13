@@ -92,6 +92,8 @@ local playRPMDiffCount = 1
 local playRPMDiffLastState = nil
 local playRPMDiffCounter = 0
 
+
+local lowvoltagStickParam = 1
 local fmsrcParam = 0
 local btypeParam = 0
 local lowfuelParam = 20
@@ -116,6 +118,15 @@ local triggerTimerSwitchParam = nil
 local filteringParam = 1
 local lowvoltagsenseParam = 2
 local triggerIntervalParam = 30
+
+
+local lvStickOrder = {}
+lvStickOrder[1] = {1,2,3,4}
+lvStickOrder[2] = {1,2,4,5}
+lvStickOrder[3] = {1,2,4,6}
+lvStickOrder[4] = {2,3,4,6}
+
+local lvStickTrigger = false
 
 local govmodeParam = 0
 local governorAlertsParam = 1
@@ -375,6 +386,7 @@ local function configure(widget)
         end
     )
     field:default(20)
+	field:suffix("%")
 
     -- ALERT INTERVAL
     line = form.addLine("Interval",alertpanel)
@@ -441,7 +453,7 @@ local function configure(widget)
         line,
         nil,
         0,
-        50,
+        200,
         function()
             return rpmAlertsPercentageParam
         end,
@@ -679,7 +691,28 @@ local function configure(widget)
         end
     )
     field:default(5)
+	field:suffix("s")
 	--field:decimals(1)
+
+    -- LVSTICK MONITORING
+    line = form.addLine("LV Stick Monitoring",advpanel)
+    form.addChoiceField(
+        line,
+        nil,
+        {
+			{"DISABLED", 0},  -- recomended
+			{"AECR1T23", 1},  -- recomended
+			{"AETRC123", 2}, -- frsky
+			{"AETR1C23", 3}, --fut/hitec
+			{"TAER1C23",4} -- spec
+		},
+        function()
+            return lowvoltagStickParam
+        end,
+        function(newValue)
+            lowvoltagStickParam = newValue
+        end
+    )
 
 
    -- LVTRIGGER DISPLAY
@@ -737,6 +770,10 @@ local function configure(widget)
 end
 
 function rf2status.getRssiSensor()
+	if environment.simulation then
+		return 100
+	end
+
     local rssiNames = {"RSSI", "RSSI 2.4G", "RSSI 900M", "Rx RSSI1", "Rx RSSI2"}
     for i, name in ipairs(rssiNames) do
         rssiSensor = system.getSource(name)
@@ -1986,11 +2023,16 @@ local function paint(widget)
             -- only trigger if we have been on for 5 seconds or more
             if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >= alertintParam then
                 audioAlertCounter = os.clock()
-                system.playFile("/scripts/RF2STATUS/sounds/alerts/lowvoltage.wav")
-                --system.playNumber(sensors.voltage / 100, 2, 2)
-                if alrthptParam == 1 then
-                    system.playHaptic("- . -")
-                end
+				
+				if lvStickTrigger == false then -- do not play if sticks at high end points
+					system.playFile("/scripts/RF2STATUS/sounds/alerts/lowvoltage.wav")
+					print(lvStickTrigger)
+					--system.playNumber(sensors.voltage / 100, 2, 2)
+					if alrthptParam == 1 then
+						system.playHaptic("- . -")
+					end
+				end
+	
             end
         end
     else
@@ -2007,6 +2049,12 @@ function rf2status.ReverseTable(t)
     end
     return reversedTable
 end
+
+local function getChannelValue(ich)
+  local src = system.getSource ({category=CATEGORY_CHANNEL, member=(ich-1), options=0})
+  return math.floor ((src:value() / 10.24) +0.5)
+end
+
 
 function rf2status.getSensors()
     if isInConfiguration == true then
@@ -2340,6 +2388,20 @@ function rf2status.getSensors()
 		adjvalue = 0
     end
 
+	-- do / dont do voltage based on stick position
+	if(lowvoltagStickParam ~= 0) then
+			lvStickTrigger = false
+			for i, v in ipairs(lvStickOrder[lowvoltagStickParam]) do
+				if lvStickTrigger == false then  -- we skip more if any stick has resulted in trigger
+					if math.abs(getChannelValue(v)) >= 80 then 
+							lvStickTrigger = true
+							
+					end
+				end
+			end
+	end		
+	
+
 
 	--calc fuel percentage if needed
     if voltage ~= 0 and (fuel == 0) then
@@ -2370,7 +2432,7 @@ function rf2status.getSensors()
 			minCellVoltage = 3.2
         end	
 	
-	
+
         --maxCellVoltage = 4.196
         --minCellVoltage = 3.2
         avgCellVoltage = voltage / cellsParam
@@ -2452,6 +2514,9 @@ function rf2status.getSensors()
 
     return ret
 end
+
+
+
 
 function sensorsMAXMIN(sensors)
 
@@ -2972,6 +3037,7 @@ local function read()
 		lowvoltagsenseParam = storage.read("lvsense")		
 		triggerIntervalParam = storage.read("triggerint")	
 		lowVoltageGovernorParam = storage.read("lvgovernor")
+		lowvoltagStickParam = storage.read("lvstickmon")
 		
 		rf2status.resetALL()
 		updateFILTERING()		
@@ -3004,6 +3070,7 @@ local function write()
 		storage.write("lvsense",lowvoltagsenseParam)
 		storage.write("triggerint",triggerIntervalParam)
 		storage.write("lvgovernor",lowVoltageGovernorParam)
+		storage.write("lvstickmon",lowvoltagStickParam)
 		
 		updateFILTERING()		
 end
