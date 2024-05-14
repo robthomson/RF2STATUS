@@ -2072,11 +2072,13 @@ local function paint(widget)
 				
 				if lvStickTrigger == false then -- do not play if sticks at high end points
 					system.playFile("/scripts/RF2STATUS/sounds/alerts/lowvoltage.wav")
-					--print(lvStickTrigger)
+
 					--system.playNumber(sensors.voltage / 100, 2, 2)
 					if alrthptParam == true then
 						system.playHaptic("- . -")
 					end
+				else
+					print("Alarm supressed due to stick positions")
 				end
 	
             end
@@ -2542,7 +2544,6 @@ function rf2status.getSensors()
 				if lvStickTrigger == false then  -- we skip more if any stick has resulted in trigger
 					if math.abs(getChannelValue(v)) >= 80 then 
 							lvStickTrigger = true
-							
 					end
 				end
 			end
