@@ -21,6 +21,7 @@ local supportedRADIO = false
 local gfx_model
 local audioAlertCounter = 0
 
+local defineSOURCES = false
 
 local lvTimer = false
 local lvTimerStart
@@ -93,6 +94,7 @@ local playRPMDiffLastState = nil
 local playRPMDiffCounter = 0
 
 
+local miniBoxParam = 0
 local lowvoltagStickParam = 0
 local fmsrcParam = 0
 local btypeParam = 0
@@ -586,6 +588,25 @@ local function configure(widget)
 
 	displaypanel = form.addExpansionPanel("Display")
 	displaypanel:open(false) 
+
+
+    -- Mini Boxes
+    line = form.addLine("Mini Boxes",displaypanel)
+    form.addChoiceField(
+        line,
+        nil,
+        {
+            {"LQ,TIMER,T.ESC,T.MCU", 0},
+            {"LQ,TIMER", 1},
+            {"TIMER", 2},
+        },
+        function()
+            return miniBoxParam
+        end,
+        function(newValue)
+            miniBoxParam = newValue
+        end
+    )
 
     -- FLIGHT MODE SOURCE
     line = form.addLine("Flight mode",displaypanel)
@@ -1769,7 +1790,7 @@ local function paint(widget)
 		end		
 
 		--TEMP ESC
-		if sensors.temp_esc ~= nil then
+		if sensors.temp_esc ~= nil and miniBoxParam == 0 then
 		
 			posX = 0
 			posY =  boxH+(theme.colSpacing*2)+boxHs+theme.colSpacing
@@ -1805,7 +1826,7 @@ local function paint(widget)
 		end	
 
 		--TEMP MCU
-		if sensors.temp_mcu ~= nil then
+		if sensors.temp_mcu ~= nil and miniBoxParam == 0 then
 		
 			posX = boxWs+theme.colSpacing
 			posY =  boxH+(theme.colSpacing*2)+boxHs+theme.colSpacing
@@ -1842,13 +1863,26 @@ local function paint(widget)
 		end	
 
 		--RSSI
-		if sensors.rssi ~= nil then
+		if sensors.rssi ~= nil and (miniBoxParam == 0 or miniBoxParam == 1)then
 		
-			posX = 0
-			posY =  boxH+(theme.colSpacing*2)
-			sensorUNIT = "%"
-			sensorWARN = false
-			smallBOX = true	
+		
+			if miniBoxParam == 0 then
+				posX = 0
+				posY =  boxH+(theme.colSpacing*2)
+				sensorUNIT = "%"
+				sensorWARN = false
+				smallBOX = true	
+				thisBoxW = boxWs
+				thisBoxH = boxHs
+			elseif 	miniBoxParam == 1 then
+				posX = 0
+				posY =  boxH+(theme.colSpacing*2)
+				sensorUNIT = "%"
+				sensorWARN = false
+				smallBOX = true	
+				thisBoxW = boxW
+				thisBoxH = boxHs			
+			end
 	
 			sensorVALUE = sensors.rssi
 			
@@ -1874,35 +1908,57 @@ local function paint(widget)
 					sensorMAX = sensorRSSIMax
 			end
 	
-			telemetryBox(posX,posY,boxWs,boxHs,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
+			telemetryBox(posX,posY,thisBoxW,thisBoxH,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
 		end	
 
 	-- TIMER
-		posX = boxWs+theme.colSpacing
-		posY =  boxH+(theme.colSpacing*2)
-		sensorUNIT = ""
-		sensorWARN = false
-		smallBOX = true		
-		sensorMIN = nil
-		sensorMAX = nil
-	
-        if theTIME ~= nil or theTIME == 0 then
-            str = rf2status.SecondsToClock(theTIME)
-        else
-            str = "00:00:00"
-        end
+	if miniBoxParam == 0 or miniBoxParam == 1 or miniBoxParam == 2 then
+			if miniBoxParam == 0 then
+				posX = boxWs+theme.colSpacing
+				posY =  boxH+(theme.colSpacing*2)
+				sensorUNIT = ""
+				sensorWARN = false
+				smallBOX = true	
+				thisBoxW = boxWs
+				thisBoxH = boxHs			
+			elseif miniBoxParam == 1 then
+				posX = 0
+				posY =  boxH+(theme.colSpacing*2)+boxHs+theme.colSpacing
+				sensorUNIT = ""
+				sensorWARN = false
+				smallBOX = true		
+				thisBoxW = boxW
+				thisBoxH = boxHs			
+			elseif miniBoxParam == 2 then
+				posX = 0
+				posY =  boxH+(theme.colSpacing*2)
+				sensorUNIT = ""
+				sensorWARN = false
+				smallBOX = false		
+				thisBoxW = boxW
+				thisBoxH = boxH			
+			end		
+			
+			sensorMIN = nil
+			sensorMAX = nil
 		
-		
-		if titleParam == true then
-			sensorTITLE = theme.title_time
-		else
-			sensorTITLE = ""		
-		end		
-	   
-	    sensorVALUE = str
-       
-	    telemetryBox(posX,posY,boxWs,boxHs,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
-
+			if theTIME ~= nil or theTIME == 0 then
+				str = rf2status.SecondsToClock(theTIME)
+			else
+				str = "00:00:00"
+			end
+			
+			
+			if titleParam == true then
+				sensorTITLE = theme.title_time
+			else
+				sensorTITLE = ""		
+			end		
+		   
+			sensorVALUE = str
+		   
+			telemetryBox(posX,posY,thisBoxW,thisBoxH,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
+		end
 
 		--FLIGHT MODES
 		posX = 0
@@ -2120,9 +2176,25 @@ function rf2status.getSensors()
 		
     elseif linkUP ~= 0 then
         local telemetrySOURCE = system.getSource("Rx RSSI1")
+	
+
         if telemetrySOURCE ~= nil then
-            -- we are running crsf
-            local voltageSOURCE = system.getSource("Rx Batt")
+	        -- we are running crsf
+	
+			-- set sources for everthing below
+			if linkUP and defineSOURCES == false then
+				voltageSOURCE = system.getSource("Rx Batt")
+				rpmSOURCE = system.getSource("GPS Alt")
+				currentSOURCE = system.getSource("Rx Curr")
+				temp_escSOURCE = system.getSource("GPS Speed")
+				temp_mcuSOURCE = system.getSource("GPS Sats")
+				fuelSOURCE = system.getSource("Rx Batt%")
+				mahSOURCE = system.getSource("Rx Cons")
+				govSOURCE = system.getSource("Flight mode")
+				rssiSOURCE = system.getSource("Rx Quality")	
+				defineSOURCES = true
+			end
+		
             if voltageSOURCE ~= nil then
                 voltage = voltageSOURCE:value()
                 if voltage ~= nil then
@@ -2133,7 +2205,8 @@ function rf2status.getSensors()
             else
                 voltage = 0
             end
-            local rpmSOURCE = system.getSource("GPS Alt")
+
+
             if rpmSOURCE ~= nil then
                 if rpmSOURCE:maximum() == 1000.0 then
                     rpmSOURCE:maximum(65000)
@@ -2148,7 +2221,7 @@ function rf2status.getSensors()
             else
                 rpm = 0
             end
-            local currentSOURCE = system.getSource("Rx Curr")
+
             if currentSOURCE ~= nil then
                 if currentSOURCE:maximum() == 50.0 then
                     currentSOURCE:maximum(400.0)
@@ -2164,7 +2237,7 @@ function rf2status.getSensors()
                 current = 0
             end
 
-            temp_escSOURCE = system.getSource("GPS Speed")
+
             if temp_escSOURCE ~= nil then
                 temp_esc = temp_escSOURCE:value()
                 if temp_esc ~= nil then
@@ -2175,7 +2248,7 @@ function rf2status.getSensors()
             else
                 temp_esc = 0
             end
-            local temp_mcuSOURCE = system.getSource("GPS Sats")
+
             if temp_mcuSOURCE ~= nil then
                 temp_mcu = temp_mcuSOURCE:value()
                 if temp_mcu ~= nil then
@@ -2186,7 +2259,7 @@ function rf2status.getSensors()
             else
                 temp_mcu = 0
             end
-            local fuelSOURCE = system.getSource("Rx Batt%")
+
             if fuelSOURCE ~= nil then
                 fuel = fuelSOURCE:value()
                 if fuel ~= nil then
@@ -2197,7 +2270,7 @@ function rf2status.getSensors()
             else
                 fuel = 0
             end
-            local mahSOURCE = system.getSource("Rx Cons")
+
             if mahSOURCE ~= nil then
                 mah = mahSOURCE:value()
                 if mah ~= nil then
@@ -2208,7 +2281,7 @@ function rf2status.getSensors()
             else
                 mah = 0
             end
-            local govSOURCE = system.getSource("Flight mode")
+
             if govSOURCE ~= nil then
                 govmode = govSOURCE:stringValue()
             end
@@ -2217,7 +2290,8 @@ function rf2status.getSensors()
             else
                 fm = ""
             end
-            local rssiSOURCE = system.getSource("Rx Quality")
+			
+
             if rssiSOURCE ~= nil then
                 rssi = rssiSOURCE:value()
                 if rssi ~= nil then
@@ -2234,8 +2308,23 @@ function rf2status.getSensors()
 			adjsource = 0
 			adjvalue = 0
         else
-            -- we are run sport
-            voltageSOURCE = system.getSource("VFAS")
+            -- we are run sport	
+			-- set sources for everthing below
+			if linkUP and defineSOURCES == false then
+				voltageSOURCE = system.getSource("VFAS")
+				rpmSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0500})
+				currentSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200})
+				temp_escSOURCE = system.getSource("ESC temp")
+				temp_mcuSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0401})
+				fuelSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600})
+				mahSOURCE = system.getSource("Consumption")
+				govSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5450})
+				adjSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5110})
+				adjVALUE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5111})
+				defineSOURCES = true
+			end		
+
+            --voltageSOURCE = system.getSource("VFAS")
             if voltageSOURCE ~= nil then
                 voltage = voltageSOURCE:value()
                 if voltage ~= nil then
@@ -2246,7 +2335,7 @@ function rf2status.getSensors()
             else
                 voltage = 0
             end
-            rpmSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0500})
+
             if rpmSOURCE ~= nil then
                 rpm = rpmSOURCE:value()
                 if rpm ~= nil then
@@ -2257,7 +2346,7 @@ function rf2status.getSensors()
             else
                 rpm = 0
             end
-            local currentSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200})
+
             if currentSOURCE ~= nil then
                 current = currentSOURCE:value()
                 if current ~= nil then
@@ -2268,7 +2357,7 @@ function rf2status.getSensors()
             else
                 current = 0
             end
-            local temp_escSOURCE = system.getSource("ESC temp")
+
             if temp_escSOURCE ~= nil then
                 temp_esc = temp_escSOURCE:value()
                 if temp_esc ~= nil then
@@ -2279,7 +2368,8 @@ function rf2status.getSensors()
             else
                 temp_esc = 0
             end
-            local temp_mcuSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0401})
+            
+
             if temp_mcuSOURCE ~= nil then
                 temp_mcu = temp_mcuSOURCE:value()
                 if temp_mcu ~= nil then
@@ -2290,7 +2380,8 @@ function rf2status.getSensors()
             else
                 temp_mcu = 0
             end
-            local fuelSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600})
+			
+
             if fuelSOURCE ~= nil then
                 fuel = fuelSOURCE:value()
                 if fuel ~= nil then
@@ -2301,7 +2392,8 @@ function rf2status.getSensors()
             else
                 fuel = 0
             end
-            local mahSOURCE = system.getSource("Consumption")
+			
+
             if mahSOURCE ~= nil then
                 mah = mahSOURCE:value()
                 if mah ~= nil then
@@ -2312,7 +2404,8 @@ function rf2status.getSensors()
             else
                 mah = 0
             end
-            local govSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5450})
+			
+
             if govSOURCE ~= nil then
                 govId = govSOURCE:value()
 
@@ -2350,11 +2443,11 @@ function rf2status.getSensors()
             else
                 fm = ""
             end
-            local adjSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5110})
+			
             if adjSOURCE ~= nil then
                 adjsource = adjSOURCE:value()
 			end	
-            local adjVALUE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5111})
+			
             if adjVALUE ~= nil then
                 adjvalue = adjVALUE:value()
 			end	
@@ -2376,6 +2469,7 @@ function rf2status.getSensors()
         rssi = linkUP
 		adjsource = 0
 		adjvalue = 0
+		defineSOURCES = false
     end
 
 	--calc fuel percentage if needed
@@ -3029,6 +3123,24 @@ local function read()
 		triggerIntervalParam = storage.read("triggerint")	
 		lowVoltageGovernorParam = storage.read("lvgovernor")
 		lowvoltagStickParam = storage.read("lvstickmon")
+		miniBoxParam = storage.read('minibox')
+
+		-- fix some legacy params values if bad
+		if miniBoxParam == nil then miniBoxParam = 0 end
+		if titleParam == 0 then titleParam = false end
+		if titleParam == 1 then titleParam = true end		
+		if maxminParam == 0 then maxminParam = false end
+		if maxminParam == 1 then maxminParam = true end		
+		if lowVoltageGovernorParam == 0 then lowVoltageGovernorParam = false end
+		if lowVoltageGovernorParam == 1 then lowVoltageGovernorParam = true end		
+		if alrthptParam == 0 then alrthptParam = false end
+		if alrthptParam == 1 then alrthptParam = true end		
+		if governorAlertsParam == 0 then governorAlertsParam = false end
+		if governorAlertsParam == 1 then governorAlertsParam = true end				
+		if rpmAlertsParam == 0 then rpmAlertsParam = false end
+		if rpmAlertsParam == 1 then rpmAlertsParam = true end	
+		if adjFunctionParam == 0 then adjFunctionParam = false end
+		if adjFunctionParam == 1 then adjFunctionParam = true end
 		
 		rf2status.resetALL()
 		updateFILTERING()		
@@ -3062,6 +3174,7 @@ local function write()
 		storage.write("triggerint",triggerIntervalParam)
 		storage.write("lvgovernor",lowVoltageGovernorParam)
 		storage.write("lvstickmon",lowvoltagStickParam)
+		storage.write("minibox",miniBoxParam)
 		
 		updateFILTERING()		
 end
