@@ -96,6 +96,7 @@ local playRPMDiffCounter = 0
 
 local miniBoxParam = 0
 local lowvoltagStickParam = 0
+local lowvoltagStickCutoffParam = 70
 local fmsrcParam = 0
 local btypeParam = 0
 local lowfuelParam = 20
@@ -654,27 +655,11 @@ local function configure(widget)
 	advpanel = form.addExpansionPanel("Advanced")
 	advpanel:open(false) 
 	
-    -- FILTER
-    -- MAX MIN DISPLAY
-    line = form.addLine("Filtering",advpanel)
-    form.addChoiceField(
-        line,
-        nil,
-        {
-			{"LOW", 1}, 
-			{"MEDIUM", 2}, 
-			{"HIGH", 3}
-		},
-        function()
-            return filteringParam
-        end,
-        function(newValue)
-            filteringParam = newValue
-        end
-    )
 
+    line = form.addLine("Voltage",advpanel)
+	
     -- LVTRIGGER DISPLAY
-    line = form.addLine("Low voltage sensitivity",advpanel)
+    line = form.addLine("    Sensitivity",advpanel)
     form.addChoiceField(
         line,
         nil,
@@ -691,7 +676,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("Voltage Sag compensation",advpanel)
+    line = form.addLine("    Sag compensation",advpanel)
     field =
         form.addNumberField(
         line,
@@ -710,16 +695,16 @@ local function configure(widget)
 	--field:decimals(1)
 
     -- LVSTICK MONITORING
-    line = form.addLine("LV Stick Monitoring",advpanel)
+    line = form.addLine("    Gimbal Monitoring",advpanel)
     form.addChoiceField(
         line,
         nil,
         {
 			{"DISABLED", 0},  -- recomended
-			{"AECR1T23", 1},  -- recomended
-			{"AETRC123", 2}, -- frsky
-			{"AETR1C23", 3}, --fut/hitec
-			{"TAER1C23",4} -- spec
+			{"AECR1T23 (ELRS)", 1},  -- recomended
+			{"AETRC123 (FRSKY)", 2}, -- frsky
+			{"AETR1C23 (FUTABA)", 3}, --fut/hitec
+			{"TAER1C23 (SPEKTRUM)",4} -- spec
 		},
         function()
             return lowvoltagStickParam
@@ -729,9 +714,26 @@ local function configure(widget)
         end
     )
 
+    line = form.addLine("    Stick Cutoff",advpanel)
+    field =
+        form.addNumberField(
+        line,
+        nil,
+        65,
+        95,
+        function()
+            return lowvoltagStickCutoffParam
+        end,
+        function(value)
+             lowvoltagStickCutoffParam = value
+        end
+    )
+    field:default(80)
+	field:suffix("%")
 
-   -- LVTRIGGER DISPLAY
-    line = form.addLine("LV Governor filter",advpanel)
+
+   -- LVTRIGGER DISPLAY 
+    line = form.addLine("    Governor filter",advpanel)
     form.addBooleanField(
         line,
         nil,
@@ -744,7 +746,24 @@ local function configure(widget)
     )
 
 
-
+    -- FILTER
+    -- MAX MIN DISPLAY
+    line = form.addLine("Telemetry Filtering",advpanel)
+    form.addChoiceField(
+        line,
+        nil,
+        {
+			{"LOW", 1}, 
+			{"MEDIUM", 2}, 
+			{"HIGH", 3}
+		},
+        function()
+            return filteringParam
+        end,
+        function(newValue)
+            filteringParam = newValue
+        end
+    )
 
    -- LVTRIGGER DISPLAY
     line = form.addLine("Trigger interval",advpanel)
@@ -2538,11 +2557,15 @@ function rf2status.getSensors()
 	if lowvoltagStickParam == nil then
 		lowvoltagStickParam = 0
 	end
+	if lowvoltagStickCutoffParam == nil then
+		lowvoltagStickCutoffParam = 80
+	end
+
 	if(lowvoltagStickParam ~= 0) then
 			lvStickTrigger = false
 			for i, v in ipairs(lvStickOrder[lowvoltagStickParam]) do
 				if lvStickTrigger == false then  -- we skip more if any stick has resulted in trigger
-					if math.abs(getChannelValue(v)) >= 80 then 
+					if math.abs(getChannelValue(v)) >= lowvoltagStickCutoffParam then 
 							lvStickTrigger = true
 					end
 				end
@@ -3125,6 +3148,7 @@ local function read()
 		lowVoltageGovernorParam = storage.read("lvgovernor")
 		lowvoltagStickParam = storage.read("lvstickmon")
 		miniBoxParam = storage.read('minibox')
+		lowvoltagStickCutoffParam = storage.read("lvstickcutoff")
 
 		-- fix some legacy params values if bad
 		if miniBoxParam == nil then miniBoxParam = 0 end
@@ -3176,6 +3200,7 @@ local function write()
 		storage.write("lvgovernor",lowVoltageGovernorParam)
 		storage.write("lvstickmon",lowvoltagStickParam)
 		storage.write("minibox",miniBoxParam)
+		storage.write("lvstickcutoff",lowvoltagStickCutoffParam)
 		
 		updateFILTERING()		
 end
