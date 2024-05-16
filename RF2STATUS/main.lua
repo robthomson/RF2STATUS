@@ -320,7 +320,7 @@ local function create(widget)
 end
 
 function loadScriptRF2STATUS(script) 
-	system.compile(script)
+	--system.compile(script)
 	return loadfile(script) 
 end
 
