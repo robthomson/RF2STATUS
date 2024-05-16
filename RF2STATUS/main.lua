@@ -320,7 +320,6 @@ local function create(widget)
 end
 
 function loadScriptRF2STATUS(script) 
-	--system.compile(script)
 	return loadfile(script) 
 end
 
@@ -733,7 +732,7 @@ local function configure(widget)
 
 
    -- LVTRIGGER DISPLAY 
-    line = form.addLine("    Governor filter",advpanel)
+    line = form.addLine("    Ignore Governor",advpanel)
     form.addBooleanField(
         line,
         nil,
@@ -2053,7 +2052,7 @@ local function paint(widget)
     end
 
     -- big conditional to trigger lvTimer if needed
-    if linkUP then
+    if linkUP ~= 0 then
         if
             sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or
                 sensors.govmode == "ACTIVE" or
@@ -3837,7 +3836,6 @@ local function init()
         }
     )
 
-    system.compile("/scripts/RF2STATUS/main.lua")
 end
 
 return {init = init}
