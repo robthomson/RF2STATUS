@@ -2202,18 +2202,18 @@ function rf2status.getSensors()
 	        -- we are running crsf
 	
 			-- set sources for everthing below
-			if linkUP and defineSOURCES == false then
-				voltageSOURCE = system.getSource("Rx Batt")
-				rpmSOURCE = system.getSource("GPS Alt")
-				currentSOURCE = system.getSource("Rx Curr")
-				temp_escSOURCE = system.getSource("GPS Speed")
-				temp_mcuSOURCE = system.getSource("GPS Sats")
-				fuelSOURCE = system.getSource("Rx Batt%")
-				mahSOURCE = system.getSource("Rx Cons")
-				govSOURCE = system.getSource("Flight mode")
-				rssiSOURCE = system.getSource("Rx Quality")	
-				defineSOURCES = true
-			end
+
+			voltageSOURCE = system.getSource("Rx Batt")
+			rpmSOURCE = system.getSource("GPS Alt")
+			currentSOURCE = system.getSource("Rx Curr")
+			temp_escSOURCE = system.getSource("GPS Speed")
+			temp_mcuSOURCE = system.getSource("GPS Sats")
+			fuelSOURCE = system.getSource("Rx Batt%")
+			mahSOURCE = system.getSource("Rx Cons")
+			govSOURCE = system.getSource("Flight mode")
+			rssiSOURCE = system.getSource("Rx Quality")	
+
+	
 		
             if voltageSOURCE ~= nil then
                 voltage = voltageSOURCE:value()
@@ -2330,19 +2330,18 @@ function rf2status.getSensors()
         else
             -- we are run sport	
 			-- set sources for everthing below
-			if linkUP and defineSOURCES == false then
-				voltageSOURCE = system.getSource("VFAS")
-				rpmSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0500})
-				currentSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200})
-				temp_escSOURCE = system.getSource("ESC temp")
-				temp_mcuSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0401})
-				fuelSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600})
-				mahSOURCE = system.getSource("Consumption")
-				govSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5450})
-				adjSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5110})
-				adjVALUE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5111})
-				defineSOURCES = true
-			end		
+
+			voltageSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0210})
+			rpmSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0500})
+			currentSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0200})
+			temp_escSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0B70})
+			temp_mcuSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0401})
+			fuelSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600})
+			mahSOURCE = system.getSource("Consumption") -- this is fake.  does not exist
+			govSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5450})
+			adjSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5110})
+			adjVALUE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5111})
+	
 
             --voltageSOURCE = system.getSource("VFAS")
             if voltageSOURCE ~= nil then
