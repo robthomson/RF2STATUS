@@ -2337,7 +2337,7 @@ function rf2status.getSensors()
 			temp_escSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0B70})
 			temp_mcuSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0401})
 			fuelSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600})
-			mahSOURCE = system.getSource("Consumption") -- this is fake.  does not exist
+			mahSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5250})
 			govSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5450})
 			adjSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5110})
 			adjVALUE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5111})
