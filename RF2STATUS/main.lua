@@ -816,7 +816,8 @@ function rf2status.getRSSI()
 	if environment.simulation == true then
 		return 100
 	end
-    if rssiSensor ~= nil and rssiSensor:state() then
+    --if rssiSensor ~= nil and rssiSensor:state() then
+	if rssiSensor ~= nil then
         return rssiSensor:value()
     end
     return 0
@@ -2341,7 +2342,7 @@ function rf2status.getSensors()
 			govSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5450})
 			adjSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5110})
 			adjVALUE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5111})
-	
+			
 
             --voltageSOURCE = system.getSource("VFAS")
             if voltageSOURCE ~= nil then
@@ -2444,7 +2445,7 @@ function rf2status.getSensors()
                 elseif govId == 6 then
                     govmode = "LOST-HS"
                 elseif govId == 7 then
-                    govmode = "SPOOLUP"
+                    govmode = "AUTOROT"
                 elseif govId == 8 then
                     govmode = "BAILOUT"
                 elseif govId == 100 then
