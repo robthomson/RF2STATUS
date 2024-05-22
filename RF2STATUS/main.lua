@@ -122,7 +122,6 @@ local lowvoltagsenseParam = 2
 local triggerIntervalParam = 30
 local lowVoltageGovernorParam = nil
 local lowvoltagStickParam = nil
-local miniBoxParam = nil
 local lowvoltagStickCutoffParam = nil
 local governorUNKNOWNParam = nil
 local governorDISARMEDParam  = nil
@@ -136,6 +135,8 @@ local governorRECOVERYParam = nil
 local governorSPOOLUPParam = nil
 local governorIDLEParam = nil
 local governorOFFParam = nil
+local alertonParam = 0
+local calcfuelParam = true
 
 local lvStickOrder = {}
 lvStickOrder[1] = {1,2,3,4}
@@ -146,7 +147,7 @@ lvStickOrder[4] = {2,3,4,6}
 local lvStickTrigger = false
 
 local govmodeParam = 0
-local adjFunctionParam = true
+local adjFunctionParam = false
 
 local timerWASActive = false
 local govWasActive = false
@@ -345,7 +346,8 @@ local function create(widget)
 		governorRECOVERY = true,
 		governorSPOOLUP = true,
 		governorIDLE = true,
-		governorOFF	 = true	
+		governorOFF	 = true,
+		alerton = 0
     }
 end
 
@@ -418,6 +420,21 @@ local function configure(widget)
     )
     field:default(20)
 	field:suffix("%")
+
+    -- ALERT INTERVAL
+    line = form.addLine("Alert ON",alertpanel)
+    form.addChoiceField(
+        line,
+        nil,
+        {{"Low Voltage", 0}, {"Low Fuel", 1}, {"Low Voltage & Fuel", 2},{"OFF", 3}},
+        function()
+            return alertonParam
+        end,
+        function(newValue)
+            alertonParam = newValue
+        end
+    )
+
 
     -- ALERT INTERVAL
     line = form.addLine("Interval",alertpanel)
@@ -965,6 +982,19 @@ local function configure(widget)
         end,
         function(newValue)
             triggerIntervalParam = newValue
+        end
+    )
+
+    -- calcfuel
+    line = form.addLine("Calculate Fuel",advpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return calcfuelParam
+        end,
+        function(newValue)
+            calcfuelParam = newValue
         end
     )
 
@@ -2237,7 +2267,7 @@ local function paint(widget)
                 sensors.govmode == "RECOVERY" or
 				lowVoltageGovernorParam == true
          then
-            if (voltageIsLow) or (sensors.fuel <= lowfuelParam) then
+            if (voltageIsLow and (alertonParam == 0 or alertonParam == 2)) or (sensors.fuel <= lowfuelParam and (alertonParam == 1 or alertonParam == 3)) then
                 lvTimer = true
             else
                 lvTimer = false
@@ -2611,7 +2641,7 @@ function rf2status.getSensors()
             if fuelSOURCE ~= nil then
                 fuel = fuelSOURCE:value()
                 if fuel ~= nil then
-                    fuel = fuel
+                    fuel = rf2status.round(fuel, 0)
                 else
                     fuel = 0
                 end
@@ -2702,7 +2732,7 @@ function rf2status.getSensors()
     end
 
 	--calc fuel percentage if needed
-    if voltage ~= 0 and (fuel == 0) then
+    if calcfuelParam == true then
 	
         if btypeParam == 0 then
             --LiPo
@@ -2732,9 +2762,11 @@ function rf2status.getSensors()
 
         --maxCellVoltage = 4.196
         --minCellVoltage = 3.2
-        avgCellVoltage = voltage / cellsParam
-        batteryPercentage = 100 * (avgCellVoltage - minCellVoltage) / (maxCellVoltage - minCellVoltage)
+        avgCellVoltage = (voltage/100) / cellsParam
+        batteryPercentage = 100 * (avgCellVoltage - minCellVoltage) / ((maxCellVoltage + (0.1*cellsParam)) - minCellVoltage)
         fuel = batteryPercentage
+		fuel = rf2status.round(fuel, 0)
+		
         if fuel > 100 then
             fuel = 100
         end
@@ -3369,6 +3401,8 @@ local function read()
 		governorSPOOLUPParam = storage.read("governorSPOOLUP")
 		governorIDLEParam = storage.read("governorIDLE")
 		governorOFFParam = storage.read("governorOFF")
+		alertonParam = storage.read("alerton")
+		calcfuelParam = storage.read("calcfuel")
 
 
 		-- fix some legacy params values if bad
@@ -3434,6 +3468,8 @@ local function write()
 		storage.write("governorSPOOLUP",governorSPOOLUPParam)
 		storage.write("governorIDLE",governorIDLEParam)
 		storage.write("governorOFF",governorOFFParam)
+		storage.write("alerton",alertonParam)
+		storage.write("calcfuel",calcfuelParam)
 		
 		updateFILTERING()		
 end
@@ -3977,8 +4013,12 @@ local function playADJ()
 
 	if adjFunctionParam  == true then
 
-		ADJSOURCE = math.floor(sensors.adjsource)
-		ADJVALUE = math.floor(sensors.adjvalue)
+		if sensors.adjsource ~= nil then
+			ADJSOURCE = math.floor(sensors.adjsource)
+		end
+		if sensors.adjvalue ~nil then
+			ADJVALUE = math.floor(sensors.adjvalue)
+		end	
 		
 		if oldADJSOURCE ~= ADJSOURCE then
 				adjfuncIdChanged = true
