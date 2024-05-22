@@ -21,7 +21,6 @@ local supportedRADIO = false
 local gfx_model
 local audioAlertCounter = 0
 
-local defineSOURCES = false
 
 local lvTimer = false
 local lvTimerStart
@@ -816,8 +815,7 @@ function rf2status.getRSSI()
 	if environment.simulation == true then
 		return 100
 	end
-    --if rssiSensor ~= nil and rssiSensor:state() then
-	if rssiSensor ~= nil then
+    if rssiSensor ~= nil and rssiSensor:state() then
         return rssiSensor:value()
     end
     return 0
@@ -2196,11 +2194,14 @@ function rf2status.getSensors()
 		
 		
     elseif linkUP ~= 0 then
-        local telemetrySOURCE = system.getSource("Rx RSSI1")
 	
+        local telemetrySOURCE = system.getSource("Rx RSSI1")
+		
+
 
         if telemetrySOURCE ~= nil then
 	        -- we are running crsf
+			--print("CRSF")
 	
 			-- set sources for everthing below
 
@@ -2331,6 +2332,7 @@ function rf2status.getSensors()
         else
             -- we are run sport	
 			-- set sources for everthing below
+			--print("SPORT")
 
 			voltageSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0210})
 			rpmSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0500})
@@ -2338,11 +2340,38 @@ function rf2status.getSensors()
 			temp_escSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0B70})
 			temp_mcuSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0401})
 			fuelSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0600})
-			mahSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5250})
-			govSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5450})
-			adjSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5110})
-			adjVALUE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5111})
 			
+			govSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5450})
+			if govSOURCE == nil then
+				govSOURCE = model.createSensor()
+				govSOURCE:name("Governor")
+				govSOURCE:appId(0x5450)
+				govSOURCE:physId(0)
+			end
+			
+			adjSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5110})
+			if adjSOURCE == nil then
+				adjSOURCE = model.createSensor()
+				adjSOURCE:name("ADJ Source")
+				adjSOURCE:appId(0x5110)
+				adjSOURCE:physId(0)
+			end			
+			
+			adjVALUE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5111})
+			if adjVALUE == nil then
+				adjVALUE = model.createSensor()
+				adjVALUE:name("ADJ Value")
+				adjVALUE:appId(0x5111)
+				adjVALUE:physId(0)
+			end					
+
+			mahSOURCE = system.getSource({category = CATEGORY_TELEMETRY_SENSOR, appId = 0x5250})
+			if mahSOURCE == nil then
+				mahSOURCE = model.createSensor()
+				mahSOURCE:name("mAh")
+				mahSOURCE:appId(0x5250)
+				mahSOURCE:physId(0)
+			end		
 
             --voltageSOURCE = system.getSource("VFAS")
             if voltageSOURCE ~= nil then
@@ -2477,6 +2506,10 @@ function rf2status.getSensors()
         end
     else
         -- we have no link.  do something
+		--print("NO LINK")
+		-- keep looking for new sensor
+		rssiSensor = rf2status.getRssiSensor()
+		
         voltage = 0
         rpm = 0
         current = 0
@@ -2489,7 +2522,6 @@ function rf2status.getSensors()
         rssi = linkUP
 		adjsource = 0
 		adjvalue = 0
-		defineSOURCES = false
     end
 
 	--calc fuel percentage if needed
