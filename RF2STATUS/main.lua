@@ -120,7 +120,22 @@ local triggerTimerSwitchParam = nil
 local filteringParam = 1
 local lowvoltagsenseParam = 2
 local triggerIntervalParam = 30
-
+local lowVoltageGovernorParam = nil
+local lowvoltagStickParam = nil
+local miniBoxParam = nil
+local lowvoltagStickCutoffParam = nil
+local governorUNKNOWNParam = nil
+local governorDISARMEDParam  = nil
+local governorDISABLEDParam = nil
+local governorBAILOUTParam = nil
+local governorAUTOROTParam = nil
+local governorLOSTHSParam = nil
+local governorTHROFFParam = nil
+local governorACTIVEParam = nil
+local governorRECOVERYParam = nil
+local governorSPOOLUPParam = nil
+local governorIDLEParam = nil
+local governorOFFParam = nil
 
 local lvStickOrder = {}
 lvStickOrder[1] = {1,2,3,4}
@@ -314,7 +329,23 @@ local function create(widget)
 		filtering = 1,
 		sag = 5,
 		lvsense = 2,
-		triggerint = 30
+		triggerint = 30,
+		lvgovernor = false,
+		lvstickmon = 0,
+		minibox = 0,
+		lvstickcutoff = 1,
+		governorUNKNOWN = true,
+		governorDISARMED = true,
+		governorDISABLED = true,
+		governorBAILOUT = true,
+		governorAUTOROT = true,
+		governorLOSTHS = true,
+		governorTHROFF = true,
+		governorACTIVE = true,
+		governorRECOVERY = true,
+		governorSPOOLUP = true,
+		governorIDLE = true,
+		governorOFF	 = true	
     }
 end
 
@@ -415,20 +446,6 @@ local function configure(widget)
         end
     )	
 
-
-    -- TITLE DISPLAY
-    line = form.addLine("Governor",alertpanel)
-    form.addBooleanField(
-        line,
-        nil,
-        function()
-            return governorAlertsParam
-        end,
-        function(newValue)
-            governorAlertsParam = newValue
-        end
-    )
-
     -- TITLE DISPLAY
     line = form.addLine("Rpm.",alertpanel)
     form.addBooleanField(
@@ -462,8 +479,6 @@ local function configure(widget)
     field:default(5)
 	field:decimals(1)
 
-
-
 	if system.getSource("Rx RSSI1") == nil then -- currently only supported with fport
 		line = form.addLine("Adjustment sensor",alertpanel)
 		form.addBooleanField(
@@ -478,6 +493,168 @@ local function configure(widget)
 		)	
 	end
 
+
+    -- TITLE DISPLAY
+    line = form.addLine("Governor",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorAlertsParam
+        end,
+        function(newValue)
+            governorAlertsParam = newValue
+        end
+    )
+
+    -- TITLE DISPLAY
+    line = form.addLine("    OFF",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorOFFParam
+        end,
+        function(newValue)
+            governorOFFParam = newValue
+        end
+    )
+
+    -- TITLE DISPLAY
+    line = form.addLine("    IDLE",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorIDLEParam
+        end,
+        function(newValue)
+            governorIDLEParam = newValue
+        end
+    )
+
+    -- TITLE DISPLAY
+    line = form.addLine("    SPOOLUP",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorSPOOLUPParam
+        end,
+        function(newValue)
+            governorSPOOLUPParam = newValue
+        end
+    )
+
+    line = form.addLine("    RECOVERY",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorRECOVERYParam
+        end,
+        function(newValue)
+            governorRECOVERYParam = newValue
+        end
+    )
+
+    line = form.addLine("    ACTIVE",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorACTIVEParam
+        end,
+        function(newValue)
+            governorACTIVEParam = newValue
+        end
+    )
+
+    line = form.addLine("    THR-OFF",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorTHROFFParam
+        end,
+        function(newValue)
+            governorTHROFFParam = newValue
+        end
+    )
+
+    line = form.addLine("    LOST-HS",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorLOSTHSParam
+        end,
+        function(newValue)
+            governorLOSTHSParam = newValue
+        end
+    )
+
+    line = form.addLine("    AUTOROT",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorAUTOROTParam
+        end,
+        function(newValue)
+            governorAUTOROTParam = newValue
+        end
+    )
+
+    line = form.addLine("    BAILOUT",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorBAILOUTParam
+        end,
+        function(newValue)
+            governorBAILOUTParam = newValue
+        end
+    )
+
+    line = form.addLine("    DISABLED",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorDISABLEDParam
+        end,
+        function(newValue)
+            governorDISABLEDParam = newValue
+        end
+    )	
+
+    line = form.addLine("    DISARMED",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorDISARMEDParam
+        end,
+        function(newValue)
+            governorDISARMEDParam = newValue
+        end
+    )	
+
+    line = form.addLine("    UNKNOWN",alertpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return governorUNKNOWNParam
+        end,
+        function(newValue)
+            governorUNKNOWNParam = newValue
+        end
+    )
+	
+	
 	triggerpanel = form.addExpansionPanel("Triggers")
 	triggerpanel:open(false) 
 	
@@ -3180,6 +3357,19 @@ local function read()
 		lowvoltagStickParam = storage.read("lvstickmon")
 		miniBoxParam = storage.read('minibox')
 		lowvoltagStickCutoffParam = storage.read("lvstickcutoff")
+		governorUNKNOWNParam = storage.read("governorUNKNOWN")
+		governorDISARMEDParam = storage.read("governorDISARMED")
+		governorDISABLEDParam = storage.read("governorDISABLED")
+		governorBAILOUTParam = storage.read("governorBAILOUT")
+		governorAUTOROTParam = storage.read("governorAUTOROT")
+		governorLOSTHSParam = storage.read("governorLOSTHS")
+		governorTHROFFParam = storage.read("governorTHROFF")
+		governorACTIVEParam = storage.read("governorACTIVE")
+		governorRECOVERYParam = storage.read("governorRECOVERY")
+		governorSPOOLUPParam = storage.read("governorSPOOLUP")
+		governorIDLEParam = storage.read("governorIDLE")
+		governorOFFParam = storage.read("governorOFF")
+
 
 		-- fix some legacy params values if bad
 		if miniBoxParam == nil then miniBoxParam = 0 end
@@ -3232,6 +3422,18 @@ local function write()
 		storage.write("lvstickmon",lowvoltagStickParam)
 		storage.write("minibox",miniBoxParam)
 		storage.write("lvstickcutoff",lowvoltagStickCutoffParam)
+		storage.write("governorUNKNOWN",governorUNKNOWNParam)
+		storage.write("governorDISARMED",governorDISARMEDParam)
+		storage.write("governorDISABLED",governorDISABLEDParam)
+		storage.write("governorBAILOUT",governorBAILOUTParam)
+		storage.write("governorAUTOROT",governorAUTOROTParam)
+		storage.write("governorLOSTHS",governorLOSTHSParam)
+		storage.write("governorTHROFF",governorTHROFFParam)
+		storage.write("governorACTIVE",governorACTIVEParam)
+		storage.write("governorRECOVERY",governorRECOVERYParam)
+		storage.write("governorSPOOLUP",governorSPOOLUPParam)
+		storage.write("governorIDLE",governorIDLEParam)
+		storage.write("governorOFF",governorOFFParam)
 		
 		updateFILTERING()		
 end
@@ -3680,10 +3882,48 @@ local function playGovernor()
 			playGovernorLastState = sensors.govmode
 		end
 		
+		
 		if playGovernorCount == 0 then
-				--print("Governor: " .. sensors.govmode)
+				print("Governor: " .. sensors.govmode)
 				playGovernorCount = 1
-				system.playFile("/scripts/RF2STATUS/sounds/gov/"..string.lower(sensors.govmode)..".wav")
+				
+				if sensors.govmode == "UNKNOWN" and governorUNKNOWNParam == true then
+					system.playFile("/scripts/RF2STATUS/sounds/gov/unknown.wav")
+				end
+				if sensors.govmode == "DISARMED" and governorDISARMEDParam == true then
+					system.playFile("/scripts/RF2STATUS/sounds/gov/disarmed.wav")
+				end				
+				if sensors.govmode == "DISABLED" and governorDISABLEDParam == true then
+					system.playFile("/scripts/RF2STATUS/sounds/gov/disabled.wav")
+				end					
+				if sensors.govmode == "BAILOUT" and governorBAILOUTParam == true then
+					system.playFile("/scripts/RF2STATUS/sounds/gov/bailout.wav")
+				end						
+				if sensors.govmode == "AUTOROT" and governorAUTOROTParam == true then
+					system.playFile("/scripts/RF2STATUS/sounds/gov/autorot.wav")
+				end						
+				if sensors.govmode == "LOST-HS" and governorLOSTHSParam == true then
+					system.playFile("/scripts/RF2STATUS/sounds/gov/lost-hs.wav")
+				end		
+				if sensors.govmode == "THR-OFF" and governorTHROFFParam == true then
+					system.playFile("/scripts/RF2STATUS/sounds/gov/thr-off.wav")
+				end		
+				if sensors.govmode == "ACTIVE" and governorACTIVEParam == true then
+					system.playFile("/scripts/RF2STATUS/sounds/gov/active.wav")
+				end		
+				if sensors.govmode == "RECOVERY" and governorRECOVERYParam == true then
+					system.playFile("/scripts/RF2STATUS/sounds/gov/recovery.wav")
+				end		
+				if sensors.govmode == "SPOOLUP" and governorSPOOLUPParam == true then
+					system.playFile("/scripts/RF2STATUS/sounds/gov/spoolup.wav")
+				end	
+				if sensors.govmode == "IDLE" and governorIDLEParam == true then
+					system.playFile("/scripts/RF2STATUS/sounds/gov/idle.wav")
+				end	
+				if sensors.govmode == "OFF" and governorOFFParam == true then
+					system.playFile("/scripts/RF2STATUS/sounds/gov/off.wav")
+				end	
+				
 		end
 	
 	end
@@ -3701,17 +3941,17 @@ function rf2status.playRPMDiff()
 			end
 		
 			-- we take a reading every 5 second
-			if (tonumber(os.clock()) - tonumber(rf2status.playRPMDiffCounter)) >= 5 then
+			if (tonumber(os.clock()) - tonumber(playRPMDiffCounter)) >= 5 then
 				playRPMDiffCounter = os.clock()
 				playRPMDiffLastState = sensors.rpm
 			end
 			
 			-- check if current state withing % of last state
 			local percentageDiff = 0
-			if sensors.rpm > rf2status.playRPMDiffLastState then
-				percentageDiff = math.abs(100 - (sensors.rpm / rf2status.playRPMDiffLastState * 100))
-			elseif rf2status.playRPMDiffLastState < sensors.rpm then
-				percentage = math.abs(100 - (rf2status.playRPMDiffLastState/sensors.rpm * 100))
+			if sensors.rpm > playRPMDiffLastState then
+				percentageDiff = math.abs(100 - (sensors.rpm / playRPMDiffLastState * 100))
+			elseif playRPMDiffLastState < sensors.rpm then
+				percentage = math.abs(100 - (playRPMDiffLastState/sensors.rpm * 100))
 			else
 				percentageDiff = 0
 			end		
