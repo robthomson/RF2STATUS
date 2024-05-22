@@ -3884,7 +3884,7 @@ local function playGovernor()
 		
 		
 		if playGovernorCount == 0 then
-				print("Governor: " .. sensors.govmode)
+				--print("Governor: " .. sensors.govmode)
 				playGovernorCount = 1
 				
 				if sensors.govmode == "UNKNOWN" and governorUNKNOWNParam == true then
