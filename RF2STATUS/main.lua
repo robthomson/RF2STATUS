@@ -19,14 +19,23 @@ local loopCounter = 0
 local sensors
 local supportedRADIO = false
 local gfx_model
-local audioAlertCounter = 0
 
+local sensors = {}
 
 local lvTimer = false
 local lvTimerStart
 local lvTriggerTimer = false
 local lvTriggerTimerStart
 local lvaudioTriggerCounter = 0
+local lvAudioAlertCounter = 0
+
+local lfTimer = false
+local lfTimerStart
+local lfTriggerTimer = false
+local lfTriggerTimerStart
+local lfaudioTriggerCounter = 0
+local lfAudioAlertCounter = 0
+
 
 local rpmTimer = false
 local rpmTimerStart
@@ -359,7 +368,7 @@ local function configure(widget)
     isInConfiguration = true
 
 
-	batterypanel = form.addExpansionPanel("Battery")
+	batterypanel = form.addExpansionPanel("Battery Configuration")
 	batterypanel:open(false) 
 
     -- CELLS
@@ -400,11 +409,10 @@ local function configure(widget)
     field:default(6)
 
 
-	alertpanel = form.addExpansionPanel("Alerts")
-	alertpanel:open(false) 
 
-    -- LOW FUEL TRIGGER
-    line = form.addLine("Low fuel%",alertpanel)
+
+   -- LOW FUEL TRIGGER
+    line = form.addLine("Low fuel%",batterypanel)
     field =
         form.addNumberField(
         line,
@@ -421,12 +429,12 @@ local function configure(widget)
     field:default(20)
 	field:suffix("%")
 
-    -- ALERT INTERVAL
-    line = form.addLine("Alert ON",alertpanel)
+    -- ALERT ON
+    line = form.addLine("Play alert on",batterypanel)
     form.addChoiceField(
         line,
         nil,
-        {{"Low Voltage", 0}, {"Low Fuel", 1}, {"Low Voltage & Fuel", 2},{"OFF", 3}},
+        {{"Low voltage", 0}, {"Low fuel", 1},{"Disabled", 2}},
         function()
             return alertonParam
         end,
@@ -435,9 +443,8 @@ local function configure(widget)
         end
     )
 
-
     -- ALERT INTERVAL
-    line = form.addLine("Interval",alertpanel)
+    line = form.addLine("     Interval",batterypanel)
     form.addChoiceField(
         line,
         nil,
@@ -450,8 +457,9 @@ local function configure(widget)
         end
     )
 
+
     -- HAPTIC
-    line = form.addLine("Voltage haptic",alertpanel)
+    line = form.addLine("     Vibrate",batterypanel)
     form.addBooleanField(
         line,
         nil,
@@ -463,8 +471,12 @@ local function configure(widget)
         end
     )	
 
+	rpmalertpanel = form.addExpansionPanel("Headspeed Alerts")
+	rpmalertpanel:open(false) 
+
+
     -- TITLE DISPLAY
-    line = form.addLine("Rpm.",alertpanel)
+    line = form.addLine("Alert on RPM difference",rpmalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -479,7 +491,7 @@ local function configure(widget)
 	
 
     -- TITLE DISPLAY
-    line = form.addLine("Rpm. % difference",alertpanel)
+    line = form.addLine("Alert if difference > than",rpmalertpanel)
     field =
         form.addNumberField(
         line,
@@ -493,26 +505,19 @@ local function configure(widget)
             rpmAlertsPercentageParam = value
         end
     )
-    field:default(5)
+    field:default(100)
 	field:decimals(1)
+	field:suffix("%")
 
-	if system.getSource("Rx RSSI1") == nil then -- currently only supported with fport
-		line = form.addLine("Adjustment sensor",alertpanel)
-		form.addBooleanField(
-			line,
-			nil,
-			function()
-				return adjFunctionParam
-			end,
-			function(newValue)
-				adjFunctionParam = newValue
-			end
-		)	
-	end
+	govalertpanel = form.addExpansionPanel("Governor Alerts")
+	govalertpanel:open(false) 
 
 
     -- TITLE DISPLAY
-    line = form.addLine("Governor",alertpanel)
+	--[[
+	-- this is being hidden as we assume always on - but memory slot
+	-- needs to be retained
+    line = form.addLine("Enable/Disable",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -523,9 +528,10 @@ local function configure(widget)
             governorAlertsParam = newValue
         end
     )
+	]]--
 
     -- TITLE DISPLAY
-    line = form.addLine("    OFF",alertpanel)
+    line = form.addLine("  OFF",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -538,7 +544,7 @@ local function configure(widget)
     )
 
     -- TITLE DISPLAY
-    line = form.addLine("    IDLE",alertpanel)
+    line = form.addLine("  IDLE",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -551,7 +557,7 @@ local function configure(widget)
     )
 
     -- TITLE DISPLAY
-    line = form.addLine("    SPOOLUP",alertpanel)
+    line = form.addLine("  SPOOLUP",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -563,7 +569,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("    RECOVERY",alertpanel)
+    line = form.addLine("  RECOVERY",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -575,7 +581,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("    ACTIVE",alertpanel)
+    line = form.addLine("  ACTIVE",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -587,7 +593,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("    THR-OFF",alertpanel)
+    line = form.addLine("  THR-OFF",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -599,7 +605,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("    LOST-HS",alertpanel)
+    line = form.addLine("  LOST-HS",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -611,7 +617,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("    AUTOROT",alertpanel)
+    line = form.addLine("  AUTOROT",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -623,7 +629,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("    BAILOUT",alertpanel)
+    line = form.addLine("  BAILOUT",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -635,7 +641,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("    DISABLED",alertpanel)
+    line = form.addLine("  DISABLED",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -647,7 +653,7 @@ local function configure(widget)
         end
     )	
 
-    line = form.addLine("    DISARMED",alertpanel)
+    line = form.addLine("  DISARMED",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -659,7 +665,7 @@ local function configure(widget)
         end
     )	
 
-    line = form.addLine("    UNKNOWN",alertpanel)
+    line = form.addLine("    UNKNOWN",govalertpanel)
     form.addBooleanField(
         line,
         nil,
@@ -692,7 +698,7 @@ local function configure(widget)
     line = form.addLine("Rpm",triggerpanel)
     form.addSwitchField(
         line,
-        form.getFieldSlots(line)[0],
+        nil,
         function()
             return triggerRPMSwitchParam
         end,
@@ -705,7 +711,7 @@ local function configure(widget)
     line = form.addLine("Current",triggerpanel)
     form.addSwitchField(
         line,
-        form.getFieldSlots(line)[0],
+        nil,
         function()
             return triggerCurrentSwitchParam
         end,
@@ -779,7 +785,7 @@ local function configure(widget)
         end
     )
 
-	displaypanel = form.addExpansionPanel("Display")
+	displaypanel = form.addExpansionPanel("Customise Display")
 	displaypanel:open(false) 
 
 
@@ -846,6 +852,36 @@ local function configure(widget)
 	
 	advpanel = form.addExpansionPanel("Advanced")
 	advpanel:open(false) 
+
+
+	if system.getSource("Rx RSSI1") == nil then -- currently only supported with fport
+		line = form.addLine("Adjustment sensor",advpanel)
+		form.addBooleanField(
+			line,
+			nil,
+			function()
+				return adjFunctionParam
+			end,
+			function(newValue)
+				adjFunctionParam = newValue
+			end
+		)	
+	end
+
+
+    -- calcfuel
+    line = form.addLine("Calculate Fuel Locally",advpanel)
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return calcfuelParam
+        end,
+        function(newValue)
+            calcfuelParam = newValue
+        end
+    )
+
 	
 
     line = form.addLine("Voltage",advpanel)
@@ -985,18 +1021,7 @@ local function configure(widget)
         end
     )
 
-    -- calcfuel
-    line = form.addLine("Calculate Fuel",advpanel)
-    form.addBooleanField(
-        line,
-        nil,
-        function()
-            return calcfuelParam
-        end,
-        function(newValue)
-            calcfuelParam = newValue
-        end
-    )
+
 
 
 	rf2status.resetALL()
@@ -2257,17 +2282,72 @@ local function paint(widget)
         theTIME = 0
     end
 
+
+	-- LOW FUEL ALERTS
+    -- big conditional to trigger lfTimer if needed
+    if linkUP ~= 0 then
+        if
+            sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or
+                sensors.govmode == "ACTIVE" or
+                sensors.govmode == "LOST-HS" or
+				sensors.govmode == "AUTOROT" or
+                sensors.govmode == "BAILOUT" or
+                sensors.govmode == "RECOVERY" or
+				lowVoltageGovernorParam == true
+         then
+            if (sensors.fuel <= lowfuelParam and alertonParam == 1) then
+                lfTimer = true
+            else
+                lfTimer = false
+            end
+        else
+            lfTimer = false
+        end
+    else
+        lfTimer = false
+    end
+	
+
+    if lfTimer == true then
+        --start timer
+        if lfTimerStart == nil then
+            lfTimerStart = os.time()
+        end
+    else
+        lfTimerStart = nil
+    end
+
+    if lfTimerStart ~= nil then
+            -- only trigger if we have been on for 5 seconds or more
+            if (tonumber(os.clock()) - tonumber(lfAudioAlertCounter)) >= alertintParam then
+                lfAudioAlertCounter = os.clock()
+				
+				system.playFile("/scripts/RF2STATUS/sounds/alerts/lowfuel.wav")
+
+				--system.playNumber(sensors.voltage / 100, 2, 2)
+				if alrthptParam == true then
+					system.playHaptic("- . -")
+				end
+
+            end
+    else
+        -- stop timer
+        lfTimerStart = nil
+    end
+
+	-- LOW VOLTAGE ALERTS
     -- big conditional to trigger lvTimer if needed
     if linkUP ~= 0 then
         if
             sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or
                 sensors.govmode == "ACTIVE" or
                 sensors.govmode == "LOST-HS" or
+				sensors.govmode == "AUTOROT" or				
                 sensors.govmode == "BAILOUT" or
                 sensors.govmode == "RECOVERY" or
 				lowVoltageGovernorParam == true
          then
-            if (voltageIsLow and (alertonParam == 0 or alertonParam == 2)) or (sensors.fuel <= lowfuelParam and (alertonParam == 1 or alertonParam == 3)) then
+            if (voltageIsLow and alertonParam == 0) then
                 lvTimer = true
             else
                 lvTimer = false
@@ -2291,12 +2371,11 @@ local function paint(widget)
     if lvTimerStart ~= nil then
         if (os.time() - lvTimerStart >= sagParam) then
             -- only trigger if we have been on for 5 seconds or more
-            if (tonumber(os.clock()) - tonumber(audioAlertCounter)) >= alertintParam then
-                audioAlertCounter = os.clock()
+            if (tonumber(os.clock()) - tonumber(lvAudioAlertCounter)) >= alertintParam then
+                lvAudioAlertCounter = os.clock()
 				
 				if lvStickTrigger == false then -- do not play if sticks at high end points
 					system.playFile("/scripts/RF2STATUS/sounds/alerts/lowvoltage.wav")
-
 					--system.playNumber(sensors.voltage / 100, 2, 2)
 					if alrthptParam == true then
 						system.playHaptic("- . -")
@@ -2311,6 +2390,9 @@ local function paint(widget)
         -- stop timer
         lvTimerStart = nil
     end
+	
+	
+	
 end
 
 function rf2status.ReverseTable(t)
@@ -3370,7 +3452,9 @@ local function read()
 		cellsParam = storage.read("cells")
 		triggerVoltageSwitchParam = storage.read("triggerswitchvltg")
 		govmodeParam = storage.read("govmode")
-		governorAlertsParam = storage.read("governoralerts")
+		governorAlertsParam = storage.read("governoralerts") -- we need to keep reading this 
+		governorAlertsParam = true							 -- but we reset below or eprom mem gets mangled
+		
 		rpmAlertsParam = storage.read("rpmalerts")				
 		rpmAlertsPercentageParam = storage.read("rpmaltp")	
 		adjFunctionParam = storage.read("adjfunc")	
