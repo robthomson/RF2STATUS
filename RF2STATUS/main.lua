@@ -2287,15 +2287,19 @@ local function paint(widget)
     -- big conditional to trigger lfTimer if needed
     if linkUP ~= 0 then
         if
-            sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or
-                sensors.govmode == "ACTIVE" or
-                sensors.govmode == "LOST-HS" or
-				sensors.govmode == "AUTOROT" or
-                sensors.govmode == "BAILOUT" or
-                sensors.govmode == "RECOVERY" or
-				lowVoltageGovernorParam == true
+            sensors.govmode == "IDLE" or 
+			sensors.govmode == "SPOOLUP" or 
+			sensors.govmode == "RECOVERY" or
+            sensors.govmode == "ACTIVE" or
+            sensors.govmode == "LOST-HS" or
+			sensors.govmode == "AUTOROT" or
+            sensors.govmode == "BAILOUT" or
+            sensors.govmode == "RECOVERY" or
+			lowVoltageGovernorParam == true
          then
-            if (sensors.fuel <= lowfuelParam and (alertonParam == 1 or alertonParam == 2)) then
+            if (sensors.fuel <= lowfuelParam and alertonParam == 1 ) then
+				lfTimer = true
+			elseif (sensors.fuel <= lowfuelParam and alertonParam == 2 )then
                 lfTimer = true
             else
                 lfTimer = false
@@ -2306,7 +2310,7 @@ local function paint(widget)
     else
         lfTimer = false
     end
-	
+
 
     if lfTimer == true then
         --start timer
@@ -2339,16 +2343,20 @@ local function paint(widget)
     -- big conditional to trigger lvTimer if needed
     if linkUP ~= 0 then
         if
-            sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or
-                sensors.govmode == "ACTIVE" or
-                sensors.govmode == "LOST-HS" or
-				sensors.govmode == "AUTOROT" or				
-                sensors.govmode == "BAILOUT" or
-                sensors.govmode == "RECOVERY" or
-				lowVoltageGovernorParam == true
+            sensors.govmode == "IDLE" or 
+			sensors.govmode == "SPOOLUP" or 
+			sensors.govmode == "RECOVERY" or
+            sensors.govmode == "ACTIVE" or
+            sensors.govmode == "LOST-HS" or
+			sensors.govmode == "AUTOROT" or				
+            sensors.govmode == "BAILOUT" or
+            sensors.govmode == "RECOVERY" or
+			lowVoltageGovernorParam == true
          then
-            if (voltageIsLow and (alertonParam == 0 or alertonParam == 2)) then
+            if (voltageIsLow and alertonParam == 0) then
                 lvTimer = true
+			elseif 	(voltageIsLow and alertonParam == 2) then
+				lvTimer = true
             else
                 lvTimer = false
             end
