@@ -434,7 +434,7 @@ local function configure(widget)
     form.addChoiceField(
         line,
         nil,
-        {{"Low voltage", 0}, {"Low fuel", 1},{"Disabled", 2}},
+        {{"Low voltage", 0}, {"Low fuel", 1},{"Low fuel & Low voltage", 2},{"Disabled", 3}},
         function()
             return alertonParam
         end,
@@ -2295,7 +2295,7 @@ local function paint(widget)
                 sensors.govmode == "RECOVERY" or
 				lowVoltageGovernorParam == true
          then
-            if (sensors.fuel <= lowfuelParam and alertonParam == 1) then
+            if (sensors.fuel <= lowfuelParam and (alertonParam == 1 or alertonParam == 2)) then
                 lfTimer = true
             else
                 lfTimer = false
@@ -2347,7 +2347,7 @@ local function paint(widget)
                 sensors.govmode == "RECOVERY" or
 				lowVoltageGovernorParam == true
          then
-            if (voltageIsLow and alertonParam == 0) then
+            if (voltageIsLow and (alertonParam == 0 or alertonParam == 2)) then
                 lvTimer = true
             else
                 lvTimer = false
