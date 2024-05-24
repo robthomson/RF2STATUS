@@ -1139,7 +1139,9 @@ function rf2status.getThemeInfo()
     if
         environment.board == "XES" or environment.board == "X20" or environment.board == "X20S" or
             environment.board == "X20PRO" or
-            environment.board == "X20PROAW"
+            environment.board == "X20PROAW" or
+           environment.board == "X20R" or
+           environment.board == "X20RS" 		   
      then
         ret = {
             supportedRADIO = true,
