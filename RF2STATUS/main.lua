@@ -2562,7 +2562,7 @@ function rf2status.getSensors()
             if temp_escSOURCE ~= nil then
                 temp_esc = temp_escSOURCE:value()
                 if temp_esc ~= nil then
-                    temp_esc = temp_esc * 1000
+                    temp_esc = temp_esc * 100
                 else
                     temp_esc = 0
                 end
