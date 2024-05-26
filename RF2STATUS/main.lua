@@ -439,13 +439,20 @@ local function configure(widget)
             return alertonParam
         end,
         function(newValue)
+			if newValue == 3 then
+				plalrtint:enable(false)
+				plalrthap:enable(false)
+			else
+				plalrtint:enable(true)
+				plalrthap:enable(true)			
+			end
             alertonParam = newValue
         end
     )
 
     -- ALERT INTERVAL
     line = form.addLine("     Interval",batterypanel)
-    form.addChoiceField(
+    plalrtint = form.addChoiceField(
         line,
         nil,
         {{"5S", 5}, {"10S", 10}, {"15S", 15}, {"20S", 20}, {"30S", 30}},
@@ -456,11 +463,15 @@ local function configure(widget)
             alertintParam = newValue
         end
     )
-
+	if alertonParam == 3 then
+		plalrtint:enable(false)
+	else
+		plalrtint:enable(true)	
+	end	
 
     -- HAPTIC
     line = form.addLine("     Vibrate",batterypanel)
-    form.addBooleanField(
+    plalrthap = form.addBooleanField(
         line,
         nil,
         function()
@@ -470,6 +481,11 @@ local function configure(widget)
             alrthptParam = newValue
         end
     )	
+	if alertonParam == 3 then
+		plalrthap:enable(false)
+	else
+		plalrthap:enable(true)	
+	end	
 
 	rpmalertpanel = form.addExpansionPanel("Headspeed Alerts")
 	rpmalertpanel:open(false) 
@@ -484,6 +500,12 @@ local function configure(widget)
             return rpmAlertsParam
         end,
         function(newValue)
+			if newValue == false then
+				rpmperfield:enable(false)
+			else
+				rpmperfield:enable(true)
+			end
+	
             rpmAlertsParam = newValue
         end
     )
@@ -492,7 +514,7 @@ local function configure(widget)
 
     -- TITLE DISPLAY
     line = form.addLine("Alert if difference > than",rpmalertpanel)
-    field =
+    rpmperfield =
         form.addNumberField(
         line,
         nil,
@@ -505,9 +527,15 @@ local function configure(widget)
             rpmAlertsPercentageParam = value
         end
     )
-    field:default(100)
-	field:decimals(1)
-	field:suffix("%")
+	if rpmAlertsParam  == false then
+	rpmperfield:enable(false)
+	else
+	rpmperfield:enable(true)
+	end
+    rpmperfield:default(100)
+	rpmperfield:decimals(1)
+	rpmperfield:suffix("%")
+	
 
 	govalertpanel = form.addExpansionPanel("Governor Alerts")
 	govalertpanel:open(false) 
@@ -938,12 +966,17 @@ local function configure(widget)
             return lowvoltagStickParam
         end,
         function(newValue)
+			if newValue == 0 then
+				fieldstckcutoff:enable(false)
+			else
+				fieldstckcutoff:enable(true)			
+			end
             lowvoltagStickParam = newValue
         end
     )
 
-    line = form.addLine("    Stick Cutoff",advpanel)
-    field =
+    line = form.addLine("       Stick Cutoff",advpanel)
+    fieldstckcutoff =
         form.addNumberField(
         line,
         nil,
@@ -956,8 +989,13 @@ local function configure(widget)
              lowvoltagStickCutoffParam = value
         end
     )
-    field:default(80)
-	field:suffix("%")
+    fieldstckcutoff:default(80)
+	fieldstckcutoff:suffix("%")
+	if lowvoltagStickParam == 0 then
+		fieldstckcutoff:enable(false)
+	else
+		fieldstckcutoff:enable(true)	
+	end
 
 
    -- LVTRIGGER DISPLAY 
