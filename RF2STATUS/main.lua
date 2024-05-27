@@ -356,7 +356,8 @@ local function create(widget)
 		governorSPOOLUP = true,
 		governorIDLE = true,
 		governorOFF	 = true,
-		alerton = 0
+		alerton = 0,
+		tempconvert = 1
     }
 end
 
@@ -910,6 +911,23 @@ local function configure(widget)
         end
     )
 
+    -- LVTRIGGER DISPLAY
+    line = form.addLine("Temp. Conversion.",advpanel)
+    form.addChoiceField(
+        line,
+        nil,
+        {
+			{"Disable", 1}, 
+			{"°C -> °F", 2}, 
+			{"°F -> °C", 3}, 
+		},
+        function()
+            return tempConvertParam
+        end,
+        function(newValue)
+            tempConvertParam = newValue
+        end
+    )
 	
 
     line = form.addLine("Voltage",advpanel)
@@ -2900,7 +2918,25 @@ function rf2status.getSensors()
         if fuel > 100 then
             fuel = 100
         end
+	
     end
+	
+	-- convert from C to F
+	-- Divide by 5, then multiply by 9, then add 32
+	if tempConvertParam == 2 then
+		temp_mcu = ((temp_mcu/5) * 9) + 32
+		temp_esc = ((temp_esc/5) * 9) + 32
+		temp_esc = rf2status.round(temp_esc,0)
+		temp_mcu = rf2status.round(temp_mcu,0)
+	end
+	-- convert from F to C
+	-- Deduct 32, then multiply by 5, then divide by 9
+	if tempConvertParam == 3 then
+		temp_mcu = ((temp_mcu - 32) * 5)/9
+		temp_esc = ((temp_esc - 32) * 5)/9
+		temp_esc = rf2status.round(temp_esc,0)
+		temp_mcu = rf2status.round(temp_mcu,0)			
+	end		
 
 
     -- set flag to refresh screen or not
@@ -3535,6 +3571,7 @@ local function read()
 		governorOFFParam = storage.read("governorOFF")
 		alertonParam = storage.read("alerton")
 		calcfuelParam = storage.read("calcfuel")
+		tempConvertParam = storage.read("tempconvert")
 
 
 		-- fix some legacy params values if bad
@@ -3553,6 +3590,7 @@ local function read()
 		if rpmAlertsParam == 1 then rpmAlertsParam = true end	
 		if adjFunctionParam == 0 then adjFunctionParam = false end
 		if adjFunctionParam == 1 then adjFunctionParam = true end
+		if tempConvertParam == nil then tempConvertParam = 1 end
 		
 		rf2status.resetALL()
 		updateFILTERING()		
@@ -3602,6 +3640,7 @@ local function write()
 		storage.write("governorOFF",governorOFFParam)
 		storage.write("alerton",alertonParam)
 		storage.write("calcfuel",calcfuelParam)
+		storage.write("tempconvert",tempConvertParam)
 		
 		updateFILTERING()		
 end
