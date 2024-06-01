@@ -836,22 +836,6 @@ local function configure(widget)
         end
     )
 
-    -- FLIGHT MODE SOURCE
-    line = form.addLine("Flight mode",displaypanel)
-    form.addChoiceField(
-        line,
-        nil,
-        {
-            {"RF Governor", 0},
-            {"Ethos flight modes", 1}
-        },
-        function()
-            return fmsrcParam
-        end,
-        function(newValue)
-            fmsrcParam = newValue
-        end
-    )
 
     -- TITLE DISPLAY
     line = form.addLine("Title",displaypanel)
@@ -1093,6 +1077,47 @@ local function configure(widget)
             triggerIntervalParam = newValue
         end
     )
+
+   -- NOT USING RF GOV 
+    -- FLIGHT MODE SOURCE
+    line = form.addLine("Governor",advpanel)
+    extgov = form.addChoiceField(
+        line,
+        nil,
+        {
+            {"RF Governor", 0},
+            {"Ext Governor", 1}
+        },
+        function()
+            return fmsrcParam
+        end,
+        function(newValue)
+            fmsrcParam = newValue
+			if newValue == 1 then
+				armswitch:enable(true)
+			else
+				armswitch:enable(false)
+			end
+			
+        end
+    )
+	
+    line = form.addLine("    Arm switch",advpanel)	
+    armswitch = form.addSwitchField(
+        line,
+        form.getFieldSlots(line)[0],
+        function()
+            return armswitchParam
+        end,
+        function(value)
+            armswitchParam = value
+        end
+    )
+	if fmsrcParam == 1 then
+		armswitch:enable(true)
+	else
+		armswitch:enable(false)
+	end
 
 
 
@@ -2325,38 +2350,59 @@ local function paint(widget)
 		
 	
     -- TIME
-    if linkUP ~= 0 then
-        if sensors.govmode == "SPOOLUP" then
-            timerNearlyActive = 1
-        end
+	if fmsrcParam == 0 then
+		if linkUP ~= 0 then
+			if sensors.govmode == "SPOOLUP" then
+				timerNearlyActive = 1
+			end
 
-        if sensors.govmode == "IDLE" then
-			if timerWASActive == true then
+			if sensors.govmode == "IDLE" then
+				if timerWASActive == true then
+					stopTimer = true
+					stopTIME = os.clock()
+				
+				else	
+					stopTimer = true
+					stopTIME = os.clock()
+					theTIME = 0			
+				end		
+			end
+
+			if sensors.govmode == "ACTIVE" then
+				if timerNearlyActive == 1 then
+					timerNearlyActive = 0
+					startTIME = os.clock()
+				end
+
+				theTIME = os.clock() - startTIME
+				timerWASActive = true
+				
+			end
+		else
+			-- default as no timer not not yet spooled up
+			theTIME = 0
+		end
+	else
+		if linkUP ~= 0 then
+			if sensors.govmode == "THR-OFF" then
 				stopTimer = true
 				stopTIME = os.clock()
+				timerNearlyActive = 1
+			end
+
+			if sensors.govmode == "ACTIVE" then
+				if timerNearlyActive == 1 then
+					timerNearlyActive = 0
+					startTIME = os.clock()
+				end
+				if startTIME ~= nil then
+					theTIME = os.clock() - startTIME
+				end	
+			end
 			
-			else	
-				stopTimer = true
-				stopTIME = os.clock()
-				theTIME = 0			
-			end		
-        end
-
-        if sensors.govmode == "ACTIVE" then
-            if timerNearlyActive == 1 then
-                timerNearlyActive = 0
-                startTIME = os.clock()
-            end
-
-            theTIME = os.clock() - startTIME
-			timerWASActive = true
 			
-        end
-    else
-        -- default as no timer not not yet spooled up
-        theTIME = 0
-    end
-
+		end
+	end
 
 	-- LOW FUEL ALERTS
     -- big conditional to trigger lfTimer if needed
@@ -2896,6 +2942,7 @@ function rf2status.getSensors()
 		adjvalue = 0
     end
 
+
 	--calc fuel percentage if needed
     if calcfuelParam == true then
 	
@@ -3005,7 +3052,18 @@ function rf2status.getSensors()
 			end
 	end		
 
-	
+	-- intercept governor for non rf governor helis
+	if fmsrcParam == 1 then
+		if armswitchParam ~= nil then
+			if armswitchParam:state() == true then
+				 govmode = "ACTIVE"
+				 fm = "ACTIVE"
+			else
+				 govmode = "THR-OFF"
+				 fm = "THR-OFF"
+			end	
+		end
+	end	
 
     if oldsensors.voltage ~= voltage then
         refresh = true
@@ -3600,6 +3658,7 @@ local function read()
 		calcfuelParam = storage.read("calcfuel")
 		tempconvertParamESC = storage.read("tempconvertesc")
 		tempconvertParamMCU = storage.read("tempconvertmcu")
+		armswitchParam = storage.read("armswitch")
 
 		-- fix some legacy params values if bad
 		if miniBoxParam == nil then miniBoxParam = 0 end
@@ -3619,6 +3678,7 @@ local function read()
 		if adjFunctionParam == 1 then adjFunctionParam = true end
 		if tempconvertParamESC == nil then tempconvertParamESC = 1 end
 		if tempconvertParamMCU == nil then tempconvertParamMCU = 1 end
+
 		
 		rf2status.resetALL()
 		updateFILTERING()		
@@ -3670,6 +3730,7 @@ local function write()
 		storage.write("calcfuel",calcfuelParam)
 		storage.write("tempconvertesc",tempconvertParamESC)
 		storage.write("tempconvertmcu",tempconvertParamMCU)
+		storage.write("armswitch",armswitchParam)
 		
 		updateFILTERING()		
 end
