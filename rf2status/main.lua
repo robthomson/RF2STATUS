@@ -707,7 +707,7 @@ local function configure(widget)
     )
 	
 	
-	triggerpanel = form.addExpansionPanel("Triggers")
+	triggerpanel = form.addExpansionPanel("Announcements")
 	triggerpanel:open(false) 
 	
     -- TRIGGER VOLTAGE READING
