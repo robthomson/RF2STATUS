@@ -4088,12 +4088,14 @@ function rf2status.playVoltage(widget)
 
                 if lvTriggerTimerStart ~= nil then
                     if voltageDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(lvaudioTriggerCounter)) >= triggerIntervalParam) then
-                            lvaudioTriggerCounter = os.clock()
-							--print("Play voltage alert (repeat)")
-							--system.playFile("/scripts/rf2status/sounds/alerts/voltage.wav")								
-                            system.playNumber(sensors.voltage / 100, 2, 2)
-                        end
+						if lvaudioTriggerCounter ~= nil and triggerIntervalParam ~= nil then
+							if ((tonumber(os.clock()) - tonumber(lvaudioTriggerCounter)) >= triggerIntervalParam) then
+								lvaudioTriggerCounter = os.clock()
+								--print("Play voltage alert (repeat)")
+								--system.playFile("/scripts/rf2status/sounds/alerts/voltage.wav")								
+								system.playNumber(sensors.voltage / 100, 2, 2)
+							end
+						end
                     end
                 else
                     -- stop timer
