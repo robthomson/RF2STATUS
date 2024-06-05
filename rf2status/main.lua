@@ -372,8 +372,10 @@ local function configure(widget)
 	batterypanel = form.addExpansionPanel("Battery Configuration")
 	batterypanel:open(false) 
 
+
     -- CELLS
-    line = form.addLine("Type",batterypanel)
+
+    line = batterypanel:addLine("Type")
     form.addChoiceField(
         line,
         nil,
@@ -392,8 +394,9 @@ local function configure(widget)
         end
     )
 
+
     -- BATTERY CELLS
-    line = form.addLine("Cells",batterypanel)
+    line = batterypanel:addLine("Cells")
     field =
         form.addNumberField(
         line,
@@ -413,7 +416,7 @@ local function configure(widget)
 
 
    -- LOW FUEL TRIGGER
-    line = form.addLine("Low fuel%",batterypanel)
+    line = batterypanel:addLine("Low fuel%")
     field =
         form.addNumberField(
         line,
@@ -431,7 +434,7 @@ local function configure(widget)
 	field:suffix("%")
 
     -- ALERT ON
-    line = form.addLine("Play alert on",batterypanel)
+    line = batterypanel:addLine("Play alert on")
     form.addChoiceField(
         line,
         nil,
@@ -452,7 +455,7 @@ local function configure(widget)
     )
 
     -- ALERT INTERVAL
-    line = form.addLine("     Interval",batterypanel)
+    line = batterypanel:addLine("     Interval")
     plalrtint = form.addChoiceField(
         line,
         nil,
@@ -471,7 +474,7 @@ local function configure(widget)
 	end	
 
     -- HAPTIC
-    line = form.addLine("     Vibrate",batterypanel)
+    line = batterypanel:addLine("     Vibrate")
     plalrthap = form.addBooleanField(
         line,
         nil,
@@ -493,7 +496,7 @@ local function configure(widget)
 
 
     -- TITLE DISPLAY
-    line = form.addLine("Alert on RPM difference",rpmalertpanel)
+    line = rpmalertpanel:addLine("Alert on RPM difference")
     form.addBooleanField(
         line,
         nil,
@@ -514,7 +517,7 @@ local function configure(widget)
 	
 
     -- TITLE DISPLAY
-    line = form.addLine("Alert if difference > than",rpmalertpanel)
+    line = rpmalertpanel:addLine("Alert if difference > than")
     rpmperfield =
         form.addNumberField(
         line,
@@ -560,7 +563,7 @@ local function configure(widget)
 	]]--
 
     -- TITLE DISPLAY
-    line = form.addLine("  OFF",govalertpanel)
+    line = govalertpanel:addLine("  OFF")
     form.addBooleanField(
         line,
         nil,
@@ -573,7 +576,7 @@ local function configure(widget)
     )
 
     -- TITLE DISPLAY
-    line = form.addLine("  IDLE",govalertpanel)
+    line = govalertpanel:addLine("  IDLE")
     form.addBooleanField(
         line,
         nil,
@@ -586,7 +589,7 @@ local function configure(widget)
     )
 
     -- TITLE DISPLAY
-    line = form.addLine("  SPOOLUP",govalertpanel)
+    line = govalertpanel:addLine("  SPOOLUP")
     form.addBooleanField(
         line,
         nil,
@@ -598,7 +601,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("  RECOVERY",govalertpanel)
+    line = govalertpanel:addLine("  RECOVERY")
     form.addBooleanField(
         line,
         nil,
@@ -610,7 +613,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("  ACTIVE",govalertpanel)
+    line = govalertpanel:addLine("  ACTIVE")
     form.addBooleanField(
         line,
         nil,
@@ -622,7 +625,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("  THR-OFF",govalertpanel)
+    line = govalertpanel:addLine("  THR-OFF")
     form.addBooleanField(
         line,
         nil,
@@ -634,7 +637,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("  LOST-HS",govalertpanel)
+    line = govalertpanel:addLine("  LOST-HS")
     form.addBooleanField(
         line,
         nil,
@@ -646,7 +649,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("  AUTOROT",govalertpanel)
+    line = govalertpanel:addLine("  AUTOROT")
     form.addBooleanField(
         line,
         nil,
@@ -658,7 +661,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("  BAILOUT",govalertpanel)
+    line = govalertpanel:addLine("  BAILOUT")
     form.addBooleanField(
         line,
         nil,
@@ -670,7 +673,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("  DISABLED",govalertpanel)
+    line = govalertpanel:addLine("  DISABLED")
     form.addBooleanField(
         line,
         nil,
@@ -682,7 +685,7 @@ local function configure(widget)
         end
     )	
 
-    line = form.addLine("  DISARMED",govalertpanel)
+    line = govalertpanel:addLine("  DISARMED")
     form.addBooleanField(
         line,
         nil,
@@ -694,7 +697,7 @@ local function configure(widget)
         end
     )	
 
-    line = form.addLine("    UNKNOWN",govalertpanel)
+    line = govalertpanel:addLine("    UNKNOWN")
     form.addBooleanField(
         line,
         nil,
@@ -707,11 +710,11 @@ local function configure(widget)
     )
 	
 	
-	triggerpanel = form.addExpansionPanel("Announcements")
+	triggerpanel = form.addExpansionPanel("Telemetry Announcements")
 	triggerpanel:open(false) 
 	
     -- TRIGGER VOLTAGE READING
-    line = form.addLine("Voltage",triggerpanel)
+    line = triggerpanel:addLine("Voltage")
     form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
@@ -724,7 +727,7 @@ local function configure(widget)
     )
 
     -- TRIGGER RPM READING
-    line = form.addLine("Rpm",triggerpanel)
+    line = triggerpanel:addLine("Rpm")
     form.addSwitchField(
         line,
         nil,
@@ -737,7 +740,7 @@ local function configure(widget)
     )
 
     -- TRIGGER CURRENT READING
-    line = form.addLine("Current",triggerpanel)
+    line = triggerpanel:addLine("Current")
     form.addSwitchField(
         line,
         nil,
@@ -750,7 +753,7 @@ local function configure(widget)
     )
 
     -- TRIGGER FUEL READING
-    line = form.addLine("Fuel",triggerpanel)
+    line = triggerpanel:addLine("Fuel")
     form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
@@ -763,7 +766,7 @@ local function configure(widget)
     )
 
     -- TRIGGER LQ READING
-    line = form.addLine("LQ",triggerpanel)
+    line = triggerpanel:addLine("LQ")
     form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
@@ -776,7 +779,7 @@ local function configure(widget)
     )
 
     -- TRIGGER LQ READING
-    line = form.addLine("Esc temperature",triggerpanel)
+    line = triggerpanel:addLine("Esc temperature")
     form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
@@ -789,7 +792,7 @@ local function configure(widget)
     )
 
     -- TRIGGER MCU READING
-    line = form.addLine("Mcu temperature",triggerpanel)
+    line = triggerpanel:addLine("Mcu temperature")
     form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
@@ -802,7 +805,7 @@ local function configure(widget)
     )
 
     -- TRIGGER TIMER READING
-    line = form.addLine("Timer",triggerpanel)
+    line = triggerpanel:addLine("Timer")
     form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
@@ -819,7 +822,7 @@ local function configure(widget)
 
 
     -- Mini Boxes
-    line = form.addLine("Mini Boxes",displaypanel)
+    line = displaypanel:addLine("Mini Boxes")
     form.addChoiceField(
         line,
         nil,
@@ -838,7 +841,7 @@ local function configure(widget)
 
 
     -- TITLE DISPLAY
-    line = form.addLine("Title",displaypanel)
+    line = displaypanel:addLine("Title")
     form.addBooleanField(
         line,
         nil,
@@ -851,7 +854,7 @@ local function configure(widget)
     )
 
     -- MAX MIN DISPLAY
-    line = form.addLine("Max/Min",displaypanel)
+    line = displaypanel:addLine("Max/Min")
     form.addBooleanField(
         line,
         nil,
@@ -868,7 +871,7 @@ local function configure(widget)
 
 
 	if system.getSource("Rx RSSI1") == nil then -- currently only supported with fport
-		line = form.addLine("Adjustment sensor",advpanel)
+		line = advpanel:addLine("Adjustment sensor")
 		form.addBooleanField(
 			line,
 			nil,
@@ -883,7 +886,7 @@ local function configure(widget)
 
 
     -- calcfuel
-    line = form.addLine("Calculate Fuel Locally",advpanel)
+    line = advpanel:addLine("Calculate Fuel Locally")
     form.addBooleanField(
         line,
         nil,
@@ -896,7 +899,7 @@ local function configure(widget)
     )
 
 
-    line = form.addLine("Temp. Conversion. Esc.",advpanel)
+    line = advpanel:addLine("Temp. Conversion. Esc.")
     form.addChoiceField(
         line,
         nil,
@@ -914,7 +917,7 @@ local function configure(widget)
     )
 	
 
-    line = form.addLine("Temp. Conversion. Mcu.",advpanel)
+    line = advpanel:addLine("Temp. Conversion. Mcu.")
     form.addChoiceField(
         line,
         nil,
@@ -934,7 +937,7 @@ local function configure(widget)
     line = form.addLine("Voltage",advpanel)
 	
     -- LVTRIGGER DISPLAY
-    line = form.addLine("    Sensitivity",advpanel)
+    line = advpanel:addLine("    Sensitivity")
     form.addChoiceField(
         line,
         nil,
@@ -951,7 +954,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("    Sag compensation",advpanel)
+    line = advpanel:addLine("    Sag compensation")
     field =
         form.addNumberField(
         line,
@@ -970,7 +973,7 @@ local function configure(widget)
 	--field:decimals(1)
 
     -- LVSTICK MONITORING
-    line = form.addLine("    Gimbal Monitoring",advpanel)
+    line = advpanel:addLine("    Gimbal Monitoring")
     form.addChoiceField(
         line,
         nil,
@@ -994,7 +997,7 @@ local function configure(widget)
         end
     )
 
-    line = form.addLine("       Stick Cutoff",advpanel)
+    line = advpanel:addLine("       Stick Cutoff")
     fieldstckcutoff =
         form.addNumberField(
         line,
@@ -1018,7 +1021,7 @@ local function configure(widget)
 
 
    -- LVTRIGGER DISPLAY 
-    line = form.addLine("    Ignore Governor",advpanel)
+    line = advpanel:addLine("    Ignore Governor")
     form.addBooleanField(
         line,
         nil,
@@ -1033,7 +1036,7 @@ local function configure(widget)
 
     -- FILTER
     -- MAX MIN DISPLAY
-    line = form.addLine("Telemetry Filtering",advpanel)
+    line = advpanel:addLine("Telemetry Filtering")
     form.addChoiceField(
         line,
         nil,
@@ -1051,7 +1054,7 @@ local function configure(widget)
     )
 
    -- LVTRIGGER DISPLAY
-    line = form.addLine("Trigger interval",advpanel)
+    line = advpanel:addLine("Trigger interval")
     form.addChoiceField(
         line,
         nil,
@@ -1080,7 +1083,7 @@ local function configure(widget)
 
    -- NOT USING RF GOV 
     -- FLIGHT MODE SOURCE
-    line = form.addLine("Governor",advpanel)
+    line = advpanel:addLine("Governor")
     extgov = form.addChoiceField(
         line,
         nil,
@@ -1102,7 +1105,7 @@ local function configure(widget)
         end
     )
 	
-    line = form.addLine("    Arm switch",advpanel)	
+    line = advpanel:addLine("    Arm switch")	
     armswitch = form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
