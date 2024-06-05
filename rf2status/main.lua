@@ -10,7 +10,7 @@ local oldsensors = {
     "mah",
     "rssi",
     "fm",
-    "govmode"
+    "mem10"
 }
 
 rf2status = {}
@@ -24,60 +24,60 @@ local sensors = {}
 
 local lvTimer = false
 local lvTimerStart
-local lvTriggerTimer = false
-local lvTriggerTimerStart
-local lvaudioTriggerCounter = 0
+local lvannouncementTimer = false
+local lvannouncementTimerStart
+local lvaudioannouncementCounter = 0
 local lvAudioAlertCounter = 0
 
 local lfTimer = false
 local lfTimerStart
-local lfTriggerTimer = false
-local lfTriggerTimerStart
-local lfaudioTriggerCounter = 0
+local lfannouncementTimer = false
+local lfannouncementTimerStart
+local lfaudioannouncementCounter = 0
 local lfAudioAlertCounter = 0
 
 
 local rpmTimer = false
 local rpmTimerStart
-local rpmTriggerTimer = false
-local rpmTriggerTimerStart
-local rpmaudioTriggerCounter = 0
+local rpmannouncementTimer = false
+local rpmannouncementTimerStart
+local rpmaudioannouncementCounter = 0
 
 local currentTimer = false
 local currentTimerStart
-local currentTriggerTimer = false
-local currentTriggerTimerStart
-local currentaudioTriggerCounter = 0
+local currentannouncementTimer = false
+local currentannouncementTimerStart
+local currentaudioannouncementCounter = 0
 
 local lqTimer = false
 local lqTimerStart
-local lqTriggerTimer = false
-local lqTriggerTimerStart
-local lqaudioTriggerCounter = 0
+local lqannouncementTimer = false
+local lqannouncementTimerStart
+local lqaudioannouncementCounter = 0
 
 local fuelTimer = false
 local fuelTimerStart
-local fuelTriggerTimer = false
-local fuelTriggerTimerStart
-local fuelaudioTriggerCounter = 0
+local fuelannouncementTimer = false
+local fuelannouncementTimerStart
+local fuelaudioannouncementCounter = 0
 
 local escTimer = false
 local escTimerStart
-local escTriggerTimer = false
-local escTriggerTimerStart
-local escaudioTriggerCounter = 0
+local escannouncementTimer = false
+local escannouncementTimerStart
+local escaudioannouncementCounter = 0
 
 local mcuTimer = false
 local mcuTimerStart
-local mcuTriggerTimer = false
-local mcuTriggerTimerStart
-local mcuaudioTriggerCounter = 0
+local mcuannouncementTimer = false
+local mcuannouncementTimerStart
+local mcuaudioannouncementCounter = 0
 
 local timerTimer = false
 local timerTimerStart
-local timerTriggerTimer = false
-local timerTriggerTimerStart
-local timeraudioTriggerCounter = 0
+local timerannouncementTimer = false
+local timerannouncementTimerStart
+local timeraudioannouncementCounter = 0
 
 local linkUP = 0
 local refresh = true
@@ -105,7 +105,7 @@ local playRPMDiffCounter = 0
 local miniBoxParam = 0
 local lowvoltagStickParam = 0
 local lowvoltagStickCutoffParam = 70
-local fmsrcParam = 0
+local startonParam = 0
 local btypeParam = 0
 local lowfuelParam = 20
 local alertintParam = 5
@@ -115,37 +115,40 @@ local titleParam = true
 local cellsParam = 6
 local lowVoltageGovernorParam = true
 local sagParam = 5
-local rpmAlertsParam = true
-local rpmAlertsPercentageParam = 2.5
+local rpmAlertsParam = false
+local rpmAlertsPercentageParam = 100
 local governorAlertsParam = true
-local triggerVoltageSwitchParam = nil
-local triggerRPMSwitchParam = nil
-local triggerCurrentSwitchParam = nil
-local triggerFuelSwitchParam = nil	
-local triggerLQSwitchParam = nil
-local triggerESCSwitchParam = nil
-local triggerMCUSwitchParam = nil
-local triggerTimerSwitchParam = nil
+local announcementVoltageSwitchParam = nil
+local announcementRPMSwitchParam = nil
+local announcementCurrentSwitchParam = nil
+local announcementFuelSwitchParam = nil	
+local announcementLQSwitchParam = nil
+local announcementESCSwitchParam = nil
+local announcementMCUSwitchParam = nil
+local announcementTimerSwitchParam = nil
 local filteringParam = 1
 local lowvoltagsenseParam = 2
-local triggerIntervalParam = 30
+local announcementIntervalParam = 30
 local lowVoltageGovernorParam = nil
 local lowvoltagStickParam = nil
 local lowvoltagStickCutoffParam = nil
-local governorUNKNOWNParam = nil
-local governorDISARMEDParam  = nil
-local governorDISABLEDParam = nil
-local governorBAILOUTParam = nil
-local governorAUTOROTParam = nil
-local governorLOSTHSParam = nil
-local governorTHROFFParam = nil
-local governorACTIVEParam = nil
-local governorRECOVERYParam = nil
-local governorSPOOLUPParam = nil
-local governorIDLEParam = nil
-local governorOFFParam = nil
+local governorUNKNOWNParam = true
+local governorDISARMEDParam  = true
+local governorDISABLEDParam = true
+local governorBAILOUTParam = true
+local governorAUTOROTParam = true
+local governorLOSTHSParam = true
+local governorTHROFFParam = true
+local governorACTIVEParam = true
+local governorRECOVERYParam = true
+local governorSPOOLUPParam = true
+local governorIDLEParam = true
+local governorOFFParam = true
 local alertonParam = 0
 local calcfuelParam = true
+local tempconvertParamESC = 1
+local tempconvertParamMCU = 1
+local lowvoltagStickCutoffParam = 80
 
 local lvStickOrder = {}
 lvStickOrder[1] = {1,2,3,4}
@@ -153,7 +156,7 @@ lvStickOrder[2] = {1,2,4,5}
 lvStickOrder[3] = {1,2,4,6}
 lvStickOrder[4] = {2,3,4,6}
 
-local lvStickTrigger = false
+local lvStickannouncement = false
 
 local govmodeParam = 0
 local adjFunctionParam = false
@@ -323,23 +326,23 @@ local function create(widget)
         maxmin = 1,
         title = 1,
         cells = 6,
-        triggerswitchvltg = nil,
+        announcementswitchvltg = nil,
         govmode = 0,
 		governoralerts = 0,
 		rpmalerts = 0,
 		rpmaltp = 2.5,
 		adjfunc = 0,
-		triggerswitchrpm = nil,
-		triggerswitchcrnt = nil,
-		triggerswitchfuel = nil,
-		triggerswitchlq = nil,
-		triggerswitchesc = nil,
-		triggerswitchmcu = nil,
-		triggerswitchtmr = nil,
+		announcementswitchrpm = nil,
+		announcementswitchcrnt = nil,
+		announcementswitchfuel = nil,
+		announcementswitchlq = nil,
+		announcementswitchesc = nil,
+		announcementswitchmcu = nil,
+		announcementswitchtmr = nil,
 		filtering = 1,
 		sag = 5,
 		lvsense = 2,
-		triggerint = 30,
+		announcementint = 30,
 		lvgovernor = false,
 		lvstickmon = 0,
 		minibox = 0,
@@ -367,6 +370,54 @@ end
 
 local function configure(widget)
     isInConfiguration = true
+
+
+
+	triggerpanel = form.addExpansionPanel("Triggers")
+	triggerpanel:open(false) 
+
+
+
+    line = triggerpanel:addLine("Start on")
+    extgov = form.addChoiceField(
+        line,
+        nil,
+        {
+            {"Governor Status", 0},
+			{"RPM > 500",1},
+            {"Switch", 2}
+        },
+        function()
+            return startonParam
+        end,
+        function(newValue)
+            startonParam = newValue
+			if newValue == 2 then
+				startswitch:enable(true)
+			else
+				startswitch:enable(false)
+			end
+			
+        end
+    )
+	
+    line = triggerpanel:addLine("Start switch")	
+    startswitch = form.addSwitchField(
+        line,
+        form.getFieldSlots(line)[0],
+        function()
+            return startswitchParam
+        end,
+        function(value)
+            startswitchParam = value
+        end
+    )
+	if startonParam == 2 then
+		startswitch:enable(true)
+	else
+		startswitch:enable(false)
+	end
+
 
 
 	batterypanel = form.addExpansionPanel("Battery Configuration")
@@ -415,7 +466,7 @@ local function configure(widget)
 
 
 
-   -- LOW FUEL TRIGGER
+   -- LOW FUEL announcement
     line = batterypanel:addLine("Low fuel%")
     field =
         form.addNumberField(
@@ -710,110 +761,110 @@ local function configure(widget)
     )
 	
 	
-	triggerpanel = form.addExpansionPanel("Telemetry Announcements")
-	triggerpanel:open(false) 
+	announcementpanel = form.addExpansionPanel("Telemetry Announcements")
+	announcementpanel:open(false) 
 	
-    -- TRIGGER VOLTAGE READING
-    line = triggerpanel:addLine("Voltage")
+    -- announcement VOLTAGE READING
+    line = announcementpanel:addLine("Voltage")
     form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
         function()
-            return triggerVoltageSwitchParam
+            return announcementVoltageSwitchParam
         end,
         function(value)
-            triggerVoltageSwitchParam = value
+            announcementVoltageSwitchParam = value
         end
     )
 
-    -- TRIGGER RPM READING
-    line = triggerpanel:addLine("Rpm")
+    -- announcement RPM READING
+    line = announcementpanel:addLine("Rpm")
     form.addSwitchField(
         line,
         nil,
         function()
-            return triggerRPMSwitchParam
+            return announcementRPMSwitchParam
         end,
         function(value)
-            triggerRPMSwitchParam = value
+            announcementRPMSwitchParam = value
         end
     )
 
-    -- TRIGGER CURRENT READING
-    line = triggerpanel:addLine("Current")
+    -- announcement CURRENT READING
+    line = announcementpanel:addLine("Current")
     form.addSwitchField(
         line,
         nil,
         function()
-            return triggerCurrentSwitchParam
+            return announcementCurrentSwitchParam
         end,
         function(value)
-            triggerCurrentSwitchParam = value
+            announcementCurrentSwitchParam = value
         end
     )
 
-    -- TRIGGER FUEL READING
-    line = triggerpanel:addLine("Fuel")
+    -- announcement FUEL READING
+    line = announcementpanel:addLine("Fuel")
     form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
         function()
-            return triggerFuelSwitchParam
+            return announcementFuelSwitchParam
         end,
         function(value)
-            triggerFuelSwitchParam = value
+            announcementFuelSwitchParam = value
         end
     )
 
-    -- TRIGGER LQ READING
-    line = triggerpanel:addLine("LQ")
+    -- announcement LQ READING
+    line = announcementpanel:addLine("LQ")
     form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
         function()
-            return triggerLQSwitchParam
+            return announcementLQSwitchParam
         end,
         function(value)
-            triggerLQSwitchParam = value
+            announcementLQSwitchParam = value
         end
     )
 
-    -- TRIGGER LQ READING
-    line = triggerpanel:addLine("Esc temperature")
+    -- announcement LQ READING
+    line = announcementpanel:addLine("Esc temperature")
     form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
         function()
-            return triggerESCSwitchParam
+            return announcementESCSwitchParam
         end,
         function(value)
-            triggerESCSwitchParam = value
+            announcementESCSwitchParam = value
         end
     )
 
-    -- TRIGGER MCU READING
-    line = triggerpanel:addLine("Mcu temperature")
+    -- announcement MCU READING
+    line = announcementpanel:addLine("Mcu temperature")
     form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
         function()
-            return triggerMCUSwitchParam
+            return announcementMCUSwitchParam
         end,
         function(value)
-            triggerMCUSwitchParam = value
+            announcementMCUSwitchParam = value
         end
     )
 
-    -- TRIGGER TIMER READING
-    line = triggerpanel:addLine("Timer")
+    -- announcement TIMER READING
+    line = announcementpanel:addLine("Timer")
     form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
         function()
-            return triggerTimerSwitchParam
+            return announcementTimerSwitchParam
         end,
         function(value)
-            triggerTimerSwitchParam = value
+            announcementTimerSwitchParam = value
         end
     )
 
@@ -841,7 +892,7 @@ local function configure(widget)
 
 
     -- TITLE DISPLAY
-    line = displaypanel:addLine("Title")
+    line = displaypanel:addLine("mem7")
     form.addBooleanField(
         line,
         nil,
@@ -936,7 +987,7 @@ local function configure(widget)
 
     line = form.addLine("Voltage",advpanel)
 	
-    -- LVTRIGGER DISPLAY
+    -- LVannouncement DISPLAY
     line = advpanel:addLine("    Sensitivity")
     form.addChoiceField(
         line,
@@ -1020,19 +1071,6 @@ local function configure(widget)
 	end
 
 
-   -- LVTRIGGER DISPLAY 
-    line = advpanel:addLine("    Ignore Governor")
-    form.addBooleanField(
-        line,
-        nil,
-        function()
-            return lowVoltageGovernorParam
-        end,
-        function(newValue)
-            lowVoltageGovernorParam = newValue
-        end
-    )
-
 
     -- FILTER
     -- MAX MIN DISPLAY
@@ -1053,8 +1091,8 @@ local function configure(widget)
         end
     )
 
-   -- LVTRIGGER DISPLAY
-    line = advpanel:addLine("Trigger interval")
+   -- LVannouncement DISPLAY
+    line = advpanel:addLine("Announcement interval")
     form.addChoiceField(
         line,
         nil,
@@ -1074,53 +1112,13 @@ local function configure(widget)
 			{"No repeat", 50000}			
 		},
         function()
-            return triggerIntervalParam
+            return announcementIntervalParam
         end,
         function(newValue)
-            triggerIntervalParam = newValue
+            announcementIntervalParam = newValue
         end
     )
 
-   -- NOT USING RF GOV 
-    -- FLIGHT MODE SOURCE
-    line = advpanel:addLine("Governor")
-    extgov = form.addChoiceField(
-        line,
-        nil,
-        {
-            {"RF Governor", 0},
-            {"Ext Governor", 1}
-        },
-        function()
-            return fmsrcParam
-        end,
-        function(newValue)
-            fmsrcParam = newValue
-			if newValue == 1 then
-				armswitch:enable(true)
-			else
-				armswitch:enable(false)
-			end
-			
-        end
-    )
-	
-    line = advpanel:addLine("    Arm switch")	
-    armswitch = form.addSwitchField(
-        line,
-        form.getFieldSlots(line)[0],
-        function()
-            return armswitchParam
-        end,
-        function(value)
-            armswitchParam = value
-        end
-    )
-	if fmsrcParam == 1 then
-		armswitch:enable(true)
-	else
-		armswitch:enable(false)
-	end
 
 
 
@@ -1234,6 +1232,11 @@ end
 function rf2status.getThemeInfo()
     environment = system.getVersion()
     local w, h = lcd.getWindowSize()
+
+	-- this is just to force height calc to end up on whole numbers to avoid
+	-- scaling issues
+	h = (math.floor((h / 4))*4)
+	w = (math.floor((w / 6))*6)
 
     -- first one is unsporrted
 
@@ -2312,7 +2315,7 @@ local function paint(widget)
 			telemetryBox(posX,posY,thisBoxW,thisBoxH,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
 		end
 
-		--FLIGHT MODES
+		--GOV MODE
 		posX = 0
 		posY =  boxHs+(theme.colSpacing*2)
 		sensorUNIT = ""
@@ -2321,7 +2324,7 @@ local function paint(widget)
 		sensorMIN = nil
 		sensorMAX = nil
 
-		if fmsrcParam == 0 then		
+		if startonParam == 0 then		
             if sensors.govmode == nil then
                 sensors.govmode = "INIT"
             end
@@ -2353,7 +2356,7 @@ local function paint(widget)
 		
 	
     -- TIME
-	if fmsrcParam == 0 then
+	if startonParam == 0 then
 		if linkUP ~= 0 then
 			if sensors.govmode == "SPOOLUP" then
 				timerNearlyActive = 1
@@ -2408,7 +2411,7 @@ local function paint(widget)
 	end
 
 	-- LOW FUEL ALERTS
-    -- big conditional to trigger lfTimer if needed
+    -- big conditional to announcement lfTimer if needed
     if linkUP ~= 0 then
         if
             sensors.govmode == "IDLE" or 
@@ -2446,7 +2449,7 @@ local function paint(widget)
     end
 
     if lfTimerStart ~= nil then
-            -- only trigger if we have been on for 5 seconds or more
+            -- only announcement if we have been on for 5 seconds or more
             if (tonumber(os.clock()) - tonumber(lfAudioAlertCounter)) >= alertintParam then
                 lfAudioAlertCounter = os.clock()
 				
@@ -2464,7 +2467,7 @@ local function paint(widget)
     end
 
 	-- LOW VOLTAGE ALERTS
-    -- big conditional to trigger lvTimer if needed
+    -- big conditional to announcement lvTimer if needed
     if linkUP ~= 0 then
         if
             sensors.govmode == "IDLE" or 
@@ -2502,11 +2505,11 @@ local function paint(widget)
 
     if lvTimerStart ~= nil then
         if (os.time() - lvTimerStart >= sagParam) then
-            -- only trigger if we have been on for 5 seconds or more
+            -- only announcement if we have been on for 5 seconds or more
             if (tonumber(os.clock()) - tonumber(lvAudioAlertCounter)) >= alertintParam then
                 lvAudioAlertCounter = os.clock()
 				
-				if lvStickTrigger == false then -- do not play if sticks at high end points
+				if lvStickannouncement == false then -- do not play if sticks at high end points
 					system.playFile("/scripts/rf2status/sounds/alerts/lowvoltage.wav")
 					--system.playNumber(sensors.voltage / 100, 2, 2)
 					if alrthptParam == true then
@@ -3045,20 +3048,32 @@ function rf2status.getSensors()
 	end
 
 	if(lowvoltagStickParam ~= 0) then
-			lvStickTrigger = false
+			lvStickannouncement = false
 			for i, v in ipairs(lvStickOrder[lowvoltagStickParam]) do
-				if lvStickTrigger == false then  -- we skip more if any stick has resulted in trigger
+				if lvStickannouncement == false then  -- we skip more if any stick has resulted in announcement
 					if math.abs(getChannelValue(v)) >= lowvoltagStickCutoffParam then 
-							lvStickTrigger = true
+							lvStickannouncement = true
 					end
 				end
 			end
 	end		
 
 	-- intercept governor for non rf governor helis
-	if fmsrcParam == 1 then
-		if armswitchParam ~= nil then
-			if armswitchParam:state() == true then
+	if startonParam == 1 then  -- rpm > 500
+		if startswitchParam ~= nil then
+			if rpm >= 500 then
+				 govmode = "ACTIVE"
+				 fm = "ACTIVE"
+			else
+				 govmode = "THR-OFF"
+				 fm = "THR-OFF"
+			end	
+		end
+	end		
+	
+	if startonParam == 2 then  -- use a switch state
+		if startswitchParam ~= nil then
+			if startswitchParam:state() == true then
 				 govmode = "ACTIVE"
 				 fm = "ACTIVE"
 			else
@@ -3614,73 +3629,53 @@ end
 
 
 local function read()
-		fmsrcParam = storage.read("fmsrc")
-		btypeParam = storage.read("btype")
-		lowfuelParam = storage.read("lowfuel")
-		alertintParam = storage.read("alertint")
-		alrthptParam = storage.read("alrthptc")
-		maxminParam = storage.read("maxmin")
-		titleParam = storage.read("title")
-		cellsParam = storage.read("cells")
-		triggerVoltageSwitchParam = storage.read("triggerswitchvltg")
-		govmodeParam = storage.read("govmode")
-		governorAlertsParam = storage.read("governoralerts") -- we need to keep reading this 
-		governorAlertsParam = true							 -- but we reset below or eprom mem gets mangled
-		
-		rpmAlertsParam = storage.read("rpmalerts")				
-		rpmAlertsPercentageParam = storage.read("rpmaltp")	
-		adjFunctionParam = storage.read("adjfunc")	
-		triggerRPMSwitchParam = storage.read("triggerswitchrpm")
-		triggerCurrentSwitchParam = storage.read("triggerswitchcrnt")
-		triggerFuelSwitchParam = storage.read("triggerswitchfuel")		
-		triggerLQSwitchParam = storage.read("triggerswitchlq")
-		triggerESCSwitchParam = storage.read("triggerswitchesc")
-		triggerMCUSwitchParam = storage.read("triggerswitchmcu")
-		triggerTimerSwitchParam = storage.read("triggerswitchtmr")
-		filteringParam = storage.read("filtering")		
-		sagParam = storage.read("sag")	
-		lowvoltagsenseParam = storage.read("lvsense")		
-		triggerIntervalParam = storage.read("triggerint")	
-		lowVoltageGovernorParam = storage.read("lvgovernor")
-		lowvoltagStickParam = storage.read("lvstickmon")
-		miniBoxParam = storage.read('minibox')
-		lowvoltagStickCutoffParam = storage.read("lvstickcutoff")
-		governorUNKNOWNParam = storage.read("governorUNKNOWN")
-		governorDISARMEDParam = storage.read("governorDISARMED")
-		governorDISABLEDParam = storage.read("governorDISABLED")
-		governorBAILOUTParam = storage.read("governorBAILOUT")
-		governorAUTOROTParam = storage.read("governorAUTOROT")
-		governorLOSTHSParam = storage.read("governorLOSTHS")
-		governorTHROFFParam = storage.read("governorTHROFF")
-		governorACTIVEParam = storage.read("governorACTIVE")
-		governorRECOVERYParam = storage.read("governorRECOVERY")
-		governorSPOOLUPParam = storage.read("governorSPOOLUP")
-		governorIDLEParam = storage.read("governorIDLE")
-		governorOFFParam = storage.read("governorOFF")
-		alertonParam = storage.read("alerton")
-		calcfuelParam = storage.read("calcfuel")
-		tempconvertParamESC = storage.read("tempconvertesc")
-		tempconvertParamMCU = storage.read("tempconvertmcu")
-		armswitchParam = storage.read("armswitch")
+		startonParam = storage.read("mem1")
+		btypeParam = storage.read("mem2")
+		lowfuelParam = storage.read("mem3")
+		alertintParam = storage.read("mem4")
+		alrthptParam = storage.read("mem5")
+		maxminParam = storage.read("mem6")
+		titleParam = storage.read("mem7")
+		cellsParam = storage.read("mem8")
+		announcementVoltageSwitchParam = storage.read("mem9")
+		govmodeParam = storage.read("mem10")
+		rpmAlertsParam = storage.read("mem11")				
+		rpmAlertsPercentageParam = storage.read("mem12")	
+		adjFunctionParam = storage.read("mem13")	
+		announcementRPMSwitchParam = storage.read("mem14")
+		announcementCurrentSwitchParam = storage.read("mem15")
+		announcementFuelSwitchParam = storage.read("mem16")		
+		announcementLQSwitchParam = storage.read("mem17")
+		announcementESCSwitchParam = storage.read("mem18")
+		announcementMCUSwitchParam = storage.read("mem19")
+		announcementTimerSwitchParam = storage.read("mem20")
+		filteringParam = storage.read("mem21")		
+		sagParam = storage.read("mem22")	
+		lowvoltagsenseParam = storage.read("mem23")		
+		announcementIntervalParam = storage.read("mem24")	
+		lowVoltageGovernorParam = storage.read("mem25")
+		lowvoltagStickParam = storage.read("mem26")
+		miniBoxParam = storage.read("mem27")
+		lowvoltagStickCutoffParam = storage.read("mem28")
+		governorUNKNOWNParam = storage.read("mem29")
+		governorDISARMEDParam = storage.read("mem30")
+		governorDISABLEDParam = storage.read("mem31")
+		governorBAILOUTParam = storage.read("mem32")
+		governorAUTOROTParam = storage.read("mem33")
+		governorLOSTHSParam = storage.read("mem34")
+		governorTHROFFParam = storage.read("mem35")
+		governorACTIVEParam = storage.read("mem36")
+		governorRECOVERYParam = storage.read("mem37")
+		governorSPOOLUPParam = storage.read("mem38")
+		governorIDLEParam = storage.read("mem39")
+		governorOFFParam = storage.read("mem40")
+		alertonParam = storage.read("mem41")
+		calcfuelParam = storage.read("mem42")
+		tempconvertParamESC = storage.read("mem43")
+		tempconvertParamMCU = storage.read("mem44")
+		startswitchParam = storage.read("mem45")
 
-		-- fix some legacy params values if bad
-		if miniBoxParam == nil then miniBoxParam = 0 end
-		if titleParam == 0 then titleParam = false end
-		if titleParam == 1 then titleParam = true end		
-		if maxminParam == 0 then maxminParam = false end
-		if maxminParam == 1 then maxminParam = true end		
-		if lowVoltageGovernorParam == 0 then lowVoltageGovernorParam = false end
-		if lowVoltageGovernorParam == 1 then lowVoltageGovernorParam = true end		
-		if alrthptParam == 0 then alrthptParam = false end
-		if alrthptParam == 1 then alrthptParam = true end		
-		if governorAlertsParam == 0 then governorAlertsParam = false end
-		if governorAlertsParam == 1 then governorAlertsParam = true end				
-		if rpmAlertsParam == 0 then rpmAlertsParam = false end
-		if rpmAlertsParam == 1 then rpmAlertsParam = true end	
-		if adjFunctionParam == 0 then adjFunctionParam = false end
-		if adjFunctionParam == 1 then adjFunctionParam = true end
-		if tempconvertParamESC == nil then tempconvertParamESC = 1 end
-		if tempconvertParamMCU == nil then tempconvertParamMCU = 1 end
+
 
 		
 		rf2status.resetALL()
@@ -3688,92 +3683,91 @@ local function read()
 end
 
 local function write()
-		storage.write("fmsrc", fmsrcParam)
-		storage.write("btype", btypeParam)
-		storage.write("lowfuel", lowfuelParam)
-		storage.write("alertint", alertintParam)
-		storage.write("alrthptc", alrthptParam)
-		storage.write("maxmin", maxminParam)
-		storage.write("title", titleParam)
-		storage.write("cells", cellsParam)
-		storage.write("triggerswitchvltg", triggerVoltageSwitchParam)
-		storage.write("govmode", govmodeParam)	
-		storage.write("governoralerts",governorAlertsParam)
-		storage.write("rpmalerts",rpmAlertsParam)
-		storage.write("rpmaltp",rpmAlertsPercentageParam)
-		storage.write("adjfunc",adjFunctionParam)	
-		storage.write("triggerswitchrpm",triggerRPMSwitchParam)
-		storage.write("triggerswitchcrnt",triggerCurrentSwitchParam)
-		storage.write("triggerswitchfuel",triggerFuelSwitchParam)		
-		storage.write("triggerswitchlq",triggerLQSwitchParam)		
-		storage.write("triggerswitchesc",triggerESCSwitchParam)	
-		storage.write("triggerswitchmcu",triggerMCUSwitchParam)		
-		storage.write("triggerswitchtmr",triggerTimerSwitchParam)
-		storage.write("filtering",filteringParam)	
-		storage.write("sag",sagParam)
-		storage.write("lvsense",lowvoltagsenseParam)
-		storage.write("triggerint",triggerIntervalParam)
-		storage.write("lvgovernor",lowVoltageGovernorParam)
-		storage.write("lvstickmon",lowvoltagStickParam)
-		storage.write("minibox",miniBoxParam)
-		storage.write("lvstickcutoff",lowvoltagStickCutoffParam)
-		storage.write("governorUNKNOWN",governorUNKNOWNParam)
-		storage.write("governorDISARMED",governorDISARMEDParam)
-		storage.write("governorDISABLED",governorDISABLEDParam)
-		storage.write("governorBAILOUT",governorBAILOUTParam)
-		storage.write("governorAUTOROT",governorAUTOROTParam)
-		storage.write("governorLOSTHS",governorLOSTHSParam)
-		storage.write("governorTHROFF",governorTHROFFParam)
-		storage.write("governorACTIVE",governorACTIVEParam)
-		storage.write("governorRECOVERY",governorRECOVERYParam)
-		storage.write("governorSPOOLUP",governorSPOOLUPParam)
-		storage.write("governorIDLE",governorIDLEParam)
-		storage.write("governorOFF",governorOFFParam)
-		storage.write("alerton",alertonParam)
-		storage.write("calcfuel",calcfuelParam)
-		storage.write("tempconvertesc",tempconvertParamESC)
-		storage.write("tempconvertmcu",tempconvertParamMCU)
-		storage.write("armswitch",armswitchParam)
+		storage.write("mem1", startonParam)
+		storage.write("mem2", btypeParam)
+		storage.write("mem3", lowfuelParam)
+		storage.write("mem4", alertintParam)
+		storage.write("mem5", alrthptParam)
+		storage.write("mem6", maxminParam)
+		storage.write("mem7", titleParam)
+		storage.write("mem8", cellsParam)
+		storage.write("mem9", announcementVoltageSwitchParam)
+		storage.write("mem10", govmodeParam)	
+		storage.write("mem11",rpmAlertsParam)
+		storage.write("mem12",rpmAlertsPercentageParam)
+		storage.write("mem13",adjFunctionParam)	
+		storage.write("mem14",announcementRPMSwitchParam)
+		storage.write("mem15",announcementCurrentSwitchParam)
+		storage.write("mem16",announcementFuelSwitchParam)		
+		storage.write("mem17",announcementLQSwitchParam)		
+		storage.write("mem18",announcementESCSwitchParam)	
+		storage.write("mem19",announcementMCUSwitchParam)		
+		storage.write("mem20",announcementTimerSwitchParam)
+		storage.write("mem21",filteringParam)	
+		storage.write("mem22",sagParam)
+		storage.write("mem23",lowvoltagsenseParam)
+		storage.write("mem24",announcementIntervalParam)
+		storage.write("mem25",lowVoltageGovernorParam)
+		storage.write("mem26",lowvoltagStickParam)
+		storage.write("mem27",miniBoxParam)
+		storage.write("mem28",lowvoltagStickCutoffParam)
+		storage.write("mem29",governorUNKNOWNParam)
+		storage.write("mem30",governorDISARMEDParam)
+		storage.write("mem31",governorDISABLEDParam)
+		storage.write("mem32",governorBAILOUTParam)
+		storage.write("mem33",governorAUTOROTParam)
+		storage.write("mem34",governorLOSTHSParam)
+		storage.write("mem35",governorTHROFFParam)
+		storage.write("mem36",governorACTIVEParam)
+		storage.write("mem37",governorRECOVERYParam)
+		storage.write("mem38",governorSPOOLUPParam)
+		storage.write("mem39",governorIDLEParam)
+		storage.write("mem40",governorOFFParam)
+		storage.write("mem41",alertonParam)
+		storage.write("mem42",calcfuelParam)
+		storage.write("mem43",tempconvertParamESC)
+		storage.write("mem44",tempconvertParamMCU)
+		storage.write("mem45",startswitchParam)
 		
 		updateFILTERING()		
 end
 
 function rf2status.playCurrent(widget)
-    if triggerCurrentSwitchParam ~= nil then
-        if triggerCurrentSwitchParam:state() then
-            currentTriggerTimer = true
+    if announcementCurrentSwitchParam ~= nil then
+        if announcementCurrentSwitchParam:state() then
+            currentannouncementTimer = true
             currentDoneFirst = false
         else
-            currentTriggerTimer = false
+            currentannouncementTimer = false
             currentDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.current ~= nil then
-                if currentTriggerTimer == true then
+                if currentannouncementTimer == true then
                     --start timer
-                    if currentTriggerTimerStart == nil and currentDoneFirst == false then
-                        currentTriggerTimerStart = os.time()
-						currentaudioTriggerCounter = os.clock()
+                    if currentannouncementTimerStart == nil and currentDoneFirst == false then
+                        currentannouncementTimerStart = os.time()
+						currentaudioannouncementCounter = os.clock()
 						--print ("Play Current Alert (first)")
                         system.playNumber(sensors.current/10, UNIT_AMPERE, 2)
                         currentDoneFirst = true
                     end
                 else
-                    currentTriggerTimerStart = nil
+                    currentannouncementTimerStart = nil
                 end
 
-                if currentTriggerTimerStart ~= nil then
+                if currentannouncementTimerStart ~= nil then
                     if currentDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(currentaudioTriggerCounter)) >= triggerIntervalParam) then
+                        if ((tonumber(os.clock()) - tonumber(currentaudioannouncementCounter)) >= announcementIntervalParam) then
 							--print ("Play Current Alert (repeat)")
-                            currentaudioTriggerCounter = os.clock()
+                            currentaudioannouncementCounter = os.clock()
                             system.playNumber(sensors.current/10, UNIT_AMPERE, 2)
                         end
                     end
                 else
                     -- stop timer
-                    currentTriggerTimerStart = nil
+                    currentannouncementTimerStart = nil
                 end
             end
         end
@@ -3781,35 +3775,35 @@ function rf2status.playCurrent(widget)
 end
 
 function rf2status.playLQ(widget)
-    if triggerLQSwitchParam ~= nil then
-        if triggerLQSwitchParam:state() then
-            lqTriggerTimer = true
+    if announcementLQSwitchParam ~= nil then
+        if announcementLQSwitchParam:state() then
+            lqannouncementTimer = true
             lqDoneFirst = false
         else
-            lqTriggerTimer = false
+            lqannouncementTimer = false
             lqDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.rssi ~= nil then
-                if lqTriggerTimer == true then
+                if lqannouncementTimer == true then
                     --start timer
-                    if lqTriggerTimerStart == nil and lqDoneFirst == false then
-                        lqTriggerTimerStart = os.time()
-						lqaudioTriggerCounter = os.clock()
+                    if lqannouncementTimerStart == nil and lqDoneFirst == false then
+                        lqannouncementTimerStart = os.time()
+						lqaudioannouncementCounter = os.clock()
 						--print ("Play LQ Alert (first)")
 						system.playFile("/scripts/rf2status/sounds/alerts/lq.wav")						
                         system.playNumber(sensors.rssi, UNIT_PERCENT, 2)
                         lqDoneFirst = true
                     end
                 else
-                    lqTriggerTimerStart = nil
+                    lqannouncementTimerStart = nil
                 end
 
-                if lqTriggerTimerStart ~= nil then
+                if lqannouncementTimerStart ~= nil then
                     if lqDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(lqaudioTriggerCounter)) >= triggerIntervalParam) then
-                            lqaudioTriggerCounter = os.clock()
+                        if ((tonumber(os.clock()) - tonumber(lqaudioannouncementCounter)) >= announcementIntervalParam) then
+                            lqaudioannouncementCounter = os.clock()
 							--print ("Play LQ Alert (repeat)")
 							system.playFile("/scripts/rf2status/sounds/alerts/lq.wav")
                             system.playNumber(sensors.rssi, UNIT_PERCENT, 2)
@@ -3817,7 +3811,7 @@ function rf2status.playLQ(widget)
                     end
                 else
                     -- stop timer
-                    lqTriggerTimerStart = nil
+                    lqannouncementTimerStart = nil
                 end
             end
         end
@@ -3825,35 +3819,35 @@ function rf2status.playLQ(widget)
 end
 
 function rf2status.playMCU(widget)
-    if triggerMCUSwitchParam ~= nil then
-        if triggerMCUSwitchParam:state() then
-            mcuTriggerTimer = true
+    if announcementMCUSwitchParam ~= nil then
+        if announcementMCUSwitchParam:state() then
+            mcuannouncementTimer = true
             mcuDoneFirst = false
         else
-            mcuTriggerTimer = false
+            mcuannouncementTimer = false
             mcuDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.temp_mcu ~= nil then
-                if mcuTriggerTimer == true then
+                if mcuannouncementTimer == true then
                     --start timer
-                    if mcuTriggerTimerStart == nil and mcuDoneFirst == false then
-                        mcuTriggerTimerStart = os.time()
-						mcuaudioTriggerCounter = os.clock()
+                    if mcuannouncementTimerStart == nil and mcuDoneFirst == false then
+                        mcuannouncementTimerStart = os.time()
+						mcuaudioannouncementCounter = os.clock()
 						--print ("Playing MCU (first)")
 						system.playFile("/scripts/rf2status/sounds/alerts/mcu.wav")
                         system.playNumber(sensors.temp_mcu/100, UNIT_DEGREE, 2)
                         mcuDoneFirst = true
                     end
                 else
-                    mcuTriggerTimerStart = nil
+                    mcuannouncementTimerStart = nil
                 end
 
-                if mcuTriggerTimerStart ~= nil then
+                if mcuannouncementTimerStart ~= nil then
                     if mcuDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(mcuaudioTriggerCounter)) >= triggerIntervalParam) then
-                            mcuaudioTriggerCounter = os.clock()
+                        if ((tonumber(os.clock()) - tonumber(mcuaudioannouncementCounter)) >= announcementIntervalParam) then
+                            mcuaudioannouncementCounter = os.clock()
 							--print ("Playing MCU (repeat)")
 							system.playFile("/scripts/rf2status/sounds/alerts/mcu.wav")
                             system.playNumber(sensors.temp_mcu/100, UNIT_DEGREE, 2)
@@ -3861,7 +3855,7 @@ function rf2status.playMCU(widget)
                     end
                 else
                     -- stop timer
-                    mcuTriggerTimerStart = nil
+                    mcuannouncementTimerStart = nil
                 end
             end
         end
@@ -3869,35 +3863,35 @@ function rf2status.playMCU(widget)
 end
 
 function rf2status.playESC(widget)
-    if triggerESCSwitchParam ~= nil then
-        if triggerESCSwitchParam:state() then
-            escTriggerTimer = true
+    if announcementESCSwitchParam ~= nil then
+        if announcementESCSwitchParam:state() then
+            escannouncementTimer = true
             escDoneFirst = false
         else
-            escTriggerTimer = false
+            escannouncementTimer = false
             escDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.temp_esc ~= nil then
-                if escTriggerTimer == true then
+                if escannouncementTimer == true then
                     --start timer
-                    if escTriggerTimerStart == nil and escDoneFirst == false then
-                        escTriggerTimerStart = os.time()
-						escaudioTriggerCounter = os.clock()
+                    if escannouncementTimerStart == nil and escDoneFirst == false then
+                        escannouncementTimerStart = os.time()
+						escaudioannouncementCounter = os.clock()
 						--print ("Playing ESC (first)")
 						system.playFile("/scripts/rf2status/sounds/alerts/esc.wav")
                         system.playNumber(sensors.temp_esc/100, UNIT_DEGREE, 2)
                         escDoneFirst = true
                     end
                 else
-                    escTriggerTimerStart = nil
+                    escannouncementTimerStart = nil
                 end
 
-                if escTriggerTimerStart ~= nil then
+                if escannouncementTimerStart ~= nil then
                     if escDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(escaudioTriggerCounter)) >= triggerIntervalParam) then
-                            escaudioTriggerCounter = os.clock()
+                        if ((tonumber(os.clock()) - tonumber(escaudioannouncementCounter)) >= announcementIntervalParam) then
+                            escaudioannouncementCounter = os.clock()
 							--print ("Playing ESC (repeat)")
 							system.playFile("/scripts/rf2status/sounds/alerts/esc.wav")
                             system.playNumber(sensors.temp_esc/100, UNIT_DEGREE, 2)
@@ -3905,7 +3899,7 @@ function rf2status.playESC(widget)
                     end
                 else
                     -- stop timer
-                    escTriggerTimerStart = nil
+                    escannouncementTimerStart = nil
                 end
             end
         end
@@ -3913,13 +3907,13 @@ function rf2status.playESC(widget)
 end
 
 function rf2status.playTIMER(widget)
-    if triggerTimerSwitchParam ~= nil then
+    if announcementTimerSwitchParam ~= nil then
 
-        if triggerTimerSwitchParam:state() then
-            timerTriggerTimer = true
+        if announcementTimerSwitchParam:state() then
+            timerannouncementTimer = true
             timerDoneFirst = false
         else
-            timerTriggerTimer = false
+            timerannouncementTimer = false
             timerDoneFirst = true
         end
 
@@ -3938,11 +3932,11 @@ function rf2status.playTIMER(widget)
 				mins = string.format("%02.f", math.floor(alertTIME / 60 - (hours * 60)))
 				secs = string.format("%02.f", math.floor(alertTIME - hours * 3600 - mins * 60))
 			
-                if timerTriggerTimer == true then
+                if timerannouncementTimer == true then
                     --start timer
-                    if timerTriggerTimerStart == nil and timerDoneFirst == false then
-                        timerTriggerTimerStart = os.time()
-						timeraudioTriggerCounter = os.clock()
+                    if timerannouncementTimerStart == nil and timerDoneFirst == false then
+                        timerannouncementTimerStart = os.time()
+						timeraudioannouncementCounter = os.clock()
 						--print ("Playing TIMER (first)" .. alertTIME)
 	
 						if mins ~= "00" then
@@ -3953,13 +3947,13 @@ function rf2status.playTIMER(widget)
                         timerDoneFirst = true
                     end
                 else
-                    timerTriggerTimerStart = nil
+                    timerannouncementTimerStart = nil
                 end
 
-                if timerTriggerTimerStart ~= nil then
+                if timerannouncementTimerStart ~= nil then
                     if timerDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(timeraudioTriggerCounter)) >= triggerIntervalParam) then
-                            timeraudioTriggerCounter = os.clock()
+                        if ((tonumber(os.clock()) - tonumber(timeraudioannouncementCounter)) >= announcementIntervalParam) then
+                            timeraudioannouncementCounter = os.clock()
 							--print ("Playing TIMER (repeat)" .. alertTIME)
 							if mins ~= "00" then
 								system.playNumber(mins, UNIT_MINUTE, 2)
@@ -3969,7 +3963,7 @@ function rf2status.playTIMER(widget)
                     end
                 else
                     -- stop timer
-                    timerTriggerTimerStart = nil
+                    timerannouncementTimerStart = nil
                 end
             end
         end
@@ -3977,35 +3971,35 @@ function rf2status.playTIMER(widget)
 end
 
 function rf2status.playFuel(widget)
-    if triggerFuelSwitchParam ~= nil then
-        if triggerFuelSwitchParam:state() then
-            fuelTriggerTimer = true
+    if announcementFuelSwitchParam ~= nil then
+        if announcementFuelSwitchParam:state() then
+            fuelannouncementTimer = true
             fuelDoneFirst = false
         else
-            fuelTriggerTimer = false
+            fuelannouncementTimer = false
             fuelDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.fuel ~= nil then
-                if fuelTriggerTimer == true then
+                if fuelannouncementTimer == true then
                     --start timer
-                    if fuelTriggerTimerStart == nil and fuelDoneFirst == false then
-                        fuelTriggerTimerStart = os.time()
-						fuelaudioTriggerCounter = os.clock()
+                    if fuelannouncementTimerStart == nil and fuelDoneFirst == false then
+                        fuelannouncementTimerStart = os.time()
+						fuelaudioannouncementCounter = os.clock()
 						--print("Play fuel alert (first)")
 						system.playFile("/scripts/rf2status/sounds/alerts/fuel.wav")	
                         system.playNumber(sensors.fuel, UNIT_PERCENT, 2)				
                         fuelDoneFirst = true
                     end
                 else
-                    fuelTriggerTimerStart = nil
+                    fuelannouncementTimerStart = nil
                 end
 
-                if fuelTriggerTimerStart ~= nil then
+                if fuelannouncementTimerStart ~= nil then
                     if fuelDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(fuelaudioTriggerCounter)) >= triggerIntervalParam) then
-                            fuelaudioTriggerCounter = os.clock()
+                        if ((tonumber(os.clock()) - tonumber(fuelaudioannouncementCounter)) >= announcementIntervalParam) then
+                            fuelaudioannouncementCounter = os.clock()
 							--print("Play fuel alert (repeat)")
 							system.playFile("/scripts/rf2status/sounds/alerts/fuel.wav")	
                             system.playNumber(sensors.fuel, UNIT_PERCENT, 2)
@@ -4014,7 +4008,7 @@ function rf2status.playFuel(widget)
                     end
                 else
                     -- stop timer
-                    fuelTriggerTimerStart = nil
+                    fuelannouncementTimerStart = nil
                 end
             end
         end
@@ -4022,41 +4016,41 @@ function rf2status.playFuel(widget)
 end
 
 function rf2status.playRPM(widget)
-    if triggerRPMSwitchParam ~= nil then
-        if triggerRPMSwitchParam:state() then
-            rpmTriggerTimer = true
+    if announcementRPMSwitchParam ~= nil then
+        if announcementRPMSwitchParam:state() then
+            rpmannouncementTimer = true
             rpmDoneFirst = false
         else
-            rpmTriggerTimer = false
+            rpmannouncementTimer = false
             rpmDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.rpm ~= nil then
-                if rpmTriggerTimer == true then
+                if rpmannouncementTimer == true then
                     --start timer
-                    if rpmTriggerTimerStart == nil and rpmDoneFirst == false then
-                        rpmTriggerTimerStart = os.time()
-						rpmaudioTriggerCounter = os.clock()
+                    if rpmannouncementTimerStart == nil and rpmDoneFirst == false then
+                        rpmannouncementTimerStart = os.time()
+						rpmaudioannouncementCounter = os.clock()
 						--print("Play rpm alert (first)")
                         system.playNumber(sensors.rpm, UNIT_RPM, 2)
                         rpmDoneFirst = true
                     end
                 else
-                    rpmTriggerTimerStart = nil
+                    rpmannouncementTimerStart = nil
                 end
 
-                if rpmTriggerTimerStart ~= nil then
+                if rpmannouncementTimerStart ~= nil then
                     if rpmDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(rpmaudioTriggerCounter)) >= triggerIntervalParam) then
+                        if ((tonumber(os.clock()) - tonumber(rpmaudioannouncementCounter)) >= announcementIntervalParam) then
 							--print("Play rpm alert (repeat)")
-                            rpmaudioTriggerCounter = os.clock()
+                            rpmaudioannouncementCounter = os.clock()
                             system.playNumber(sensors.rpm, UNIT_RPM, 2)
                         end
                     end
                 else
                     -- stop timer
-                    rpmTriggerTimerStart = nil
+                    rpmannouncementTimerStart = nil
                 end
             end
         end
@@ -4064,36 +4058,36 @@ function rf2status.playRPM(widget)
 end
 
 function rf2status.playVoltage(widget)
-    if triggerVoltageSwitchParam ~= nil then
-        if triggerVoltageSwitchParam:state() then
-            lvTriggerTimer = true
+    if announcementVoltageSwitchParam ~= nil then
+        if announcementVoltageSwitchParam:state() then
+            lvannouncementTimer = true
             voltageDoneFirst = false
         else
-            lvTriggerTimer = false
+            lvannouncementTimer = false
             voltageDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.voltage ~= nil then
-                if lvTriggerTimer == true then
+                if lvannouncementTimer == true then
                     --start timer
-                    if lvTriggerTimerStart == nil and voltageDoneFirst == false then
-                        lvTriggerTimerStart = os.time()
-						lvaudioTriggerCounter = os.clock()
+                    if lvannouncementTimerStart == nil and voltageDoneFirst == false then
+                        lvannouncementTimerStart = os.time()
+						lvaudioannouncementCounter = os.clock()
 						--print("Play voltage alert (first)")
 						--system.playFile("/scripts/rf2status/sounds/alerts/voltage.wav")						
                         system.playNumber(sensors.voltage / 100, 2, 2)
                         voltageDoneFirst = true
                     end
                 else
-                    lvTriggerTimerStart = nil
+                    lvannouncementTimerStart = nil
                 end
 
-                if lvTriggerTimerStart ~= nil then
+                if lvannouncementTimerStart ~= nil then
                     if voltageDoneFirst == false then
-						if lvaudioTriggerCounter ~= nil and triggerIntervalParam ~= nil then
-							if ((tonumber(os.clock()) - tonumber(lvaudioTriggerCounter)) >= triggerIntervalParam) then
-								lvaudioTriggerCounter = os.clock()
+						if lvaudioannouncementCounter ~= nil and announcementIntervalParam ~= nil then
+							if ((tonumber(os.clock()) - tonumber(lvaudioannouncementCounter)) >= announcementIntervalParam) then
+								lvaudioannouncementCounter = os.clock()
 								--print("Play voltage alert (repeat)")
 								--system.playFile("/scripts/rf2status/sounds/alerts/voltage.wav")								
 								system.playNumber(sensors.voltage / 100, 2, 2)
@@ -4102,7 +4096,7 @@ function rf2status.playVoltage(widget)
                     end
                 else
                     -- stop timer
-                    lvTriggerTimerStart = nil
+                    lvannouncementTimerStart = nil
                 end
             end
         end
@@ -4153,7 +4147,7 @@ local function event(widget, category, value, x, y)
 	end
 	
   	
-  -- if in simlation we capture a  page  press  to trigger a fake govenor spool up and then down
+  -- if in simlation we capture a  page  press  to announcement a fake govenor spool up and then down
    
   if environment.simulation == true then
 
@@ -4309,7 +4303,7 @@ local function playADJ()
 					-- play function that has changed
 					adjfunction = adjfunctions["id"..ADJSOURCE]
 					if adjfunction ~= nil then
-						--print("ADJfunc triggered for: " .. "id".. ADJSOURCE)
+						--print("ADJfunc announcemented for: " .. "id".. ADJSOURCE)
 						for wavi, wavv in ipairs(adjfunction.wavs) do
 							system.playFile("/scripts/rf2status/sounds/adjfunc/"..wavv..".wav")
 						end
@@ -4400,7 +4394,7 @@ end
 local function init()
     system.registerWidget(
         {
-            key = "xkshss",
+            key = "bkshss",
             name = "Rotorflight Flight Status",
             create = create,
             configure = configure,
