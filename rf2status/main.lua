@@ -20,6 +20,8 @@ local sensors
 local supportedRADIO = false
 local gfx_model
 
+
+local theTIME = 0
 local sensors = {}
 
 local lvTimer = false
@@ -145,7 +147,7 @@ local governorSPOOLUPParam = true
 local governorIDLEParam = true
 local governorOFFParam = true
 local alertonParam = 0
-local calcfuelParam = true
+local calcfuelParam = false
 local tempconvertParamESC = 1
 local tempconvertParamMCU = 1
 local lowvoltagStickCutoffParam = 80
@@ -345,7 +347,7 @@ local function create(widget)
 		announcementint = 30,
 		lvgovernor = false,
 		lvstickmon = 0,
-		minibox = 0,
+		minibox = 2,
 		lvstickcutoff = 1,
 		governorUNKNOWN = true,
 		governorDISARMED = true,
@@ -385,7 +387,7 @@ local function configure(widget)
         {
             {"Governor Status", 0},
 			{"RPM > 500",1},
-            {"Switch", 2}
+            {"Switch Configuration", 2}
         },
         function()
             return startonParam
@@ -393,29 +395,48 @@ local function configure(widget)
         function(newValue)
             startonParam = newValue
 			if newValue == 2 then
-				startswitch:enable(true)
+				idleupswitch:enable(true)
+				armswitch:enable(true)
 			else
-				startswitch:enable(false)
+				idleupswitch:enable(false)
+				armswitch:enable(false)
 			end
 			
         end
     )
 	
-    line = triggerpanel:addLine("Start switch")	
-    startswitch = form.addSwitchField(
+    line = triggerpanel:addLine("Idleup switch")	
+    idleupswitch = form.addSwitchField(
         line,
         form.getFieldSlots(line)[0],
         function()
-            return startswitchParam
+            return idleupswitchParam
         end,
         function(value)
-            startswitchParam = value
+            idleupswitchParam = value
         end
     )
 	if startonParam == 2 then
-		startswitch:enable(true)
+		idleupswitch:enable(true)
 	else
-		startswitch:enable(false)
+		idleupswitch:enable(false)
+	end
+
+    line = triggerpanel:addLine("Arm switch")	
+    armswitch = form.addSwitchField(
+        line,
+        form.getFieldSlots(line)[0],
+        function()
+            return armswitchParam
+        end,
+        function(value)
+            armswitchParam = value
+        end
+    )
+	if startonParam == 2 then
+		armswitch:enable(true)
+	else
+		armswitch:enable(false)
 	end
 
 
@@ -892,7 +913,7 @@ local function configure(widget)
 
 
     -- TITLE DISPLAY
-    line = displaypanel:addLine("mem7")
+    line = displaypanel:addLine("Title")
     form.addBooleanField(
         line,
         nil,
@@ -2559,16 +2580,17 @@ function rf2status.getSensors()
 		temp_esc = math.random(500, 2250)*10
 		temp_mcu = math.random(500, 1850)*10
 		mah = math.random(10000, 10100)
-		fuel = 0
+		fuel = 55
 		fm = "DISABLED"
 		rssi = math.random(90, 100)	
 		adjsource = 0
 		adjvalue = 0
+		current = 0
 
 		if simDoSPOOLUP == false then
 			-- these ones do a scale up in simulation
 			rpm = math.random(0, 0)		
-			current = math.random(10, 20)
+			current = math.random(0, 0)
 			govmode = "OFF"
 		end
 		
@@ -3059,29 +3081,47 @@ function rf2status.getSensors()
 	end		
 
 	-- intercept governor for non rf governor helis
-	if startonParam == 1 then  -- rpm > 500
-		if startswitchParam ~= nil then
-			if rpm >= 500 then
-				 govmode = "ACTIVE"
-				 fm = "ACTIVE"
-			else
-				 govmode = "THR-OFF"
-				 fm = "THR-OFF"
-			end	
-		end
-	end		
+	if armswitchParam ~= nil or idleupswitchParam ~= nil then
+		if startonParam == 2 then
+			if armswitchParam:state() == true then
+					 govmode = "ARMED"
+					 fm = "ARMED"		
+			end
+		end	
+		
+		if startonParam == 1 then  -- rpm > 500
+			if idleupswitchParam ~= nil then
+				if rpm >= 500 then
+					 govmode = "ACTIVE"
+					 fm = "ACTIVE"
+				else
+					 govmode = "THR-OFF"
+					 fm = "THR-OFF"
+				end	
+			end
+		end		
+		
+		if startonParam == 2 then  -- use a switch state
+			if idleupswitchParam ~= nil then
+				if idleupswitchParam:state() == true then
+					 govmode = "ACTIVE"
+					 fm = "ACTIVE"
+				else
+					 govmode = "THR-OFF"
+					 fm = "THR-OFF"
+				end	
+			end
+		end	
+		
 	
-	if startonParam == 2 then  -- use a switch state
-		if startswitchParam ~= nil then
-			if startswitchParam:state() == true then
-				 govmode = "ACTIVE"
-				 fm = "ACTIVE"
-			else
-				 govmode = "THR-OFF"
-				 fm = "THR-OFF"
-			end	
+		if startonParam == 2 then
+			if armswitchParam:state() ~= true then
+					 govmode = "DISARMED"
+					 fm = "DISARMED"	
+					 theTIME = 0
+			end		 
 		end
-	end	
+	end
 
     if oldsensors.voltage ~= voltage then
         refresh = true
@@ -3146,7 +3186,7 @@ function sensorsMAXMIN(sensors)
 		end
 	
 	
-        if sensors.govmode == "SPOOLUP" then
+        if sensors.govmode == "SPOOLUP" or (theTIME >= 5 and theTIME <= 10) then
             govNearlyActive = 1
 			
 			if spoolupNearlyActive == 1 then
@@ -3174,6 +3214,7 @@ function sensorsMAXMIN(sensors)
 	
 
         if sensors.govmode == "ACTIVE" then
+
             if govNearlyActive == 1 then
                 sensorVoltageMin = sensors.voltage
                 sensorVoltageMax = sensors.voltage
@@ -3673,7 +3714,8 @@ local function read()
 		calcfuelParam = storage.read("mem42")
 		tempconvertParamESC = storage.read("mem43")
 		tempconvertParamMCU = storage.read("mem44")
-		startswitchParam = storage.read("mem45")
+		idleupswitchParam = storage.read("mem45")
+		armswitchParam = storage.read("mem46")
 
 
 
@@ -3727,7 +3769,8 @@ local function write()
 		storage.write("mem42",calcfuelParam)
 		storage.write("mem43",tempconvertParamESC)
 		storage.write("mem44",tempconvertParamMCU)
-		storage.write("mem45",startswitchParam)
+		storage.write("mem45",idleupswitchParam)
+		storage.write("mem46",armswitchParam)
 		
 		updateFILTERING()		
 end
@@ -4108,6 +4151,7 @@ local function event(widget, category, value, x, y)
 	--print("Event received:", category, value, x, y)
 	
 	-- disable menu if governor active
+	if startonParam == 0 then
 		if sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or
 					sensors.govmode == "ACTIVE" or
 					sensors.govmode == "LOST-HS" or
@@ -4117,6 +4161,19 @@ local function event(widget, category, value, x, y)
 				return true
 			end
 		end	
+	elseif startonParam == 1 then
+		if sensors.rpm >= 500 then
+			if category == EVT_TOUCH then
+				return true
+			end		
+		end
+	elseif startonParam == 2 then
+		if armswitchParam:state() == true then
+			if category == EVT_TOUCH then
+				return true
+			end		
+		end
+	end
 
 	if closingLOGS then
 		if category == EVT_TOUCH and (value == 16640 or value == 16641)  then				
