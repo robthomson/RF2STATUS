@@ -10,7 +10,7 @@ local oldsensors = {
     "mah",
     "rssi",
     "fm",
-    "mem10"
+    "govmode"
 }
 
 rf2status = {}
@@ -24,12 +24,15 @@ local gfx_model
 local theTIME = 0
 local sensors = {}
 
+
 local lvTimer = false
 local lvTimerStart
 local lvannouncementTimer = false
 local lvannouncementTimerStart
 local lvaudioannouncementCounter = 0
 local lvAudioAlertCounter = 0
+
+local motorWasActive = false
 
 local lfTimer = false
 local lfTimerStart
@@ -38,48 +41,55 @@ local lfannouncementTimerStart
 local lfaudioannouncementCounter = 0
 local lfAudioAlertCounter = 0
 
+local rpmtime = {}
+rpmtime.rpmTimer = false
+rpmtime.rpmTimerStart = nil
+rpmtime.announcementTimer = false
+rpmtime.announcementTimerStart = nil
+rpmtime.audioannouncementCounter = 0
 
-local rpmTimer = false
-local rpmTimerStart
-local rpmannouncementTimer = false
-local rpmannouncementTimerStart
-local rpmaudioannouncementCounter = 0
+local currenttime = {}
+currenttime.currentTimer = false
+currenttime.currentTimerStart = nil
+currenttime.currentannouncementTimer = false
+currenttime.currentannouncementTimerStart = nil
+currenttime.currentaudioannouncementCounter = 0
 
-local currentTimer = false
-local currentTimerStart
-local currentannouncementTimer = false
-local currentannouncementTimerStart
-local currentaudioannouncementCounter = 0
 
-local lqTimer = false
-local lqTimerStart
-local lqannouncementTimer = false
-local lqannouncementTimerStart
-local lqaudioannouncementCounter = 0
+local lqtime = {}
+lqtime.lqTimer = false
+lqtime.lqTimerStart = nil
+lqtime.lqannouncementTimer = false
+lqtime.lqannouncementTimerStart = nil
+lqtime.lqaudioannouncementCounter = 0
 
-local fuelTimer = false
-local fuelTimerStart
-local fuelannouncementTimer = false
-local fuelannouncementTimerStart
-local fuelaudioannouncementCounter = 0
+local fueltime = {}
+fueltime.fuelTimer = false
+fueltime.fuelTimerStart = nil
+fueltime.fuelannouncementTimer = false
+fueltime.fuelannouncementTimerStart = nil
+fueltime.fuelaudioannouncementCounter = 0
 
-local escTimer = false
-local escTimerStart
-local escannouncementTimer = false
-local escannouncementTimerStart
-local escaudioannouncementCounter = 0
+local esctime = {}
+esctime.escTimer = false
+esctime.escTimerStart = nil
+esctime.escannouncementTimer = false
+esctime.escannouncementTimerStart = nil
+esctime.escaudioannouncementCounter = 0
 
-local mcuTimer = false
-local mcuTimerStart
-local mcuannouncementTimer = false
-local mcuannouncementTimerStart
-local mcuaudioannouncementCounter = 0
+local mcutime = {}
+mcutime.mcuTimer = false
+mcutime.mcuTimerStart = nil
+mcutime.mcuannouncementTimer = false
+mcutime.mcuannouncementTimerStart = nil
+mcutime.mcuaudioannouncementCounter = 0
 
-local timerTimer = false
-local timerTimerStart
-local timerannouncementTimer = false
-local timerannouncementTimerStart
-local timeraudioannouncementCounter = 0
+local timetime = {}
+timetime.timerTimer = false
+timetime.timerTimerStart = nil
+timetime.timerannouncementTimer = false
+timetime.timerannouncementTimerStart = nil
+timetime.timeraudioannouncementCounter = 0
 
 local linkUP = 0
 local refresh = true
@@ -99,15 +109,17 @@ local linkUPTime = 0
 local playGovernorCount = 0
 local playGovernorLastState = nil
 
-local playRPMDiffCount = 1
-local playRPMDiffLastState = nil
-local playRPMDiffCounter = 0
+local playrpmdiff = {}
+playrpmdiff.playRPMDiffCount = 1
+playrpmdiff.playRPMDiffLastState = nil
+playrpmdiff.playRPMDiffCounter = 0
 
+local switchstatus = {}
 
 local miniBoxParam = 0
 local lowvoltagStickParam = 0
 local lowvoltagStickCutoffParam = 70
-local startonParam = 0
+local govmodeParam = 0
 local btypeParam = 0
 local lowfuelParam = 20
 local alertintParam = 5
@@ -151,6 +163,18 @@ local calcfuelParam = false
 local tempconvertParamESC = 1
 local tempconvertParamMCU = 1
 local lowvoltagStickCutoffParam = 80
+local idleupdelayParam = 20
+local switchIdlelowParam = nil
+local switchIdlemediumParam = nil
+local switchIdlehighParam = nil
+local switchrateslowParam = nil
+local switchratesmediumParam = nil
+local switchrateshighParam = nil
+local switchrescueonParam = nil
+local switchrescueoffParam = nil
+local switchbblonParam = nil
+local switchbbloffParam = nil
+
 
 local lvStickOrder = {}
 lvStickOrder[1] = {1,2,3,4}
@@ -379,49 +403,6 @@ local function configure(widget)
 	triggerpanel:open(false) 
 
 
-
-    line = triggerpanel:addLine("Start on")
-    extgov = form.addChoiceField(
-        line,
-        nil,
-        {
-            {"Governor Status", 0},
-			{"RPM > 500",1},
-            {"Switch Configuration", 2}
-        },
-        function()
-            return startonParam
-        end,
-        function(newValue)
-            startonParam = newValue
-			if newValue == 2 then
-				idleupswitch:enable(true)
-				armswitch:enable(true)
-			else
-				idleupswitch:enable(false)
-				armswitch:enable(false)
-			end
-			
-        end
-    )
-	
-    line = triggerpanel:addLine("Idleup switch")	
-    idleupswitch = form.addSwitchField(
-        line,
-        form.getFieldSlots(line)[0],
-        function()
-            return idleupswitchParam
-        end,
-        function(value)
-            idleupswitchParam = value
-        end
-    )
-	if startonParam == 2 then
-		idleupswitch:enable(true)
-	else
-		idleupswitch:enable(false)
-	end
-
     line = triggerpanel:addLine("Arm switch")	
     armswitch = form.addSwitchField(
         line,
@@ -433,15 +414,40 @@ local function configure(widget)
             armswitchParam = value
         end
     )
-	if startonParam == 2 then
-		armswitch:enable(true)
-	else
-		armswitch:enable(false)
-	end
+
+    line = triggerpanel:addLine("Idleup switch")	
+    idleupswitch = form.addSwitchField(
+        line,
+        form.getFieldSlots(line)[0],
+        function()
+            return idleupswitchParam
+        end,
+        function(value)
+            idleupswitchParam = value
+        end
+    )
+
+
+    line = triggerpanel:addLine("    Delay before active")
+    field =
+        form.addNumberField(
+        line,
+        nil,
+        5,
+        60,
+        function()
+            return idleupdelayParam
+        end,
+        function(value)
+            idleupdelayParam = value
+        end
+    )
+    field:default(5)
+	field:suffix("s")
 
 
 
-	batterypanel = form.addExpansionPanel("Battery Configuration")
+	batterypanel = form.addExpansionPanel("Battery configuration")
 	batterypanel:open(false) 
 
 
@@ -563,76 +569,244 @@ local function configure(widget)
 		plalrthap:enable(true)	
 	end	
 
-	rpmalertpanel = form.addExpansionPanel("Headspeed Alerts")
-	rpmalertpanel:open(false) 
+
+	switchpanel = form.addExpansionPanel("Switch announcements")
+	switchpanel:open(false) 
 
 
-    -- TITLE DISPLAY
-    line = rpmalertpanel:addLine("Alert on RPM difference")
-    form.addBooleanField(
+    line = switchpanel:addLine("Idle speed low")
+    form.addSwitchField(
         line,
         nil,
         function()
-            return rpmAlertsParam
-        end,
-        function(newValue)
-			if newValue == false then
-				rpmperfield:enable(false)
-			else
-				rpmperfield:enable(true)
-			end
-	
-            rpmAlertsParam = newValue
-        end
-    )
-	
-	
-
-    -- TITLE DISPLAY
-    line = rpmalertpanel:addLine("Alert if difference > than")
-    rpmperfield =
-        form.addNumberField(
-        line,
-        nil,
-        0,
-        200,
-        function()
-            return rpmAlertsPercentageParam
+            return switchIdlelowParam
         end,
         function(value)
-            rpmAlertsPercentageParam = value
+            switchIdlelowParam = value
         end
     )
-	if rpmAlertsParam  == false then
-	rpmperfield:enable(false)
-	else
-	rpmperfield:enable(true)
-	end
-    rpmperfield:default(100)
-	rpmperfield:decimals(1)
-	rpmperfield:suffix("%")
-	
 
-	govalertpanel = form.addExpansionPanel("Governor Alerts")
-	govalertpanel:open(false) 
-
-
-    -- TITLE DISPLAY
-	--[[
-	-- this is being hidden as we assume always on - but memory slot
-	-- needs to be retained
-    line = form.addLine("Enable/Disable",govalertpanel)
-    form.addBooleanField(
+    line = switchpanel:addLine("Idle speed medium")
+    form.addSwitchField(
         line,
         nil,
         function()
-            return governorAlertsParam
+            return switchIdlemediumParam
         end,
-        function(newValue)
-            governorAlertsParam = newValue
+        function(value)
+            switchIdlemediumParam = value
         end
     )
-	]]--
+
+    line = switchpanel:addLine("Idle speed high")
+    form.addSwitchField(
+        line,
+        nil,
+        function()
+            return switchIdlehighParam
+        end,
+        function(value)
+            switchIdlehighParam = value
+        end
+    )
+
+    line = switchpanel:addLine("Rates low")
+    form.addSwitchField(
+        line,
+        nil,
+        function()
+            return switchrateslowParam
+        end,
+        function(value)
+            switchrateslowParam = value
+        end
+    )
+
+    line = switchpanel:addLine("Rates medium")
+    form.addSwitchField(
+        line,
+        nil,
+        function()
+            return switchratesmediumParam
+        end,
+        function(value)
+            switchratesmediumParam = value
+        end
+    )
+
+    line = switchpanel:addLine("Rates high")
+    form.addSwitchField(
+        line,
+        nil,
+        function()
+            return switchrateshighParam
+        end,
+        function(value)
+            switchrateshighParam = value
+        end
+    )
+
+
+    line = switchpanel:addLine("Rescue on")
+    form.addSwitchField(
+        line,
+        nil,
+        function()
+            return switchrescueonParam
+        end,
+        function(value)
+            switchrescueonParam = value
+        end
+    )
+
+    line = switchpanel:addLine("Rescue off")
+    form.addSwitchField(
+        line,
+        nil,
+        function()
+            return switchrescueoffParam
+        end,
+        function(value)
+            switchrescueoffParam = value
+        end
+    )
+
+    line = switchpanel:addLine("BBL enabled")
+    form.addSwitchField(
+        line,
+        nil,
+        function()
+            return switchbblonParam
+        end,
+        function(value)
+            switchbblonParam = value
+        end
+    )
+
+    line = switchpanel:addLine("BBL disabled")
+    form.addSwitchField(
+        line,
+        nil,
+        function()
+            return switchbbloffParam
+        end,
+        function(value)
+            switchbbloffParam = value
+        end
+    )
+	
+	
+	announcementpanel = form.addExpansionPanel("Telemetry announcements")
+	announcementpanel:open(false) 
+	
+    -- announcement VOLTAGE READING
+    line = announcementpanel:addLine("Voltage")
+    form.addSwitchField(
+        line,
+        form.getFieldSlots(line)[0],
+        function()
+            return announcementVoltageSwitchParam
+        end,
+        function(value)
+            announcementVoltageSwitchParam = value
+        end
+    )
+
+    -- announcement RPM READING
+    line = announcementpanel:addLine("Rpm")
+    form.addSwitchField(
+        line,
+        nil,
+        function()
+            return announcementRPMSwitchParam
+        end,
+        function(value)
+            announcementRPMSwitchParam = value
+        end
+    )
+
+    -- announcement CURRENT READING
+    line = announcementpanel:addLine("Current")
+    form.addSwitchField(
+        line,
+        nil,
+        function()
+            return announcementCurrentSwitchParam
+        end,
+        function(value)
+            announcementCurrentSwitchParam = value
+        end
+    )
+
+    -- announcement FUEL READING
+    line = announcementpanel:addLine("Fuel")
+    form.addSwitchField(
+        line,
+        form.getFieldSlots(line)[0],
+        function()
+            return announcementFuelSwitchParam
+        end,
+        function(value)
+            announcementFuelSwitchParam = value
+        end
+    )
+
+    -- announcement LQ READING
+    line = announcementpanel:addLine("LQ")
+    form.addSwitchField(
+        line,
+        form.getFieldSlots(line)[0],
+        function()
+            return announcementLQSwitchParam
+        end,
+        function(value)
+            announcementLQSwitchParam = value
+        end
+    )
+
+    -- announcement LQ READING
+    line = announcementpanel:addLine("Esc temperature")
+    form.addSwitchField(
+        line,
+        form.getFieldSlots(line)[0],
+        function()
+            return announcementESCSwitchParam
+        end,
+        function(value)
+            announcementESCSwitchParam = value
+        end
+    )
+
+    -- announcement MCU READING
+    line = announcementpanel:addLine("Mcu temperature")
+    form.addSwitchField(
+        line,
+        form.getFieldSlots(line)[0],
+        function()
+            return announcementMCUSwitchParam
+        end,
+        function(value)
+            announcementMCUSwitchParam = value
+        end
+    )
+
+    -- announcement TIMER READING
+    line = announcementpanel:addLine("Timer")
+    form.addSwitchField(
+        line,
+        form.getFieldSlots(line)[0],
+        function()
+            return announcementTimerSwitchParam
+        end,
+        function(value)
+            announcementTimerSwitchParam = value
+        end
+    )
+	
+
+	govalertpanel = form.addExpansionPanel("Governor announcements")
+	govalertpanel:open(false) 
+
 
     -- TITLE DISPLAY
     line = govalertpanel:addLine("  OFF")
@@ -781,116 +955,26 @@ local function configure(widget)
         end
     )
 	
-	
-	announcementpanel = form.addExpansionPanel("Telemetry Announcements")
-	announcementpanel:open(false) 
-	
-    -- announcement VOLTAGE READING
-    line = announcementpanel:addLine("Voltage")
-    form.addSwitchField(
-        line,
-        form.getFieldSlots(line)[0],
-        function()
-            return announcementVoltageSwitchParam
-        end,
-        function(value)
-            announcementVoltageSwitchParam = value
-        end
-    )
 
-    -- announcement RPM READING
-    line = announcementpanel:addLine("Rpm")
-    form.addSwitchField(
-        line,
-        nil,
-        function()
-            return announcementRPMSwitchParam
-        end,
-        function(value)
-            announcementRPMSwitchParam = value
-        end
-    )
 
-    -- announcement CURRENT READING
-    line = announcementpanel:addLine("Current")
-    form.addSwitchField(
-        line,
-        nil,
-        function()
-            return announcementCurrentSwitchParam
-        end,
-        function(value)
-            announcementCurrentSwitchParam = value
-        end
-    )
-
-    -- announcement FUEL READING
-    line = announcementpanel:addLine("Fuel")
-    form.addSwitchField(
-        line,
-        form.getFieldSlots(line)[0],
-        function()
-            return announcementFuelSwitchParam
-        end,
-        function(value)
-            announcementFuelSwitchParam = value
-        end
-    )
-
-    -- announcement LQ READING
-    line = announcementpanel:addLine("LQ")
-    form.addSwitchField(
-        line,
-        form.getFieldSlots(line)[0],
-        function()
-            return announcementLQSwitchParam
-        end,
-        function(value)
-            announcementLQSwitchParam = value
-        end
-    )
-
-    -- announcement LQ READING
-    line = announcementpanel:addLine("Esc temperature")
-    form.addSwitchField(
-        line,
-        form.getFieldSlots(line)[0],
-        function()
-            return announcementESCSwitchParam
-        end,
-        function(value)
-            announcementESCSwitchParam = value
-        end
-    )
-
-    -- announcement MCU READING
-    line = announcementpanel:addLine("Mcu temperature")
-    form.addSwitchField(
-        line,
-        form.getFieldSlots(line)[0],
-        function()
-            return announcementMCUSwitchParam
-        end,
-        function(value)
-            announcementMCUSwitchParam = value
-        end
-    )
-
-    -- announcement TIMER READING
-    line = announcementpanel:addLine("Timer")
-    form.addSwitchField(
-        line,
-        form.getFieldSlots(line)[0],
-        function()
-            return announcementTimerSwitchParam
-        end,
-        function(value)
-            announcementTimerSwitchParam = value
-        end
-    )
-
-	displaypanel = form.addExpansionPanel("Customise Display")
+	displaypanel = form.addExpansionPanel("Customise display")
 	displaypanel:open(false) 
+
+    line = displaypanel:addLine("Governor")
+    extgov = form.addChoiceField(
+        line,
+        nil,
+        {
+            {"RF Governor Status", 0},
+			{"Flight Modes",1},
+        },
+        function()
+            return govmodeParam
+        end,
+        function(newValue)
+            govmodeParam = newValue		
+        end
+    )
 
 
     -- Mini Boxes
@@ -942,36 +1026,9 @@ local function configure(widget)
 	advpanel:open(false) 
 
 
-	if system.getSource("Rx RSSI1") == nil then -- currently only supported with fport
-		line = advpanel:addLine("Adjustment sensor")
-		form.addBooleanField(
-			line,
-			nil,
-			function()
-				return adjFunctionParam
-			end,
-			function(newValue)
-				adjFunctionParam = newValue
-			end
-		)	
-	end
+    line = form.addLine("Temperature conversion",advpanel)
 
-
-    -- calcfuel
-    line = advpanel:addLine("Calculate Fuel Locally")
-    form.addBooleanField(
-        line,
-        nil,
-        function()
-            return calcfuelParam
-        end,
-        function(newValue)
-            calcfuelParam = newValue
-        end
-    )
-
-
-    line = advpanel:addLine("Temp. Conversion. Esc.")
+    line = advpanel:addLine("    ESC")
     form.addChoiceField(
         line,
         nil,
@@ -989,7 +1046,7 @@ local function configure(widget)
     )
 	
 
-    line = advpanel:addLine("Temp. Conversion. Mcu.")
+    line = advpanel:addLine("    MCU")
     form.addChoiceField(
         line,
         nil,
@@ -1045,7 +1102,7 @@ local function configure(widget)
 	--field:decimals(1)
 
     -- LVSTICK MONITORING
-    line = advpanel:addLine("    Gimbal Monitoring")
+    line = advpanel:addLine("    Gimbal monitoring")
     form.addChoiceField(
         line,
         nil,
@@ -1069,7 +1126,7 @@ local function configure(widget)
         end
     )
 
-    line = advpanel:addLine("       Stick Cutoff")
+    line = advpanel:addLine("       Stick cutoff")
     fieldstckcutoff =
         form.addNumberField(
         line,
@@ -1092,10 +1149,56 @@ local function configure(widget)
 	end
 
 
+    line = form.addLine("Headspeed",advpanel)
+
+    -- TITLE DISPLAY
+    line = advpanel:addLine("   Alert on RPM difference")
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return rpmAlertsParam
+        end,
+        function(newValue)
+			if newValue == false then
+				rpmperfield:enable(false)
+			else
+				rpmperfield:enable(true)
+			end
+	
+            rpmAlertsParam = newValue
+        end
+    )
+	
+	
+
+    -- TITLE DISPLAY
+    line = advpanel:addLine("   Alert if difference > than")
+    rpmperfield =
+        form.addNumberField(
+        line,
+        nil,
+        0,
+        200,
+        function()
+            return rpmAlertsPercentageParam
+        end,
+        function(value)
+            rpmAlertsPercentageParam = value
+        end
+    )
+	if rpmAlertsParam  == false then
+	rpmperfield:enable(false)
+	else
+	rpmperfield:enable(true)
+	end
+    rpmperfield:default(100)
+	rpmperfield:decimals(1)
+	rpmperfield:suffix("%")
 
     -- FILTER
     -- MAX MIN DISPLAY
-    line = advpanel:addLine("Telemetry Filtering")
+    line = advpanel:addLine("Telemetry filtering")
     form.addChoiceField(
         line,
         nil,
@@ -1141,6 +1244,34 @@ local function configure(widget)
     )
 
 
+
+	if system.getSource("Rx RSSI1") == nil then -- currently only supported with fport
+		line = advpanel:addLine("Adjustment sensor")
+		form.addBooleanField(
+			line,
+			nil,
+			function()
+				return adjFunctionParam
+			end,
+			function(newValue)
+				adjFunctionParam = newValue
+			end
+		)	
+	end
+
+
+    -- calcfuel
+    line = advpanel:addLine("Calculate fuel locally")
+    form.addBooleanField(
+        line,
+        nil,
+        function()
+            return calcfuelParam
+        end,
+        function(newValue)
+            calcfuelParam = newValue
+        end
+    )
 
 
 
@@ -1206,6 +1337,7 @@ function rf2status.resetALL()
 	sensorTempESCMin = 0
 	sensorTempESCMax = 0
 end
+
 
 function rf2status.noTelem()
 
@@ -2036,17 +2168,18 @@ local function paint(widget)
 				sensorTITLE = ""		
 			end
 
-			if sensorFuelMin == 0 or sensorFuelMin == nil then
+			if sensorFuelMin == 0 or sensorFuelMin == nil or theTIME == 0 then
 					sensorMIN = "-"
 			else 
 					sensorMIN = sensorFuelMin
 			end
 			
-			if sensorFuelMax == 0 or sensorFuelMax == nil then
+			if sensorFuelMax == 0 or sensorFuelMax == nil or theTIME == 0 then
 					sensorMAX = "-"
 			else 
 					sensorMAX = sensorFuelMax
 			end
+			
 
 			telemetryBox(posX,posY,boxW,boxH,sensorTITLE,sensorVALUE,sensorUNIT,smallBOX,sensorWARN,sensorMIN,sensorMAX)
 		end
@@ -2072,13 +2205,13 @@ local function paint(widget)
 				sensorTITLE = ""		
 			end
 
-			if sensorRPMMin == 0 or sensorRPMMin == nil then
+			if sensorRPMMin == 0 or sensorRPMMin == nil or theTIME == 0 then
 					sensorMIN = "-"
 			else 
 					sensorMIN = sensorRPMMin
 			end
 			
-			if sensorRPMMax == 0 or sensorRPMMax == nil then
+			if sensorRPMMax == 0 or sensorRPMMax == nil or theTIME == 0 then
 					sensorMAX = "-"
 			else 
 					sensorMAX = sensorRPMMax
@@ -2112,13 +2245,13 @@ local function paint(widget)
 				sensorTITLE = ""		
 			end
 
-			if sensorVoltageMin == 0 or sensorVoltageMin == nil then
+			if sensorVoltageMin == 0 or sensorVoltageMin == nil or theTIME == 0 then
 					sensorMIN = "-"
 			else 
 					sensorMIN = sensorVoltageMin/100
 			end
 			
-			if sensorVoltageMax == 0 or sensorVoltageMax == nil then
+			if sensorVoltageMax == 0 or sensorVoltageMax == nil or theTIME == 0 then
 					sensorMAX = "-"
 			else 
 					sensorMAX = sensorVoltageMax/100
@@ -2138,25 +2271,43 @@ local function paint(widget)
 	
 	
 			sensorVALUE = sensors.current/10
-
-			if sensorVALUE <= 0.5 then
+			if linkUP == 0 then
 				sensorVALUE = 0
+			else
+				if sensorVALUE == 0 then
+					local fakeC
+					if sensors.rpm > 5 then
+						fakeC = 1
+					elseif sensors.rpm > 50 then
+						fakeC = 2
+					elseif sensors.rpm > 100 then
+						fakeC = 3
+					elseif sensors.rpm > 200 then
+						fakeC = 4
+					elseif sensors.rpm > 500 then
+						fakeC = 5
+					elseif sensors.rpm > 1000 then
+						fakeC = 6
+					else
+						fakeC = math.random(1, 3)/10
+					end
+					sensorVALUE = fakeC
+				end
 			end
-
-			
+	
 			if titleParam == true then
 				sensorTITLE = theme.title_current
 			else
 				sensorTITLE = ""		
 			end
 
-			if sensorCurrentMin == 0 or sensorCurrentMin == nil then
+			if sensorCurrentMin == 0 or sensorCurrentMin == nil or theTIME == 0 then
 					sensorMIN = "-"
 			else 
 					sensorMIN = sensorCurrentMin/10
 			end
 			
-			if sensorCurrentMax == 0 or sensorCurrentMax == nil then
+			if sensorCurrentMax == 0 or sensorCurrentMax == nil or theTIME == 0 then
 					sensorMAX = "-"
 			else 
 					sensorMAX = sensorCurrentMax/10
@@ -2186,13 +2337,13 @@ local function paint(widget)
 				sensorTITLE = ""		
 			end
 
-			if sensorTempESCMin == 0 or sensorTempESCMin == nil then
+			if sensorTempESCMin == 0 or sensorTempESCMin == nil  or theTIME == 0 then
 					sensorMIN = "-"
 			else 
 					sensorMIN = rf2status.round(sensorTempESCMin/100,0)
 			end
 			
-			if sensorTempESCMax == 0 or sensorTempESCMax == nil then
+			if sensorTempESCMax == 0 or sensorTempESCMax == nil  or theTIME == 0 then
 					sensorMAX = "-"
 			else 
 					sensorMAX = rf2status.round(sensorTempESCMax/100,0)
@@ -2222,7 +2373,7 @@ local function paint(widget)
 				sensorTITLE = ""		
 			end
 
-			if sensorTempMCUMin == 0 or sensorTempMCUMin == nil then
+			if sensorTempMCUMin == 0 or sensorTempMCUMin == nil  or theTIME == 0 then
 					sensorMIN = "-"
 			else 
 					sensorMIN = rf2status.round(sensorTempMCUMin/100,0)
@@ -2345,7 +2496,7 @@ local function paint(widget)
 		sensorMIN = nil
 		sensorMAX = nil
 
-		if startonParam == 0 then		
+		if govmodeParam == 0 then		
             if sensors.govmode == nil then
                 sensors.govmode = "INIT"
             end
@@ -2375,49 +2526,19 @@ local function paint(widget)
 
 	end
 		
-	
-    -- TIME
-	if startonParam == 0 then
-		if linkUP ~= 0 then
-			if sensors.govmode == "SPOOLUP" then
-				timerNearlyActive = 1
-			end
-
-			if sensors.govmode == "IDLE" then
-				if timerWASActive == true then
-					stopTimer = true
-					stopTIME = os.clock()
-				
-				else	
-					stopTimer = true
-					stopTIME = os.clock()
-					theTIME = 0			
-				end		
-			end
-
-			if sensors.govmode == "ACTIVE" then
-				if timerNearlyActive == 1 then
-					timerNearlyActive = 0
-					startTIME = os.clock()
-				end
-
-				theTIME = os.clock() - startTIME
-				timerWASActive = true
-				
-			end
-		else
-			-- default as no timer not not yet spooled up
-			theTIME = 0
-		end
-	else
-		if linkUP ~= 0 then
-			if sensors.govmode == "THR-OFF" then
+	-- TIME
+ 	if linkUP ~= 0 then
+		if armswitchParam ~= nil then
+			if armswitchParam:state() == false then
 				stopTimer = true
 				stopTIME = os.clock()
 				timerNearlyActive = 1
+				theTIME = 0
 			end
+		end	
 
-			if sensors.govmode == "ACTIVE" then
+		if idleupswitchParam ~= nil then
+			if idleupswitchParam:state()  then
 				if timerNearlyActive == 1 then
 					timerNearlyActive = 0
 					startTIME = os.clock()
@@ -2426,25 +2547,14 @@ local function paint(widget)
 					theTIME = os.clock() - startTIME
 				end	
 			end
-			
-			
 		end
+		
 	end
 
 	-- LOW FUEL ALERTS
     -- big conditional to announcement lfTimer if needed
     if linkUP ~= 0 then
-        if
-            sensors.govmode == "IDLE" or 
-			sensors.govmode == "SPOOLUP" or 
-			sensors.govmode == "RECOVERY" or
-            sensors.govmode == "ACTIVE" or
-            sensors.govmode == "LOST-HS" or
-			sensors.govmode == "AUTOROT" or
-            sensors.govmode == "BAILOUT" or
-            sensors.govmode == "RECOVERY" or
-			lowVoltageGovernorParam == true
-         then
+			if idleupswitchParam:state() then
             if (sensors.fuel <= lowfuelParam and alertonParam == 1 ) then
 				lfTimer = true
 			elseif (sensors.fuel <= lowfuelParam and alertonParam == 2 )then
@@ -2490,17 +2600,7 @@ local function paint(widget)
 	-- LOW VOLTAGE ALERTS
     -- big conditional to announcement lvTimer if needed
     if linkUP ~= 0 then
-        if
-            sensors.govmode == "IDLE" or 
-			sensors.govmode == "SPOOLUP" or 
-			sensors.govmode == "RECOVERY" or
-            sensors.govmode == "ACTIVE" or
-            sensors.govmode == "LOST-HS" or
-			sensors.govmode == "AUTOROT" or				
-            sensors.govmode == "BAILOUT" or
-            sensors.govmode == "RECOVERY" or
-			lowVoltageGovernorParam == true
-         then
+		if idleupswitchParam:state() then
             if (voltageIsLow and alertonParam == 0) then
                 lvTimer = true
 			elseif 	(voltageIsLow and alertonParam == 2) then
@@ -2577,8 +2677,8 @@ function rf2status.getSensors()
 
 		tv = math.random(2100, 2274)
 		voltage = tv
-		temp_esc = math.random(500, 2250)*10
-		temp_mcu = math.random(500, 1850)*10
+		temp_esc = math.random(50, 225)*10
+		temp_mcu = math.random(50, 185)*10
 		mah = math.random(10000, 10100)
 		fuel = 55
 		fm = "DISABLED"
@@ -2586,58 +2686,17 @@ function rf2status.getSensors()
 		adjsource = 0
 		adjvalue = 0
 		current = 0
+		
 
-		if simDoSPOOLUP == false then
-			-- these ones do a scale up in simulation
-			rpm = math.random(0, 0)		
-			current = math.random(0, 0)
-			govmode = "OFF"
+		if idleupswitchParam:state() ~= nil and armswitchParam:state() ~= nil then
+			if idleupswitchParam:state() == true and armswitchParam:state() == true then
+					current = math.random(100, 120)
+					rpm = math.random(90, 100)
+			else
+					current = 0
+					rpm = 0			
+			end
 		end
-		
-		if simDoSPOOLUP == true and simDoSPOOLUPCount == 0 then
-			govmode = "SPOOLUP"
-			rpm = math.random(750, 800)		
-			current = math.random(1000, 1100)			
-			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
-		end
-
-		if simDoSPOOLUP == true and simDoSPOOLUPCount ~= 0 then
-			govmode = "SPOOLUP"
-			rpm = math.random(800, 810)	
-			current = math.random(1100, 1150)					
-			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
-		end
-		
-		
-		
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= 20 then
-			govmode = "ACTIVE"
-			rpm = math.random(810, 820)	
-			current = math.random(1150, 1200)			
-			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
-		end		
-
-		
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= actTime + 20 then
-			govmode = "THR-OFF"
-			rpm = math.random(200, 300)	
-			current = math.random(100, 200)				
-			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
-		end		
-
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= actTime + 40 then
-			govmode = "IDLE"
-			rpm = math.random(0, 0)	
-			current = math.random(20, 20)				
-			simDoSPOOLUPCount = simDoSPOOLUPCount + 1
-		end		
-
-		if simDoSPOOLUP == true and simDoSPOOLUPCount >= actTime + 70 then
-			govmode = "OFF"
-			simDoSPOOLUPCount = 0
-			simDoSPOOLUP = false
-		end			
-		
 		
     elseif linkUP ~= 0 then
 	
@@ -3082,45 +3141,28 @@ function rf2status.getSensors()
 
 	-- intercept governor for non rf governor helis
 	if armswitchParam ~= nil or idleupswitchParam ~= nil then
-		if startonParam == 2 then
+		if govmodeParam == 1 then
 			if armswitchParam:state() == true then
 					 govmode = "ARMED"
-					 fm = "ARMED"		
-			end
-		end	
-		
-		if startonParam == 1 then  -- rpm > 500
-			if idleupswitchParam ~= nil then
-				if rpm >= 500 then
-					 govmode = "ACTIVE"
-					 fm = "ACTIVE"
-				else
-					 govmode = "THR-OFF"
-					 fm = "THR-OFF"
-				end	
-			end
-		end		
-		
-		if startonParam == 2 then  -- use a switch state
-			if idleupswitchParam ~= nil then
-				if idleupswitchParam:state() == true then
-					 govmode = "ACTIVE"
-					 fm = "ACTIVE"
-				else
-					 govmode = "THR-OFF"
-					 fm = "THR-OFF"
-				end	
-			end
-		end	
-		
-	
-		if startonParam == 2 then
-			if armswitchParam:state() ~= true then
+					 fm = "ARMED"			
+			else
 					 govmode = "DISARMED"
-					 fm = "DISARMED"	
-					 theTIME = 0
-			end		 
-		end
+					 fm = "DISARMED"			
+			end
+			
+			if armswitchParam:state() == true then
+				if idleupswitchParam:state() == true then
+						 govmode = "ACTIVE"
+						 fm = "ACTIVE"	
+				else
+						 govmode = "THR-OFF"
+						 fm = "THR-OFF"				
+				end
+
+			end
+		end	
+		
+
 	end
 
     if oldsensors.voltage ~= voltage then
@@ -3174,125 +3216,131 @@ function rf2status.getSensors()
 end
 
 
+local function sensorsMAXMIN(sensors)
 
 
-function sensorsMAXMIN(sensors)
+    if linkUP ~= 0 and theTIME ~= nil then
 
 
-    if linkUP ~= 0 then
-
-		if sensors.govmode == "OFF" then
-			spoolupNearlyActive = 1
+		-- hold back - to early to get a reading
+		if  theTIME <= idleupdelayParam then
+			sensorVoltageMin = 0
+			sensorVoltageMax = 0
+			sensorFuelMin = 0
+			sensorFuelMax = 0
+			sensorRPMMin = 0
+			sensorRPMMax = 0
+			sensorCurrentMin = 0
+			sensorCurrentMax = 0
+			sensorRSSIMin = 0
+			sensorRSSIMax = 0
+			sensorTempESCMin = 0
+			sensorTempESCMax = 0
 		end
-	
-	
-        if sensors.govmode == "SPOOLUP" or (theTIME >= 5 and theTIME <= 10) then
-            govNearlyActive = 1
+
+		-- prob put in a screen/audio alert for initialising
+		if theTIME >= 1 and theTIME < idleupdelayParam then
 			
-			if spoolupNearlyActive == 1 then
-				spoolupNearlyActive = 0				
+		end
+
+	
+        if theTIME >= idleupdelayParam  then
+			
+			local idleupdelayOFFSET = 2
+
+			-- record initial parameters for max/min
+			if theTIME >= idleupdelayParam and theTIME <= (idleupdelayParam + idleupdelayOFFSET ) then
+				sensorVoltageMin = sensors.voltage
+				sensorVoltageMax = sensors.voltage
+				sensorFuelMin = sensors.fuel
+				sensorFuelMax = sensors.fuel
+				sensorRPMMin = sensors.rpm
+				sensorRPMMax = sensors.rpm
+				if sensors.current == 0 then
+					sensorCurrentMin = 1
+				else
+					sensorCurrentMin = sensors.current
+				end
+				sensorCurrentMax = sensors.current
+
+				sensorRSSIMin = sensors.rssi
+				sensorRSSIMax = sensors.rssi
+				sensorTempESCMin = sensors.temp_esc
+				sensorTempESCMax = sensors.temp_esc
+				motorNearlyActive = 0
+			end
+			
+
+			if theTIME >= (idleupdelayParam + idleupdelayOFFSET) and idleupswitchParam:state() == true then
+
+				if sensors.voltage < sensorVoltageMin then
+					sensorVoltageMin = sensors.voltage
+				end
+				if sensors.voltage > sensorVoltageMax then
+					sensorVoltageMax = sensors.voltage
+				end
+
+				if sensors.fuel < sensorFuelMin then
+					sensorFuelMin = sensors.fuel
+				end
+				if sensors.fuel > sensorFuelMax then
+					sensorFuelMax = sensors.fuel
+				end
+
+				if sensors.rpm < sensorRPMMin then
+					sensorRPMMin = sensors.rpm
+				end
+				if sensors.rpm > sensorRPMMax then
+					sensorRPMMax = sensors.rpm
+				end
+				if sensors.current < sensorCurrentMin then
+					sensorCurrentMin = sensors.current
+					if sensorCurrentMin == 0 then
+						sensorCurrentMin = 1
+					end
+				end
+				if sensors.current > sensorCurrentMax then
+					sensorCurrentMax = sensors.current
+				end
+				if sensors.rssi < sensorRSSIMin then
+					sensorRSSIMin = sensors.rssi
+				end
+				if sensors.rssi > sensorRSSIMax then
+					sensorRSSIMax = sensors.rssi
+				end
+				if sensors.temp_esc < sensorTempESCMin then
+					sensorTempESCMin = sensors.temp_esc
+				end
+				if sensors.temp_esc > sensorTempESCMax then
+					sensorTempESCMax = sensors.temp_esc
+				end
+				motorWasActive = true
 			end	
-        end
-
-	
-        if sensors.govmode == "DISARMED" then
-            sensorVoltageMin = 0
-            sensorVoltageMax = 0
-            sensorFuelMin = 0
-            sensorFuelMax = 0
-            sensorRPMMin = 0
-            sensorRPMMax = 0
-            sensorCurrentMin = 0
-            sensorCurrentMax = 0
-            sensorRSSIMin = 0
-            sensorRSSIMax = 0
-            sensorTempMCUMin = 0
-            sensorTempMCUMax = 0
-            sensorTempESCMin = 0
-            sensorTempESCMax = 0
-        end
-	
-
-        if sensors.govmode == "ACTIVE" then
-
-            if govNearlyActive == 1 then
-                sensorVoltageMin = sensors.voltage
-                sensorVoltageMax = sensors.voltage
-                sensorFuelMin = sensors.fuel
-                sensorFuelMax = sensors.fuel
-                sensorRPMMin = sensors.rpm
-                sensorRPMMax = sensors.rpm
-                sensorCurrentMin = sensors.current
-                sensorCurrentMax = sensors.current
-                sensorRSSIMin = sensors.rssi
-                sensorRSSIMax = sensors.rssi
-                sensorTempMCUMin = sensors.temp_mcu 
-                sensorTempMCUMax = sensors.temp_mcu
-                sensorTempESCMin = sensors.temp_esc
-                sensorTempESCMax = sensors.temp_esc
-                govNearlyActive = 0
-						
-            end
-
-            if sensors.voltage < sensorVoltageMin then
-                sensorVoltageMin = sensors.voltage
-            end
-            if sensors.voltage > sensorVoltageMax then
-                sensorVoltageMax = sensors.voltage
-            end
-
-            if sensors.fuel < sensorFuelMin then
-                sensorFuelMin = sensors.fuel
-            end
-
-            if sensors.fuel > sensorFuelMax then
-                sensorFuelMax = sensors.fuel
-            end
-
-            if sensors.rpm < sensorRPMMin then
-                sensorRPMMin = sensors.rpm
-            end
-            if sensors.rpm > sensorRPMMax then
-                sensorRPMMax = sensors.rpm
-            end
-            if sensors.current < sensorCurrentMin then
-                sensorCurrentMin = sensors.current
-            end
-            if sensors.current > sensorCurrentMax then
-                sensorCurrentMax = sensors.current
-            end
-            if sensors.rssi < sensorRSSIMin then
-                sensorRSSIMin = sensors.rssi
-            end
-            if sensors.rssi > sensorRSSIMax then
-                sensorRSSIMax = sensors.rssi
-            end
-            if sensors.temp_mcu < sensorTempMCUMin then
-                sensorTempMCUMin = sensors.temp_mcu
-            end
-            if sensors.temp_mcu > sensorTempMCUMax then
-                sensorTempMCUMax = sensors.temp_mcu
-            end
-            if sensors.temp_esc < sensorTempESCMin then
-                sensorTempESCMin = sensors.temp_esc
-            end
-            if sensors.temp_esc > sensorTempESCMax then
-                sensorTempESCMax = sensors.temp_esc
-            end
-			
-			govWasActive = true
+				
+				
         end
 		
 
+	
 		
 		-- store the last values
-		if govWasActive and (sensors.govmode == 'OFF' or sensors.govmode == 'DISABLED' or sensors.govmode == 'DISARMED' or sensors.govmode == 'UNKNOWN') then
-			govWasActive = false	
-
-
+		if motorWasActive and idleupswitchParam:state() == false then
+		
+		
+			motorWasActive = false	
 
 			local maxminFinals = rf2status.readHistory()	
 
+			if sensorCurrentMin == 0 then
+				sensorCurrentMinAlt = 1
+			else
+				sensorCurrentMinAlt = sensorCurrentMin
+			end
+			if sensorCurrentMax == 0 then
+				sensorCurrentMaxAlt = 1
+			else
+				sensorCurrentMaxAlt = sensorCurrentMax
+			end			
 
 			local maxminRow = theTIME .. "," 
 						.. sensorVoltageMin .. "," 
@@ -3354,13 +3402,13 @@ function sensorsMAXMIN(sensors)
         sensorRPMMax = 0
         sensorCurrentMin = 0
         sensorCurrentMax = 0
-        sensorTempMCUMin = 0
-        sensorTempMCUMax = 0
         sensorTempESCMin = 0
         sensorTempESCMax = 0
     end
 
 end
+
+
 
 function tablelength(T)
   local count = 0
@@ -3670,7 +3718,7 @@ end
 
 
 local function read()
-		startonParam = storage.read("mem1")
+		govmodeParam = storage.read("mem1")
 		btypeParam = storage.read("mem2")
 		lowfuelParam = storage.read("mem3")
 		alertintParam = storage.read("mem4")
@@ -3716,8 +3764,17 @@ local function read()
 		tempconvertParamMCU = storage.read("mem44")
 		idleupswitchParam = storage.read("mem45")
 		armswitchParam = storage.read("mem46")
-
-
+		idleupdelayParam = storage.read("mem47")
+		switchIdlelowParam = storage.read("mem48")
+		switchIdlemediumParam  = storage.read("mem49")
+		switchIdlehighParam = storage.read("mem50")
+		switchrateslowParam = storage.read("mem51")
+		switchratesmediumParam = storage.read("mem52")
+		switchrateshighParam = storage.read("mem53")
+		switchrescueonParam = storage.read("mem54")
+		switchrescueoffParam = storage.read("mem55")
+		switchbblonParam = storage.read("mem56")
+		switchbbloffParam = storage.read("mem57")
 
 		
 		rf2status.resetALL()
@@ -3725,7 +3782,7 @@ local function read()
 end
 
 local function write()
-		storage.write("mem1", startonParam)
+		storage.write("mem1", govmodeParam)
 		storage.write("mem2", btypeParam)
 		storage.write("mem3", lowfuelParam)
 		storage.write("mem4", alertintParam)
@@ -3771,6 +3828,17 @@ local function write()
 		storage.write("mem44",tempconvertParamMCU)
 		storage.write("mem45",idleupswitchParam)
 		storage.write("mem46",armswitchParam)
+		storage.write("mem47",idleupdelayParam)
+		storage.write("mem48",switchIdlelowParam)
+		storage.write("mem49",switchIdlemediumParam)
+		storage.write("mem50",switchIdlehighParam)
+		storage.write("mem51",switchrateslowParam)
+		storage.write("mem52",switchratesmediumParam)
+		storage.write("mem53",switchrateshighParam)
+		storage.write("mem54",switchrescueonParam)
+		storage.write("mem55",switchrescueoffParam)
+		storage.write("mem56",switchbblonParam)
+		storage.write("mem57",switchbbloffParam)		
 		
 		updateFILTERING()		
 end
@@ -3778,39 +3846,39 @@ end
 function rf2status.playCurrent(widget)
     if announcementCurrentSwitchParam ~= nil then
         if announcementCurrentSwitchParam:state() then
-            currentannouncementTimer = true
+            currenttime.currentannouncementTimer = true
             currentDoneFirst = false
         else
-            currentannouncementTimer = false
+            currenttime.currentannouncementTimer = false
             currentDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.current ~= nil then
-                if currentannouncementTimer == true then
+                if currenttime.currentannouncementTimer == true then
                     --start timer
-                    if currentannouncementTimerStart == nil and currentDoneFirst == false then
-                        currentannouncementTimerStart = os.time()
-						currentaudioannouncementCounter = os.clock()
+                    if currenttime.currentannouncementTimerStart == nil and currentDoneFirst == false then
+                        currenttime.currentannouncementTimerStart = os.time()
+						currenttime.currentaudioannouncementCounter = os.clock()
 						--print ("Play Current Alert (first)")
                         system.playNumber(sensors.current/10, UNIT_AMPERE, 2)
                         currentDoneFirst = true
                     end
                 else
-                    currentannouncementTimerStart = nil
+                    currenttime.currentannouncementTimerStart = nil
                 end
 
-                if currentannouncementTimerStart ~= nil then
+                if currenttime.currentannouncementTimerStart ~= nil then
                     if currentDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(currentaudioannouncementCounter)) >= announcementIntervalParam) then
+                        if ((tonumber(os.clock()) - tonumber(currenttime.currentaudioannouncementCounter)) >= announcementIntervalParam) then
 							--print ("Play Current Alert (repeat)")
-                            currentaudioannouncementCounter = os.clock()
+                            currenttime.currentaudioannouncementCounter = os.clock()
                             system.playNumber(sensors.current/10, UNIT_AMPERE, 2)
                         end
                     end
                 else
                     -- stop timer
-                    currentannouncementTimerStart = nil
+                    currenttime.currentannouncementTimerStart = nil
                 end
             end
         end
@@ -3820,33 +3888,33 @@ end
 function rf2status.playLQ(widget)
     if announcementLQSwitchParam ~= nil then
         if announcementLQSwitchParam:state() then
-            lqannouncementTimer = true
+            lqtime.lqannouncementTimer = true
             lqDoneFirst = false
         else
-            lqannouncementTimer = false
+            lqtime.lqannouncementTimer = false
             lqDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.rssi ~= nil then
-                if lqannouncementTimer == true then
+                if lqtime.lqannouncementTimer == true then
                     --start timer
-                    if lqannouncementTimerStart == nil and lqDoneFirst == false then
-                        lqannouncementTimerStart = os.time()
-						lqaudioannouncementCounter = os.clock()
+                    if lqtime.lqannouncementTimerStart == nil and lqDoneFirst == false then
+                        lqtime.lqannouncementTimerStart = os.time()
+						lqtime.lqaudioannouncementCounter = os.clock()
 						--print ("Play LQ Alert (first)")
 						system.playFile("/scripts/rf2status/sounds/alerts/lq.wav")						
                         system.playNumber(sensors.rssi, UNIT_PERCENT, 2)
                         lqDoneFirst = true
                     end
                 else
-                    lqannouncementTimerStart = nil
+                    lqtime.lqannouncementTimerStart = nil
                 end
 
-                if lqannouncementTimerStart ~= nil then
+                if lqtime.lqannouncementTimerStart ~= nil then
                     if lqDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(lqaudioannouncementCounter)) >= announcementIntervalParam) then
-                            lqaudioannouncementCounter = os.clock()
+                        if ((tonumber(os.clock()) - tonumber(lqtime.lqaudioannouncementCounter)) >= announcementIntervalParam) then
+                            lqtime.lqaudioannouncementCounter = os.clock()
 							--print ("Play LQ Alert (repeat)")
 							system.playFile("/scripts/rf2status/sounds/alerts/lq.wav")
                             system.playNumber(sensors.rssi, UNIT_PERCENT, 2)
@@ -3854,7 +3922,7 @@ function rf2status.playLQ(widget)
                     end
                 else
                     -- stop timer
-                    lqannouncementTimerStart = nil
+                    lqtime.lqannouncementTimerStart = nil
                 end
             end
         end
@@ -3864,33 +3932,33 @@ end
 function rf2status.playMCU(widget)
     if announcementMCUSwitchParam ~= nil then
         if announcementMCUSwitchParam:state() then
-            mcuannouncementTimer = true
+            mcutime.mcuannouncementTimer = true
             mcuDoneFirst = false
         else
-            mcuannouncementTimer = false
+            mcutime.mcuannouncementTimer = false
             mcuDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.temp_mcu ~= nil then
-                if mcuannouncementTimer == true then
+                if mcutime.mcuannouncementTimer == true then
                     --start timer
-                    if mcuannouncementTimerStart == nil and mcuDoneFirst == false then
-                        mcuannouncementTimerStart = os.time()
-						mcuaudioannouncementCounter = os.clock()
+                    if mcutime.mcuannouncementTimerStart == nil and mcuDoneFirst == false then
+                        mcutime.mcuannouncementTimerStart = os.time()
+						mcutime.mcuaudioannouncementCounter = os.clock()
 						--print ("Playing MCU (first)")
 						system.playFile("/scripts/rf2status/sounds/alerts/mcu.wav")
                         system.playNumber(sensors.temp_mcu/100, UNIT_DEGREE, 2)
                         mcuDoneFirst = true
                     end
                 else
-                    mcuannouncementTimerStart = nil
+                    mcutime.mcuannouncementTimerStart = nil
                 end
 
-                if mcuannouncementTimerStart ~= nil then
+                if mcutime.mcuannouncementTimerStart ~= nil then
                     if mcuDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(mcuaudioannouncementCounter)) >= announcementIntervalParam) then
-                            mcuaudioannouncementCounter = os.clock()
+                        if ((tonumber(os.clock()) - tonumber(mcutime.mcuaudioannouncementCounter)) >= announcementIntervalParam) then
+                            mcutime.mcuaudioannouncementCounter = os.clock()
 							--print ("Playing MCU (repeat)")
 							system.playFile("/scripts/rf2status/sounds/alerts/mcu.wav")
                             system.playNumber(sensors.temp_mcu/100, UNIT_DEGREE, 2)
@@ -3898,7 +3966,7 @@ function rf2status.playMCU(widget)
                     end
                 else
                     -- stop timer
-                    mcuannouncementTimerStart = nil
+                    mcutime.mcuannouncementTimerStart = nil
                 end
             end
         end
@@ -3908,33 +3976,33 @@ end
 function rf2status.playESC(widget)
     if announcementESCSwitchParam ~= nil then
         if announcementESCSwitchParam:state() then
-            escannouncementTimer = true
+            esctime.escannouncementTimer = true
             escDoneFirst = false
         else
-            escannouncementTimer = false
+            esctime.escannouncementTimer = false
             escDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.temp_esc ~= nil then
-                if escannouncementTimer == true then
+                if esctime.escannouncementTimer == true then
                     --start timer
-                    if escannouncementTimerStart == nil and escDoneFirst == false then
-                        escannouncementTimerStart = os.time()
-						escaudioannouncementCounter = os.clock()
+                    if esctime.escannouncementTimerStart == nil and escDoneFirst == false then
+                        esctime.escannouncementTimerStart = os.time()
+						esctime.escaudioannouncementCounter = os.clock()
 						--print ("Playing ESC (first)")
 						system.playFile("/scripts/rf2status/sounds/alerts/esc.wav")
                         system.playNumber(sensors.temp_esc/100, UNIT_DEGREE, 2)
                         escDoneFirst = true
                     end
                 else
-                    escannouncementTimerStart = nil
+                    esctime.escannouncementTimerStart = nil
                 end
 
-                if escannouncementTimerStart ~= nil then
+                if esctime.escannouncementTimerStart ~= nil then
                     if escDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(escaudioannouncementCounter)) >= announcementIntervalParam) then
-                            escaudioannouncementCounter = os.clock()
+                        if ((tonumber(os.clock()) - tonumber(esctime.escaudioannouncementCounter)) >= announcementIntervalParam) then
+                            esctime.escaudioannouncementCounter = os.clock()
 							--print ("Playing ESC (repeat)")
 							system.playFile("/scripts/rf2status/sounds/alerts/esc.wav")
                             system.playNumber(sensors.temp_esc/100, UNIT_DEGREE, 2)
@@ -3942,7 +4010,7 @@ function rf2status.playESC(widget)
                     end
                 else
                     -- stop timer
-                    escannouncementTimerStart = nil
+                    esctime.escannouncementTimerStart = nil
                 end
             end
         end
@@ -3953,10 +4021,10 @@ function rf2status.playTIMER(widget)
     if announcementTimerSwitchParam ~= nil then
 
         if announcementTimerSwitchParam:state() then
-            timerannouncementTimer = true
+            timetime.timerannouncementTimer = true
             timerDoneFirst = false
         else
-            timerannouncementTimer = false
+            timetime.timerannouncementTimer = false
             timerDoneFirst = true
         end
 
@@ -3975,11 +4043,11 @@ function rf2status.playTIMER(widget)
 				mins = string.format("%02.f", math.floor(alertTIME / 60 - (hours * 60)))
 				secs = string.format("%02.f", math.floor(alertTIME - hours * 3600 - mins * 60))
 			
-                if timerannouncementTimer == true then
+                if timetime.timerannouncementTimer == true then
                     --start timer
-                    if timerannouncementTimerStart == nil and timerDoneFirst == false then
-                        timerannouncementTimerStart = os.time()
-						timeraudioannouncementCounter = os.clock()
+                    if timetime.timerannouncementTimerStart == nil and timerDoneFirst == false then
+                        timetime.timerannouncementTimerStart = os.time()
+						timetime.timeraudioannouncementCounter = os.clock()
 						--print ("Playing TIMER (first)" .. alertTIME)
 	
 						if mins ~= "00" then
@@ -3990,13 +4058,13 @@ function rf2status.playTIMER(widget)
                         timerDoneFirst = true
                     end
                 else
-                    timerannouncementTimerStart = nil
+                    timetime.timerannouncementTimerStart = nil
                 end
 
-                if timerannouncementTimerStart ~= nil then
+                if timetime.timerannouncementTimerStart ~= nil then
                     if timerDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(timeraudioannouncementCounter)) >= announcementIntervalParam) then
-                            timeraudioannouncementCounter = os.clock()
+                        if ((tonumber(os.clock()) - tonumber(timetime.timeraudioannouncementCounter)) >= announcementIntervalParam) then
+                            timetime.timeraudioannouncementCounter = os.clock()
 							--print ("Playing TIMER (repeat)" .. alertTIME)
 							if mins ~= "00" then
 								system.playNumber(mins, UNIT_MINUTE, 2)
@@ -4006,7 +4074,7 @@ function rf2status.playTIMER(widget)
                     end
                 else
                     -- stop timer
-                    timerannouncementTimerStart = nil
+                    timetime.timerannouncementTimerStart = nil
                 end
             end
         end
@@ -4016,33 +4084,33 @@ end
 function rf2status.playFuel(widget)
     if announcementFuelSwitchParam ~= nil then
         if announcementFuelSwitchParam:state() then
-            fuelannouncementTimer = true
+            fueltime.fuelannouncementTimer = true
             fuelDoneFirst = false
         else
-            fuelannouncementTimer = false
+            fueltime.fuelannouncementTimer = false
             fuelDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.fuel ~= nil then
-                if fuelannouncementTimer == true then
+                if fueltime.fuelannouncementTimer == true then
                     --start timer
-                    if fuelannouncementTimerStart == nil and fuelDoneFirst == false then
-                        fuelannouncementTimerStart = os.time()
-						fuelaudioannouncementCounter = os.clock()
+                    if fueltime.fuelannouncementTimerStart == nil and fuelDoneFirst == false then
+                        fueltime.fuelannouncementTimerStart = os.time()
+						fueltime.fuelaudioannouncementCounter = os.clock()
 						--print("Play fuel alert (first)")
 						system.playFile("/scripts/rf2status/sounds/alerts/fuel.wav")	
                         system.playNumber(sensors.fuel, UNIT_PERCENT, 2)				
                         fuelDoneFirst = true
                     end
                 else
-                    fuelannouncementTimerStart = nil
+                    fueltime.fuelannouncementTimerStart = nil
                 end
 
-                if fuelannouncementTimerStart ~= nil then
+                if fueltime.fuelannouncementTimerStart ~= nil then
                     if fuelDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(fuelaudioannouncementCounter)) >= announcementIntervalParam) then
-                            fuelaudioannouncementCounter = os.clock()
+                        if ((tonumber(os.clock()) - tonumber(fueltime.fuelaudioannouncementCounter)) >= announcementIntervalParam) then
+                            fueltime.fuelaudioannouncementCounter = os.clock()
 							--print("Play fuel alert (repeat)")
 							system.playFile("/scripts/rf2status/sounds/alerts/fuel.wav")	
                             system.playNumber(sensors.fuel, UNIT_PERCENT, 2)
@@ -4051,7 +4119,7 @@ function rf2status.playFuel(widget)
                     end
                 else
                     -- stop timer
-                    fuelannouncementTimerStart = nil
+                    fueltime.fuelannouncementTimerStart = nil
                 end
             end
         end
@@ -4061,39 +4129,39 @@ end
 function rf2status.playRPM(widget)
     if announcementRPMSwitchParam ~= nil then
         if announcementRPMSwitchParam:state() then
-            rpmannouncementTimer = true
+            rpmtime.announcementTimer = true
             rpmDoneFirst = false
         else
-            rpmannouncementTimer = false
+            rpmtime.announcementTimer = false
             rpmDoneFirst = true
         end
 
         if isInConfiguration == false then
             if sensors.rpm ~= nil then
-                if rpmannouncementTimer == true then
+                if rpmtime.announcementTimer == true then
                     --start timer
-                    if rpmannouncementTimerStart == nil and rpmDoneFirst == false then
-                        rpmannouncementTimerStart = os.time()
-						rpmaudioannouncementCounter = os.clock()
+                    if rpmtime.announcementTimerStart == nil and rpmDoneFirst == false then
+                        rpmtime.announcementTimerStart = os.time()
+						rpmtime.audioannouncementCounter = os.clock()
 						--print("Play rpm alert (first)")
                         system.playNumber(sensors.rpm, UNIT_RPM, 2)
                         rpmDoneFirst = true
                     end
                 else
-                    rpmannouncementTimerStart = nil
+                    rpmtime.announcementTimerStart = nil
                 end
 
-                if rpmannouncementTimerStart ~= nil then
+                if rpmtime.announcementTimerStart ~= nil then
                     if rpmDoneFirst == false then
-                        if ((tonumber(os.clock()) - tonumber(rpmaudioannouncementCounter)) >= announcementIntervalParam) then
+                        if ((tonumber(os.clock()) - tonumber(rpmtime.audioannouncementCounter)) >= announcementIntervalParam) then
 							--print("Play rpm alert (repeat)")
-                            rpmaudioannouncementCounter = os.clock()
+                            rpmtime.audioannouncementCounter = os.clock()
                             system.playNumber(sensors.rpm, UNIT_RPM, 2)
                         end
                     end
                 else
                     -- stop timer
-                    rpmannouncementTimerStart = nil
+                    rpmtime.announcementTimerStart = nil
                 end
             end
         end
@@ -4149,31 +4217,7 @@ end
 local function event(widget, category, value, x, y)
 
 	--print("Event received:", category, value, x, y)
-	
-	-- disable menu if governor active
-	if startonParam == 0 then
-		if sensors.govmode == "IDLE" or sensors.govmode == "SPOOLUP" or sensors.govmode == "RECOVERY" or
-					sensors.govmode == "ACTIVE" or
-					sensors.govmode == "LOST-HS" or
-					sensors.govmode == "BAILOUT" or
-					sensors.govmode == "RECOVERY" then
-			if category == EVT_TOUCH then
-				return true
-			end
-		end	
-	elseif startonParam == 1 then
-		if sensors.rpm >= 500 then
-			if category == EVT_TOUCH then
-				return true
-			end		
-		end
-	elseif startonParam == 2 then
-		if armswitchParam:state() == true then
-			if category == EVT_TOUCH then
-				return true
-			end		
-		end
-	end
+
 
 	if closingLOGS then
 		if category == EVT_TOUCH and (value == 16640 or value == 16641)  then				
@@ -4204,22 +4248,7 @@ local function event(widget, category, value, x, y)
 	end
 	
   	
-  -- if in simlation we capture a  page  press  to announcement a fake govenor spool up and then down
-   
-  if environment.simulation == true then
 
-	
-	-- fire up  governor
-	if (sensors.govmode == 'OFF' or sensors.govmode == 'DISABLED' or sensors.govmode == 'DISARMED' or sensors.govmode == 'UNKNOWN') and value == 32 then
-		simDoSPOOLUP = true
-		govNearlyActive = 1
-		timerNearlyActive = 1
-		actTime = math.random(200,400) -- random run time when simulation of govener
-	end
-		
-	
-  end	
-  
 end
 
 
@@ -4241,40 +4270,76 @@ local function playGovernor()
 				playGovernorCount = 1
 				
 				if sensors.govmode == "UNKNOWN" and governorUNKNOWNParam == true then
-					system.playFile("/scripts/rf2status/sounds/gov/unknown.wav")
+					if govmodeParam == 0 then
+						system.playFile("/scripts/rf2status/sounds/events/governor.wav")
+					end
+					system.playFile("/scripts/rf2status/sounds/events/unknown.wav")
 				end
 				if sensors.govmode == "DISARMED" and governorDISARMEDParam == true then
-					system.playFile("/scripts/rf2status/sounds/gov/disarmed.wav")
+					if govmodeParam == 0 then
+						system.playFile("/scripts/rf2status/sounds/events/governor.wav")
+					end	
+					system.playFile("/scripts/rf2status/sounds/events/disarmed.wav")
 				end				
 				if sensors.govmode == "DISABLED" and governorDISABLEDParam == true then
-					system.playFile("/scripts/rf2status/sounds/gov/disabled.wav")
+					if govmodeParam == 0 then
+						system.playFile("/scripts/rf2status/sounds/events/governor.wav")
+					end	
+					system.playFile("/scripts/rf2status/sounds/events/disabled.wav")
 				end					
 				if sensors.govmode == "BAILOUT" and governorBAILOUTParam == true then
-					system.playFile("/scripts/rf2status/sounds/gov/bailout.wav")
+					if govmodeParam == 0 then
+						system.playFile("/scripts/rf2status/sounds/events/governor.wav")
+					end	
+					system.playFile("/scripts/rf2status/sounds/events/bailout.wav")
 				end						
 				if sensors.govmode == "AUTOROT" and governorAUTOROTParam == true then
-					system.playFile("/scripts/rf2status/sounds/gov/autorot.wav")
+					if govmodeParam == 0 then
+						system.playFile("/scripts/rf2status/sounds/events/governor.wav")
+					end
+					system.playFile("/scripts/rf2status/sounds/events/autorot.wav")
 				end						
 				if sensors.govmode == "LOST-HS" and governorLOSTHSParam == true then
-					system.playFile("/scripts/rf2status/sounds/gov/lost-hs.wav")
+					if govmodeParam == 0 then
+						system.playFile("/scripts/rf2status/sounds/events/governor.wav")
+					end	
+					system.playFile("/scripts/rf2status/sounds/events/lost-hs.wav")
 				end		
 				if sensors.govmode == "THR-OFF" and governorTHROFFParam == true then
-					system.playFile("/scripts/rf2status/sounds/gov/thr-off.wav")
+					if govmodeParam == 0 then
+						system.playFile("/scripts/rf2status/sounds/events/governor.wav")
+					end	
+					system.playFile("/scripts/rf2status/sounds/events/thr-off.wav")
 				end		
 				if sensors.govmode == "ACTIVE" and governorACTIVEParam == true then
-					system.playFile("/scripts/rf2status/sounds/gov/active.wav")
+					if govmodeParam == 0 then
+						system.playFile("/scripts/rf2status/sounds/events/governor.wav")
+					end	
+					system.playFile("/scripts/rf2status/sounds/events/active.wav")
 				end		
 				if sensors.govmode == "RECOVERY" and governorRECOVERYParam == true then
-					system.playFile("/scripts/rf2status/sounds/gov/recovery.wav")
+					if govmodeParam == 0 then
+						system.playFile("/scripts/rf2status/sounds/events/governor.wav")
+					end
+					system.playFile("/scripts/rf2status/sounds/events/recovery.wav")
 				end		
 				if sensors.govmode == "SPOOLUP" and governorSPOOLUPParam == true then
-					system.playFile("/scripts/rf2status/sounds/gov/spoolup.wav")
+					if govmodeParam == 0 then
+						system.playFile("/scripts/rf2status/sounds/events/governor.wav")
+					end	
+					system.playFile("/scripts/rf2status/sounds/events/spoolup.wav")
 				end	
 				if sensors.govmode == "IDLE" and governorIDLEParam == true then
-					system.playFile("/scripts/rf2status/sounds/gov/idle.wav")
+					if govmodeParam == 0 then
+						system.playFile("/scripts/rf2status/sounds/events/governor.wav")
+					end
+					system.playFile("/scripts/rf2status/sounds/events/idle.wav")
 				end	
 				if sensors.govmode == "OFF" and governorOFFParam == true then
-					system.playFile("/scripts/rf2status/sounds/gov/off.wav")
+					if govmodeParam == 0 then
+						system.playFile("/scripts/rf2status/sounds/events/governor.wav")
+					end
+					system.playFile("/scripts/rf2status/sounds/events/off.wav")
 				end	
 				
 		end
@@ -4289,33 +4354,33 @@ function rf2status.playRPMDiff()
 	
 	    if sensors.govmode == "ACTIVE" or sensors.govmode == "LOST-HS" or sensors.govmode == "BAILOUT" or sensors.govmode == "RECOVERY" then
 	
-			if playRPMDiffLastState == nil then
-				playRPMDiffLastState = sensors.rpm
+			if playrpmdiff.playRPMDiffLastState == nil then
+				playrpmdiff.playRPMDiffLastState = sensors.rpm
 			end
 		
 			-- we take a reading every 5 second
-			if (tonumber(os.clock()) - tonumber(playRPMDiffCounter)) >= 5 then
-				playRPMDiffCounter = os.clock()
-				playRPMDiffLastState = sensors.rpm
+			if (tonumber(os.clock()) - tonumber(playrpmdiff.playRPMDiffCounter)) >= 5 then
+				playrpmdiff.playRPMDiffCounter = os.clock()
+				playrpmdiff.playRPMDiffLastState = sensors.rpm
 			end
 			
 			-- check if current state withing % of last state
 			local percentageDiff = 0
-			if sensors.rpm > playRPMDiffLastState then
-				percentageDiff = math.abs(100 - (sensors.rpm / playRPMDiffLastState * 100))
-			elseif playRPMDiffLastState < sensors.rpm then
-				percentage = math.abs(100 - (playRPMDiffLastState/sensors.rpm * 100))
+			if sensors.rpm > playrpmdiff.playRPMDiffLastState then
+				percentageDiff = math.abs(100 - (sensors.rpm / playrpmdiff.playRPMDiffLastState * 100))
+			elseif playrpmdiff.playRPMDiffLastState < sensors.rpm then
+				percentage = math.abs(100 - (playrpmdiff.playRPMDiffLastState/sensors.rpm * 100))
 			else
 				percentageDiff = 0
 			end		
 
 			if percentageDiff > rpmAlertsPercentageParam/10 then
-				playRPMDiffCount = 0
+				playrpmdiff.playRPMDiffCount = 0
 			end
 
-			if playRPMDiffCount == 0 then
+			if playrpmdiff.playRPMDiffCount == 0 then
 					--print("RPM Difference: " .. percentageDiff)
-					playRPMDiffCount = 1
+					playrpmdiff.playRPMDiffCount = 1
 					system.playNumber(sensors.rpm ,  UNIT_RPM, 2)
 			end		
 		end
@@ -4402,7 +4467,7 @@ local function wakeup(widget)
 	end
 	
 	if linkUP ~= 0 then
-	
+
 		 if ((tonumber(os.clock()) - tonumber(linkUPTime)) >= 5) then
 			-- voltage alerts
 			rf2status.playVoltage(widget)
@@ -4426,6 +4491,118 @@ local function wakeup(widget)
 			rf2status.playTIMER(widget)
 			-- adjValues
 			playADJ(widget)
+			
+
+			if ((tonumber(os.clock()) - tonumber(linkUPTime)) >= 10) then
+			
+				-- IDLE
+				if switchIdlelowParam ~= nil and switchIdlelowParam:state() == true then
+					if switchstatus.idlelow == nil or switchstatus.idlelow == false then
+						system.playFile("/scripts/rf2status/sounds/switches/idle-l.wav")
+						switchstatus.idlelow = true
+						switchstatus.idlemedium = false
+						switchstatus.idlehigh = false
+					end	
+				else
+					switchstatus.idlelow = false
+				end
+				if switchIdlemediumParam ~= nil and switchIdlemediumParam:state() == true then
+					if switchstatus.idlemedium == nil or switchstatus.idlemedium == false then
+						system.playFile("/scripts/rf2status/sounds/switches/idle-m.wav")
+						switchstatus.idlelow = false				
+						switchstatus.idlemedium = true
+						switchstatus.idlehigh = false				
+					end	
+				else
+					switchstatus.idlemedium = false
+				end
+				if switchIdlehighParam ~= nil and switchIdlehighParam:state() == true then
+					if switchstatus.idlehigh == nil or switchstatus.idlehigh == false then
+						system.playFile("/scripts/rf2status/sounds/switches/idle-h.wav")
+						switchstatus.idlelow = false				
+						switchstatus.idlemedium = false
+						switchstatus.idlehigh = true	
+					end	
+				else
+					switchstatus.idlehigh = false
+				end		
+				
+				-- RATES
+				if switchrateslowParam ~= nil and switchrateslowParam:state() == true then
+					if switchstatus.rateslow == nil or switchstatus.rateslow == false then
+						system.playFile("/scripts/rf2status/sounds/switches/rates-l.wav")
+						switchstatus.rateslow = true
+						switchstatus.ratesmedium = false
+						switchstatus.rateshigh = false
+					end	
+				else
+					switchstatus.rateslow = false
+				end
+				if switchratesmediumParam ~= nil and switchratesmediumParam:state() == true then
+					if switchstatus.ratesmedium == nil or switchstatus.ratesmedium == false then
+						system.playFile("/scripts/rf2status/sounds/switches/rates-m.wav")
+						switchstatus.rateslow = false				
+						switchstatus.ratesmedium = true
+						switchstatus.rateshigh = false				
+					end	
+				else
+					switchstatus.ratesmedium = false
+				end
+				if switchrateshighParam ~= nil and switchrateshighParam:state() == true then
+					if switchstatus.rateshigh == nil or switchstatus.rateshigh == false then
+						system.playFile("/scripts/rf2status/sounds/switches/rates-h.wav")
+						switchstatus.rateslow = false				
+						switchstatus.ratesmedium = false
+						switchstatus.rateshigh = true	
+					end	
+				else
+					switchstatus.rateshigh = false
+				end			
+
+				-- RESCUE
+				if switchrescueonParam ~= nil and switchrescueonParam:state() == true then
+					if switchstatus.rescueon == nil or switchstatus.rescueon == false then
+						system.playFile("/scripts/rf2status/sounds/switches/rescue-on.wav")
+						switchstatus.rescueon = true
+						switchstatus.rescueoff = false
+					end	
+				else
+					switchstatus.rescueon = false
+				end
+				if switchrescueoffParam ~= nil and switchrescueoffParam:state() == true then
+					if switchstatus.rescueoff == nil or switchstatus.rescueoff == false then
+						system.playFile("/scripts/rf2status/sounds/switches/rescue-off.wav")
+						switchstatus.rescueon = false				
+						switchstatus.rescueoff = true			
+					end	
+				else
+					switchstatus.rescueoff = false
+				end			
+
+				-- BBL
+				if switchbblonParam ~= nil and switchbblonParam:state() == true then
+					if switchstatus.bblon == nil or switchstatus.bblon == false then
+						system.playFile("/scripts/rf2status/sounds/switches/bbl-on.wav")
+						switchstatus.bblon = true
+						switchstatus.bbloff = false
+					end	
+				else
+					switchstatus.bblon = false
+				end
+				if switchbbloffParam ~= nil and switchbbloffParam:state() == true then
+					if switchstatus.bbloff == nil or switchstatus.bbloff == false then
+						system.playFile("/scripts/rf2status/sounds/switches/bbl-off.wav")
+						switchstatus.bblon = false				
+						switchstatus.bbloff = true			
+					end	
+				else
+					switchstatus.bbloff = false
+				end	
+				
+				
+			end	
+			
+			
 		else
 			adjJUSTUP = true	
 		end	
