@@ -2688,7 +2688,7 @@ function rf2status.getSensors()
 		current = 0
 		
 
-		if idleupswitchParam:state() ~= nil and armswitchParam:state() ~= nil then
+		if idleupswitchParam ~= nil and armswitchParam ~= nil then
 			if idleupswitchParam:state() == true and armswitchParam:state() == true then
 					current = math.random(100, 120)
 					rpm = math.random(90, 100)
