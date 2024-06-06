@@ -174,7 +174,7 @@ local switchrescueonParam = nil
 local switchrescueoffParam = nil
 local switchbblonParam = nil
 local switchbbloffParam = nil
-
+local idleupswitchParam = nil
 
 local lvStickOrder = {}
 lvStickOrder[1] = {1,2,3,4}
@@ -2554,17 +2554,21 @@ local function paint(widget)
 	-- LOW FUEL ALERTS
     -- big conditional to announcement lfTimer if needed
     if linkUP ~= 0 then
-			if idleupswitchParam:state() then
-            if (sensors.fuel <= lowfuelParam and alertonParam == 1 ) then
-				lfTimer = true
-			elseif (sensors.fuel <= lowfuelParam and alertonParam == 2 )then
-                lfTimer = true
-            else
-                lfTimer = false
-            end
-        else
-            lfTimer = false
-        end
+		if idleupswitchParam ~= nil then
+				if idleupswitchParam:state() then
+				if (sensors.fuel <= lowfuelParam and alertonParam == 1 ) then
+					lfTimer = true
+				elseif (sensors.fuel <= lowfuelParam and alertonParam == 2 )then
+					lfTimer = true
+				else
+					lfTimer = false
+				end
+			else
+				lfTimer = false
+			end
+		else
+			lfTimer = false
+		end
     else
         lfTimer = false
     end
@@ -2600,17 +2604,21 @@ local function paint(widget)
 	-- LOW VOLTAGE ALERTS
     -- big conditional to announcement lvTimer if needed
     if linkUP ~= 0 then
-		if idleupswitchParam:state() then
-            if (voltageIsLow and alertonParam == 0) then
-                lvTimer = true
-			elseif 	(voltageIsLow and alertonParam == 2) then
-				lvTimer = true
-            else
-                lvTimer = false
-            end
-        else
-            lvTimer = false
-        end
+		if idleupswitchParam ~= nil then
+			if idleupswitchParam:state() then
+				if (voltageIsLow and alertonParam == 0) then
+					lvTimer = true
+				elseif 	(voltageIsLow and alertonParam == 2) then
+					lvTimer = true
+				else
+					lvTimer = false
+				end
+			else
+				lvTimer = false
+			end
+		else
+			lvTimer = false
+		end
     else
         lvTimer = false
     end
