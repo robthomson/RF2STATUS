@@ -960,21 +960,6 @@ local function configure(widget)
 	displaypanel = form.addExpansionPanel("Customise display")
 	displaypanel:open(false) 
 
-    line = displaypanel:addLine("Governor")
-    extgov = form.addChoiceField(
-        line,
-        nil,
-        {
-            {"RF Governor Status", 0},
-			{"Flight Modes",1},
-        },
-        function()
-            return govmodeParam
-        end,
-        function(newValue)
-            govmodeParam = newValue		
-        end
-    )
 
 
     -- Mini Boxes
@@ -1024,6 +1009,23 @@ local function configure(widget)
 	
 	advpanel = form.addExpansionPanel("Advanced")
 	advpanel:open(false) 
+
+
+    line = advpanel:addLine("Governor")
+    extgov = form.addChoiceField(
+        line,
+        nil,
+        {
+            {"RF Governor", 0},
+			{"External Governor",1},
+        },
+        function()
+            return govmodeParam
+        end,
+        function(newValue)
+            govmodeParam = newValue		
+        end
+    )
 
 
     line = form.addLine("Temperature conversion",advpanel)
@@ -2379,7 +2381,7 @@ local function paint(widget)
 					sensorMIN = rf2status.round(sensorTempMCUMin/100,0)
 			end
 			
-			if sensorTempMCUMax == 0 or sensorTempMCUMax == nil then
+			if sensorTempMCUMax == 0 or sensorTempMCUMax == nil or theTIME == 0 then
 					sensorMAX = "-"
 			else 
 					sensorMAX = rf2status.round(sensorTempMCUMax/100,0)
@@ -3247,7 +3249,7 @@ local function sensorsMAXMIN(sensors)
 			sensorRSSIMin = 0
 			sensorRSSIMax = 0
 			sensorTempESCMin = 0
-			sensorTempESCMax = 0
+			sensorTempMCUMax = 0
 		end
 
 		-- prob put in a screen/audio alert for initialising
@@ -3279,6 +3281,8 @@ local function sensorsMAXMIN(sensors)
 				sensorRSSIMax = sensors.rssi
 				sensorTempESCMin = sensors.temp_esc
 				sensorTempESCMax = sensors.temp_esc
+				sensorTempMCUMin = sensors.temp_mcu
+				sensorTempMCUMax = sensors.temp_mcu
 				motorNearlyActive = 0
 			end
 			
