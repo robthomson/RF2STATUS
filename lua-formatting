@@ -1,0 +1,13 @@
+# this script uses lua-format
+# https://github.com/Koihik/LuaFormatter
+#!/bin/sh
+
+
+list=$(find ./ -name "*.lua")
+
+for x in $list ; do
+
+	echo $x
+	lua-format -i $x
+
+done
