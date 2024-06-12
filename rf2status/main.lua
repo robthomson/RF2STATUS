@@ -240,8 +240,8 @@ local rssiNoiseQ = 100
 local currentNoiseQ = 100
 
 local layoutOptions = {
-    {"TIMER", 1}, {"VOLTAGE", 2}, {"FUEL", 3}, {"CURRENT", 4}, {"MAH", 17}, {"RPM", 5}, {"LQ", 6}, {"T.ESC", 7}, {"T.MCU", 8}, {"IMAGE", 9}, {"GOVERNOR", 10}, {"IMAGE, GOV", 11}, {"LQ,TIMER", 12},
-    {"T.ESC,T.MCU", 13}, {"VOLTAGE,FUEL", 14}, {"VOLTAGE,CURRENT", 15}, {"VOLTAGE,MAH", 16}, {"LQ,TIMER,T.ESC,T.MCU", 20}
+    {"TIMER", 1}, {"VOLTAGE", 2}, {"FUEL", 3}, {"CURRENT", 4}, {"MAH", 17}, {"RPM", 5}, {"LQ", 6}, {"T.ESC", 7}, {"T.MCU", 8}, {"IMAGE", 9}, {"GOVERNOR", 10}, {"IMAGE, GOVERNOR", 11}, {"LQ,TIMER", 12},
+    {"T.ESC,T.MCU", 13}, {"VOLTAGE,FUEL", 14}, {"VOLTAGE,CURRENT", 15}, {"VOLTAGE,MAH", 16}, {"LQ,TIMER,T.ESC,T.MCU", 20}, {"MAX CURRENT", 21}
 }
 
 -- default layout as follows
@@ -1289,6 +1289,7 @@ function rf2status.getThemeInfo()
     return ret
 end
 
+
 local function telemetryBox(x, y, w, h, title, value, unit, smallbox, alarm, minimum, maximum)
 
     isVisible = lcd.isVisible()
@@ -1414,6 +1415,73 @@ local function telemetryBox(x, y, w, h, title, value, unit, smallbox, alarm, min
             lcd.drawText(sx, sy, str)
         end
 
+    end
+
+end
+
+local function telemetryBoxMAX(x, y, w, h, title, value, unit, smallbox)
+
+    isVisible = lcd.isVisible()
+    isDARKMODE = lcd.darkMode()
+    local theme = rf2status.getThemeInfo()
+
+    if isDARKMODE then
+        lcd.color(lcd.RGB(40, 40, 40))
+    else
+        lcd.color(lcd.RGB(240, 240, 240))
+    end
+
+    -- draw box backgrf2status.round	
+    lcd.drawFilledRectangle(x, y, w, h)
+
+    -- color	
+    if isDARKMODE then
+        lcd.color(lcd.RGB(255, 255, 255, 1))
+    else
+        lcd.color(lcd.RGB(90, 90, 90))
+    end
+
+    -- draw sensor text
+    if value ~= nil then
+
+        if smallbox == nil or smallbox == false then
+            lcd.font(theme.fontSENSOR)
+        else
+            lcd.font(theme.fontSENSORSmallBox)
+        end
+
+        str = value .. unit
+
+        if unit == "°" then
+            tsizeW, tsizeH = lcd.getTextSize(value .. ".")
+        else
+            tsizeW, tsizeH = lcd.getTextSize(str)
+        end
+
+        sx = (x + w / 2) - (tsizeW / 2)
+        if smallbox == nil or smallbox == false then
+            sy = (y + h / 2) - (tsizeH / 2)
+        else
+            if maxminParam == false and titleParam == false then
+                sy = (y + h / 2) - (tsizeH / 2)
+            else
+                sy = (y + h / 2) - (tsizeH / 2) + theme.smallBoxSensortextOFFSET
+            end
+        end
+
+        lcd.drawText(sx, sy, str)
+
+    end
+
+    if title ~= nil and titleParam == true then
+        lcd.font(theme.fontTITLE)
+        str = title
+        tsizeW, tsizeH = lcd.getTextSize(str)
+
+        sx = (x + w / 2) - (tsizeW / 2)
+        sy = (y + h) - (tsizeH) - theme.colSpacing
+
+        lcd.drawText(sx, sy, str)
     end
 
 end
@@ -2339,6 +2407,9 @@ local function paint(widget)
             if sensorTGT == 20 then
                 sensorTGT = 'rssi_timer_temp_esc_temp_mcu'
             end
+            if sensorTGT == 21 then
+                sensorTGT = 'max_current'
+            end
 
             -- set sensor values based on sensorTGT
             if sensordisplay[sensorTGT] ~= nil then
@@ -2562,6 +2633,25 @@ local function paint(widget)
                                  sensorVALUE, sensorUNIT, smallBOX, sensorWARN, sensorMIN, sensorMAX)
 
                 end
+				
+               if sensorTGT == 'max_current' then
+
+                    sensorTGT = "current"
+                    sensorVALUE = sensordisplay[sensorTGT]['value']
+                    sensorUNIT = sensordisplay[sensorTGT]['unit']
+                    sensorMIN = sensordisplay[sensorTGT]['min']
+                    sensorMAX = sensordisplay[sensorTGT]['max']
+                    sensorWARN = sensordisplay[sensorTGT]['warn']
+                    sensorTITLE = sensordisplay[sensorTGT]['title']
+
+					if sensorMAX == "-" or sensorMAX == nil then
+						sensorMAX = 0
+					end
+
+                    smallBOX = false
+                    telemetryBox(posX, posY, boxW, boxH, "MAX " ..sensorTITLE, sensorMAX, sensorUNIT, smallBOX)
+
+                end				
 
             end
 
