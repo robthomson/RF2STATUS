@@ -29,6 +29,12 @@ local lfannouncementTimerStart
 local lfaudioannouncementCounter = 0
 local lfAudioAlertCounter = 0
 
+local timeralarmVibrateParam = true
+local timeralarmParam = 210
+
+
+timerAlarmPlay = true
+
 local rpmtime = {}
 rpmtime.rpmTimer = false
 rpmtime.rpmTimerStart = nil
@@ -239,10 +245,10 @@ local layoutOptions = {
 }
 
 -- default layout as follows
-local layoutBox1Param = 10 -- IMAGE, GOV
+local layoutBox1Param = 11 -- IMAGE, GOV
 local layoutBox2Param = 2 -- VOLTAGE
 local layoutBox3Param = 3 -- FUEL
-local layoutBox4Param = 11 -- LQ,TIMER
+local layoutBox4Param = 12 -- LQ,TIMER
 local layoutBox5Param = 4 -- CURRENT
 local layoutBox6Param = 5 -- RPM
 
@@ -417,6 +423,72 @@ local function configure(widget)
     end)
     field:default(5)
     field:suffix("s")
+
+    timerpanel = form.addExpansionPanel("Timer configuration")
+    timerpanel:open(false)
+
+
+	timeTable = {
+					{"Disabled", 0},
+					{"00:30", 30},
+					{"01:00", 60},
+					{"01:30", 90},
+					{"02:00", 120},
+					{"02:30", 150},
+					{"03:00", 180},
+					{"03:30", 210},
+					{"04:00", 240},
+					{"04:30", 270},
+					{"05:00", 300},
+					{"05:30", 330},
+					{"06:00", 360},
+					{"06:30", 390},
+					{"07:00", 420},
+					{"07:30", 450},					
+					{"08:00", 480},
+					{"08:30", 510},
+					{"09:00", 540},
+					{"09:30", 570},
+					{"10:00", 600},
+					{"10:30", 630},
+					{"11:00", 660},	
+					{"11:30", 690},
+					{"12:00", 720},
+					{"12:30", 750},
+					{"13:00", 780},
+					{"13:30", 810},					
+					{"14:00", 840},	
+					{"14:30", 870},	
+					{"15:00", 900},						
+					{"15:30", 930},
+					{"16:00", 960},
+					{"16:30", 990},
+					{"17:00", 1020},
+					{"17:30", 1050},
+					{"18:00", 1080},
+					{"18:30", 1110},
+					{"19:00", 1140},
+					{"19:30", 1170},
+					{"20:00", 1200},							
+				}
+
+
+	line = timerpanel:addLine("Play alarm at")
+     form.addChoiceField(line, nil, timeTable, function()
+        return timeralarmParam
+    end, function(newValue)
+        timeralarmParam = newValue
+    end)
+
+
+    line = timerpanel:addLine("Vibrate")
+    form.addBooleanField(line, nil, function()
+        return timeralarmVibrateParam
+    end, function(newValue)
+        timeralarmVibrateParam= newValue
+    end)
+
+
 
     batterypanel = form.addExpansionPanel("Battery configuration")
     batterypanel:open(false)
@@ -3727,9 +3799,12 @@ local function read()
     layoutBox4Param = storage.read("mem61")
     layoutBox5Param = storage.read("mem62")
     layoutBox6Param = storage.read("mem63")
+	timeralarmVibrateParam = storage.read("mem64")
+	timeralarmParam = storage.read("mem65")
+	
 
     if layoutBox1Param == nil then
-        layoutBox1Param = 10
+        layoutBox1Param = 11
     end
     if layoutBox2Param == nil then
         layoutBox2Param = 2
@@ -3738,7 +3813,7 @@ local function read()
         layoutBox3Param = 3
     end
     if layoutBox4Param == nil then
-        layoutBox4Param = 11
+        layoutBox4Param = 12
     end
     if layoutBox5Param == nil then
         layoutBox5Param = 4
@@ -3815,6 +3890,8 @@ local function write()
     storage.write("mem61", layoutBox4Param)
     storage.write("mem62", layoutBox5Param)
     storage.write("mem63", layoutBox6Param)
+    storage.write("mem64", timeralarmVibrateParam)
+	storage.write("mem65", timeralarmParam)	
 
     updateFILTERING()
 end
@@ -3991,6 +4068,42 @@ function rf2status.playESC(widget)
             end
         end
     end
+end
+
+function rf2status.playTIMERALARM(widget)
+	if theTIME ~= nil and timeralarmParam ~= nil and timeralarmParam ~= 0 then
+		
+		-- reset timer Delay
+		if theTIME > timeralarmParam + 2 then
+			timerAlarmPlay = true
+		end
+		-- trigger first timer
+		if timerAlarmPlay == true then
+			if theTIME >= timeralarmParam and theTIME <= timeralarmParam + 1 then
+
+			
+				system.playFile("/scripts/rf2status/sounds/alerts/beep.wav")
+				
+				hours = string.format("%02.f", math.floor(theTIME / 3600))
+				mins = string.format("%02.f", math.floor(theTIME / 60 - (hours * 60)))
+				secs = string.format("%02.f", math.floor(theTIME - hours * 3600 - mins * 60))			
+
+				system.playFile("/scripts/rf2status/sounds/alerts/timer.wav")
+				if mins ~= "00" then
+					system.playNumber(mins, UNIT_MINUTE, 2)
+				end
+				system.playNumber(secs, UNIT_SECOND, 2)
+				
+				if timeralarmVibrateParam == true then
+				    system.playHaptic("- - -")
+				end
+				
+				timerAlarmPlay = false
+			end
+		end
+
+
+	end
 end
 
 function rf2status.playTIMER(widget)
@@ -4452,8 +4565,14 @@ local function wakeup(widget)
             rf2status.playMCU(widget)
             -- timer
             rf2status.playTIMER(widget)
+			-- timer alarm
+			rf2status.playTIMERALARM(widget)			
+			
             -- adjValues
             playADJ(widget)
+			
+
+
 
             if ((tonumber(os.clock()) - tonumber(linkUPTime)) >= 10) then
 
