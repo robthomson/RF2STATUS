@@ -3,6 +3,10 @@ local oldsensors = {"refresh", "voltage", "rpm", "current", "temp_esc", "temp_mc
 
 rf2status = {}
 
+
+
+local i8n = assert(loadfile("/scripts/rf2status/i8n/"..system.getLocale()..".lua"))()
+
 local loopCounter = 0
 local sensors
 local supportedRADIO = false
@@ -240,8 +244,8 @@ local rssiNoiseQ = 100
 local currentNoiseQ = 100
 
 local layoutOptions = {
-    {"TIMER", 1}, {"VOLTAGE", 2}, {"FUEL", 3}, {"CURRENT", 4}, {"MAH", 17}, {"RPM", 5}, {"LQ", 6}, {"T.ESC", 7}, {"T.MCU", 8}, {"IMAGE", 9}, {"GOVERNOR", 10}, {"IMAGE, GOVERNOR", 11}, {"LQ,TIMER", 12},
-    {"T.ESC,T.MCU", 13}, {"VOLTAGE,FUEL", 14}, {"VOLTAGE,CURRENT", 15}, {"VOLTAGE,MAH", 16}, {"LQ,TIMER,T.ESC,T.MCU", 20}, {"MAX CURRENT", 21}
+    {i8n.TIMER, 1}, {i8n.VOLTAGE, 2}, {i8n.FUEL, 3}, {i8n.CURRENT, 4}, {i8n.MAH, 17}, {i8n.RPM, 5}, {i8n.LQ, 6}, {i8n.TESC, 7}, {i8n.TMCU, 8}, {i8n.IMAGE, 9}, {i8n.GOVERNOR, 10}, {i8n.IMAGEGOVERNOR, 11}, {i8n.LQTIMER, 12},
+    {i8n.TESCTMCU, 13}, {i8n.VOLTAGEFUEL, 14}, {i8n.VOLTAGECURRENT, 15}, {i8n.VOLTAGEMAH, 16}, {i8n.LQTIMERTESCTMCU, 20}, {i8n.MAXCURRENT, 21}
 }
 
 -- default layout as follows
@@ -340,8 +344,9 @@ local function create(widget)
     gfx_close = lcd.loadBitmap("/scripts/rf2status/gfx/close.png")
     rssiSensor = rf2status.getRssiSensor()
 
-    if tonumber(rf2status.sensorMakeNumber(environment.version)) < 152 then
-        rf2status.screenError("ETHOS < V1.5.2")
+
+    if tonumber(rf2status.sensorMakeNumber(environment.version)) < 159 then
+        rf2status.screenError("ETHOS < V1.5.9")
         return
     end
 
@@ -398,24 +403,24 @@ end
 local function configure(widget)
     isInConfiguration = true
 
-    triggerpanel = form.addExpansionPanel("Triggers")
+    triggerpanel = form.addExpansionPanel(i8n.Triggers)
     triggerpanel:open(false)
 
-    line = triggerpanel:addLine("Arm switch")
+    line = triggerpanel:addLine(i8n.Armswitch)
     armswitch = form.addSwitchField(line, form.getFieldSlots(line)[0], function()
         return armswitchParam
     end, function(value)
         armswitchParam = value
     end)
 
-    line = triggerpanel:addLine("Idleup switch")
+    line = triggerpanel:addLine(i8n.Idleupswitch)
     idleupswitch = form.addSwitchField(line, form.getFieldSlots(line)[0], function()
         return idleupswitchParam
     end, function(value)
         idleupswitchParam = value
     end)
 
-    line = triggerpanel:addLine("    Delay before active")
+    line = triggerpanel:addLine("    " .. i8n.Delaybeforeactive)
     field = form.addNumberField(line, nil, 5, 60, function()
         return idleupdelayParam
     end, function(value)
@@ -424,12 +429,12 @@ local function configure(widget)
     field:default(5)
     field:suffix("s")
 
-    timerpanel = form.addExpansionPanel("Timer configuration")
+    timerpanel = form.addExpansionPanel(i8n.Timerconfiguration)
     timerpanel:open(false)
 
 
 	timeTable = {
-					{"Disabled", 0},
+					{i8n.Disabled, 0},
 					{"00:30", 30},
 					{"01:00", 60},
 					{"01:30", 90},
@@ -473,7 +478,7 @@ local function configure(widget)
 				}
 
 
-	line = timerpanel:addLine("Play alarm at")
+	line = timerpanel:addLine(i8n.Playalarmat)
      form.addChoiceField(line, nil, timeTable, function()
         return timeralarmParam
     end, function(newValue)
@@ -481,7 +486,7 @@ local function configure(widget)
     end)
 
 
-    line = timerpanel:addLine("Vibrate")
+    line = timerpanel:addLine(i8n.Vibrate)
     form.addBooleanField(line, nil, function()
         return timeralarmVibrateParam
     end, function(newValue)
@@ -490,20 +495,20 @@ local function configure(widget)
 
 
 
-    batterypanel = form.addExpansionPanel("Battery configuration")
+    batterypanel = form.addExpansionPanel(i8n.Batteryconfiguration)
     batterypanel:open(false)
 
     -- CELLS
 
-    line = batterypanel:addLine("Type")
-    form.addChoiceField(line, nil, {{"LiPo", 0}, {"LiHv", 1}, {"Lion", 2}, {"LiFe", 3}, {"NiMh", 4}}, function()
+    line = batterypanel:addLine(i8n.Type)
+    form.addChoiceField(line, nil, {{i8n.LiPo, 0}, {i8n.LiHv, 1}, {i8n.Lion, 2}, {i8n.LiFe, 3}, {i8n.NiMh, 4}}, function()
         return btypeParam
     end, function(newValue)
         btypeParam = newValue
     end)
 
     -- BATTERY CELLS
-    line = batterypanel:addLine("Cells")
+    line = batterypanel:addLine(i8n.Cells)
     field = form.addNumberField(line, nil, 0, 14, function()
         return cellsParam
     end, function(value)
@@ -512,7 +517,7 @@ local function configure(widget)
     field:default(6)
 
     -- LOW FUEL announcement
-    line = batterypanel:addLine("Low fuel%")
+    line = batterypanel:addLine(i8n.Lowfuelpercentage)
     field = form.addNumberField(line, nil, 0, 50, function()
         return lowfuelParam
     end, function(value)
@@ -522,8 +527,8 @@ local function configure(widget)
     field:suffix("%")
 
     -- ALERT ON
-    line = batterypanel:addLine("Play alert on")
-    form.addChoiceField(line, nil, {{"Low voltage", 0}, {"Low fuel", 1}, {"Low fuel & Low voltage", 2}, {"Disabled", 3}}, function()
+    line = batterypanel:addLine(i8n.Playalerton)
+    form.addChoiceField(line, nil, {{i8n.Lowvoltage, 0}, {i8n.Lowfuel, 1}, {i8n.LowfuelLowvoltage, 2}, {i8n.Disabled, 3}}, function()
         return alertonParam
     end, function(newValue)
         if newValue == 3 then
@@ -537,7 +542,7 @@ local function configure(widget)
     end)
 
     -- ALERT INTERVAL
-    line = batterypanel:addLine("     Interval")
+    line = batterypanel:addLine("     "..i8n.Interval)
     plalrtint = form.addChoiceField(line, nil, {{"5S", 5}, {"10S", 10}, {"15S", 15}, {"20S", 20}, {"30S", 30}}, function()
         return alertintParam
     end, function(newValue)
@@ -550,7 +555,7 @@ local function configure(widget)
     end
 
     -- HAPTIC
-    line = batterypanel:addLine("     Vibrate")
+    line = batterypanel:addLine("     ".. i8n.Vibrate)
     plalrthap = form.addBooleanField(line, nil, function()
         return alrthptParam
     end, function(newValue)
@@ -562,84 +567,84 @@ local function configure(widget)
         plalrthap:enable(true)
     end
 
-    switchpanel = form.addExpansionPanel("Switch announcements")
+    switchpanel = form.addExpansionPanel(i8n.Switchannouncements)
     switchpanel:open(false)
 
-    line = switchpanel:addLine("Idle speed low")
+    line = switchpanel:addLine(i8n.Idlespeedlow)
     form.addSwitchField(line, nil, function()
         return switchIdlelowParam
     end, function(value)
         switchIdlelowParam = value
     end)
 
-    line = switchpanel:addLine("Idle speed medium")
+    line = switchpanel:addLine(i8n.Idlespeedmedium)
     form.addSwitchField(line, nil, function()
         return switchIdlemediumParam
     end, function(value)
         switchIdlemediumParam = value
     end)
 
-    line = switchpanel:addLine("Idle speed high")
+    line = switchpanel:addLine(i8n.Idlespeedhigh)
     form.addSwitchField(line, nil, function()
         return switchIdlehighParam
     end, function(value)
         switchIdlehighParam = value
     end)
 
-    line = switchpanel:addLine("Rates low")
+    line = switchpanel:addLine(i8n.Rateslow)
     form.addSwitchField(line, nil, function()
         return switchrateslowParam
     end, function(value)
         switchrateslowParam = value
     end)
 
-    line = switchpanel:addLine("Rates medium")
+    line = switchpanel:addLine(i8n.Ratesmedium)
     form.addSwitchField(line, nil, function()
         return switchratesmediumParam
     end, function(value)
         switchratesmediumParam = value
     end)
 
-    line = switchpanel:addLine("Rates high")
+    line = switchpanel:addLine(i8n.Rateshigh)
     form.addSwitchField(line, nil, function()
         return switchrateshighParam
     end, function(value)
         switchrateshighParam = value
     end)
 
-    line = switchpanel:addLine("Rescue on")
+    line = switchpanel:addLine(i8n.Rescueon)
     form.addSwitchField(line, nil, function()
         return switchrescueonParam
     end, function(value)
         switchrescueonParam = value
     end)
 
-    line = switchpanel:addLine("Rescue off")
+    line = switchpanel:addLine(i8n.Rescueoff)
     form.addSwitchField(line, nil, function()
         return switchrescueoffParam
     end, function(value)
         switchrescueoffParam = value
     end)
 
-    line = switchpanel:addLine("BBL enabled")
+    line = switchpanel:addLine(i8n.BBLenabled)
     form.addSwitchField(line, nil, function()
         return switchbblonParam
     end, function(value)
         switchbblonParam = value
     end)
 
-    line = switchpanel:addLine("BBL disabled")
+    line = switchpanel:addLine(i8n.BBLdisabled)
     form.addSwitchField(line, nil, function()
         return switchbbloffParam
     end, function(value)
         switchbbloffParam = value
     end)
 
-    announcementpanel = form.addExpansionPanel("Telemetry announcements")
+    announcementpanel = form.addExpansionPanel(i8n.Telemetryannouncements)
     announcementpanel:open(false)
 
     -- announcement VOLTAGE READING
-    line = announcementpanel:addLine("Voltage")
+    line = announcementpanel:addLine(i8n.Voltage)
     form.addSwitchField(line, form.getFieldSlots(line)[0], function()
         return announcementVoltageSwitchParam
     end, function(value)
@@ -647,7 +652,7 @@ local function configure(widget)
     end)
 
     -- announcement RPM READING
-    line = announcementpanel:addLine("Rpm")
+    line = announcementpanel:addLine(i8n.Rpm)
     form.addSwitchField(line, nil, function()
         return announcementRPMSwitchParam
     end, function(value)
@@ -655,7 +660,7 @@ local function configure(widget)
     end)
 
     -- announcement CURRENT READING
-    line = announcementpanel:addLine("Current")
+    line = announcementpanel:addLine(i8n.Current)
     form.addSwitchField(line, nil, function()
         return announcementCurrentSwitchParam
     end, function(value)
@@ -663,7 +668,7 @@ local function configure(widget)
     end)
 
     -- announcement FUEL READING
-    line = announcementpanel:addLine("Fuel")
+    line = announcementpanel:addLine(i8n.Fuel)
     form.addSwitchField(line, form.getFieldSlots(line)[0], function()
         return announcementFuelSwitchParam
     end, function(value)
@@ -671,7 +676,7 @@ local function configure(widget)
     end)
 
     -- announcement LQ READING
-    line = announcementpanel:addLine("LQ")
+    line = announcementpanel:addLine(i8n.LQ)
     form.addSwitchField(line, form.getFieldSlots(line)[0], function()
         return announcementLQSwitchParam
     end, function(value)
@@ -679,7 +684,7 @@ local function configure(widget)
     end)
 
     -- announcement LQ READING
-    line = announcementpanel:addLine("Esc temperature")
+    line = announcementpanel:addLine(i8n.Esctemperature)
     form.addSwitchField(line, form.getFieldSlots(line)[0], function()
         return announcementESCSwitchParam
     end, function(value)
@@ -687,7 +692,7 @@ local function configure(widget)
     end)
 
     -- announcement MCU READING
-    line = announcementpanel:addLine("Mcu temperature")
+    line = announcementpanel:addLine(i8n.Mcutemperature)
     form.addSwitchField(line, form.getFieldSlots(line)[0], function()
         return announcementMCUSwitchParam
     end, function(value)
@@ -695,18 +700,18 @@ local function configure(widget)
     end)
 
     -- announcement TIMER READING
-    line = announcementpanel:addLine("Timer")
+    line = announcementpanel:addLine(i8n.Timer)
     form.addSwitchField(line, form.getFieldSlots(line)[0], function()
         return announcementTimerSwitchParam
     end, function(value)
         announcementTimerSwitchParam = value
     end)
 
-    govalertpanel = form.addExpansionPanel("Governor announcements")
+    govalertpanel = form.addExpansionPanel(i8n.Governorannouncements)
     govalertpanel:open(false)
 
     -- TITLE DISPLAY
-    line = govalertpanel:addLine("  OFF")
+    line = govalertpanel:addLine("  " .. i8n.OFF)
     form.addBooleanField(line, nil, function()
         return governorOFFParam
     end, function(newValue)
@@ -714,7 +719,7 @@ local function configure(widget)
     end)
 
     -- TITLE DISPLAY
-    line = govalertpanel:addLine("  IDLE")
+    line = govalertpanel:addLine("  ".. i8n.IDLE)
     form.addBooleanField(line, nil, function()
         return governorIDLEParam
     end, function(newValue)
@@ -722,115 +727,115 @@ local function configure(widget)
     end)
 
     -- TITLE DISPLAY
-    line = govalertpanel:addLine("  SPOOLUP")
+    line = govalertpanel:addLine("  "..i8n.SPOOLUP)
     form.addBooleanField(line, nil, function()
         return governorSPOOLUPParam
     end, function(newValue)
         governorSPOOLUPParam = newValue
     end)
 
-    line = govalertpanel:addLine("  RECOVERY")
+    line = govalertpanel:addLine("  "..i8n.RECOVERY)
     form.addBooleanField(line, nil, function()
         return governorRECOVERYParam
     end, function(newValue)
         governorRECOVERYParam = newValue
     end)
 
-    line = govalertpanel:addLine("  ACTIVE")
+    line = govalertpanel:addLine("  "..i8n.ACTIVE)
     form.addBooleanField(line, nil, function()
         return governorACTIVEParam
     end, function(newValue)
         governorACTIVEParam = newValue
     end)
 
-    line = govalertpanel:addLine("  THR-OFF")
+    line = govalertpanel:addLine("  "..i8n.THROFF)
     form.addBooleanField(line, nil, function()
         return governorTHROFFParam
     end, function(newValue)
         governorTHROFFParam = newValue
     end)
 
-    line = govalertpanel:addLine("  LOST-HS")
+    line = govalertpanel:addLine("  "..i8n.LOSTHS)
     form.addBooleanField(line, nil, function()
         return governorLOSTHSParam
     end, function(newValue)
         governorLOSTHSParam = newValue
     end)
 
-    line = govalertpanel:addLine("  AUTOROT")
+    line = govalertpanel:addLine("  "..i8n.AUTOROT)
     form.addBooleanField(line, nil, function()
         return governorAUTOROTParam
     end, function(newValue)
         governorAUTOROTParam = newValue
     end)
 
-    line = govalertpanel:addLine("  BAILOUT")
+    line = govalertpanel:addLine("  "..i8n.BAILOUT)
     form.addBooleanField(line, nil, function()
         return governorBAILOUTParam
     end, function(newValue)
         governorBAILOUTParam = newValue
     end)
 
-    line = govalertpanel:addLine("  DISABLED")
+    line = govalertpanel:addLine("  "..i8n.DISABLED)
     form.addBooleanField(line, nil, function()
         return governorDISABLEDParam
     end, function(newValue)
         governorDISABLEDParam = newValue
     end)
 
-    line = govalertpanel:addLine("  DISARMED")
+    line = govalertpanel:addLine("  "..i8n.DISARMED)
     form.addBooleanField(line, nil, function()
         return governorDISARMEDParam
     end, function(newValue)
         governorDISARMEDParam = newValue
     end)
 
-    line = govalertpanel:addLine("    UNKNOWN")
+    line = govalertpanel:addLine("   "..i8n.UNKNOWN)
     form.addBooleanField(line, nil, function()
         return governorUNKNOWNParam
     end, function(newValue)
         governorUNKNOWNParam = newValue
     end)
 
-    displaypanel = form.addExpansionPanel("Customise display")
+    displaypanel = form.addExpansionPanel(i8n.Customisedisplay)
     displaypanel:open(false)
 
-    line = displaypanel:addLine("Box1")
+    line = displaypanel:addLine(i8n.Box1)
     form.addChoiceField(line, nil, layoutOptions, function()
         return layoutBox1Param
     end, function(newValue)
         layoutBox1Param = newValue
     end)
 
-    line = displaypanel:addLine("Box2")
+    line = displaypanel:addLine(i8n.Box2)
     form.addChoiceField(line, nil, layoutOptions, function()
         return layoutBox2Param
     end, function(newValue)
         layoutBox2Param = newValue
     end)
 
-    line = displaypanel:addLine("Box3")
+    line = displaypanel:addLine(i8n.Box3)
     form.addChoiceField(line, nil, layoutOptions, function()
         return layoutBox3Param
     end, function(newValue)
         layoutBox3Param = newValue
     end)
 
-    line = displaypanel:addLine("Box4")
+    line = displaypanel:addLine(i8n.Box4)
     form.addChoiceField(line, nil, layoutOptions, function()
         return layoutBox4Param
     end, function(newValue)
         layoutBox4Param = newValue
     end)
 
-    line = displaypanel:addLine("Box5")
+    line = displaypanel:addLine(i8n.Box5)
     form.addChoiceField(line, nil, layoutOptions, function()
         return layoutBox5Param
     end, function(newValue)
         layoutBox5Param = newValue
     end)
 
-    line = displaypanel:addLine("Box6")
+    line = displaypanel:addLine(i8n.Box6)
     form.addChoiceField(line, nil, layoutOptions, function()
         return layoutBox6Param
     end, function(newValue)
@@ -838,7 +843,7 @@ local function configure(widget)
     end)
 
     -- TITLE DISPLAY
-    line = displaypanel:addLine("Display title")
+    line = displaypanel:addLine(i8n.Displaytitle)
     form.addBooleanField(line, nil, function()
         return titleParam
     end, function(newValue)
@@ -846,50 +851,50 @@ local function configure(widget)
     end)
 
     -- MAX MIN DISPLAY
-    line = displaypanel:addLine("Display max/min")
+    line = displaypanel:addLine(i8n.Displaymaxmin)
     form.addBooleanField(line, nil, function()
         return maxminParam
     end, function(newValue)
         maxminParam = newValue
     end)
 
-    advpanel = form.addExpansionPanel("Advanced")
+    advpanel = form.addExpansionPanel(i8n.Advanced)
     advpanel:open(false)
 
-    line = advpanel:addLine("Governor")
-    extgov = form.addChoiceField(line, nil, {{"RF Governor", 0}, {"External Governor", 1}}, function()
+    line = advpanel:addLine(i8n.Governor)
+    extgov = form.addChoiceField(line, nil, {{i8n.RFGovernor, 0}, {i8n.ExternalGovernor, 1}}, function()
         return govmodeParam
     end, function(newValue)
         govmodeParam = newValue
     end)
 
-    line = form.addLine("Temperature conversion", advpanel)
+    line = form.addLine(i8n.Temperatureconversion, advpanel)
 
-    line = advpanel:addLine("    ESC")
-    form.addChoiceField(line, nil, {{"Disable", 1}, {"°C -> °F", 2}, {"°F -> °C", 3}}, function()
+    line = advpanel:addLine("    "..i8n.ESC)
+    form.addChoiceField(line, nil, {{i8n.Disable, 1}, {"°C -> °F", 2}, {"°F -> °C", 3}}, function()
         return tempconvertParamESC
     end, function(newValue)
         tempconvertParamESC = newValue
     end)
 
-    line = advpanel:addLine("    MCU")
-    form.addChoiceField(line, nil, {{"Disable", 1}, {"°C -> °F", 2}, {"°F -> °C", 3}}, function()
+    line = advpanel:addLine("   "..i8n.MCU)
+    form.addChoiceField(line, nil, {{i8n.Disable, 1}, {"°C -> °F", 2}, {"°F -> °C", 3}}, function()
         return tempconvertParamMCU
     end, function(newValue)
         tempconvertParamMCU = newValue
     end)
 
-    line = form.addLine("Voltage", advpanel)
+    line = form.addLine(i8n.Voltage, advpanel)
 
     -- LVannouncement DISPLAY
-    line = advpanel:addLine("    Sensitivity")
-    form.addChoiceField(line, nil, {{"HIGH", 1}, {"MEDIUM", 2}, {"LOW", 3}}, function()
+    line = advpanel:addLine("    "..i8n.Sensitivity)
+    form.addChoiceField(line, nil, {{i8n.HIGH, 1}, {i8n.MEDIUM, 2}, {i8n.LOW, 3}}, function()
         return lowvoltagsenseParam
     end, function(newValue)
         lowvoltagsenseParam = newValue
     end)
 
-    line = advpanel:addLine("    Sag compensation")
+    line = advpanel:addLine("    "..i8n.Sagcompensation)
     field = form.addNumberField(line, nil, 0, 10, function()
         return sagParam
     end, function(value)
@@ -900,9 +905,9 @@ local function configure(widget)
     -- field:decimals(1)
 
     -- LVSTICK MONITORING
-    line = advpanel:addLine("    Gimbal monitoring")
+    line = advpanel:addLine("    "..i8n.Gimbalmonitoring)
     form.addChoiceField(line, nil, {
-        {"DISABLED", 0}, -- recomended
+        {i8n.DISABLED, 0}, -- recomended
         {"AECR1T23 (ELRS)", 1}, -- recomended
         {"AETRC123 (FRSKY)", 2}, -- frsky
         {"AETR1C23 (FUTABA)", 3}, -- fut/hitec
@@ -918,7 +923,7 @@ local function configure(widget)
         lowvoltagStickParam = newValue
     end)
 
-    line = advpanel:addLine("       Stick cutoff")
+    line = advpanel:addLine("       "..i8n.Stickcutoff)
     fieldstckcutoff = form.addNumberField(line, nil, 65, 95, function()
         return lowvoltagStickCutoffParam
     end, function(value)
@@ -932,10 +937,10 @@ local function configure(widget)
         fieldstckcutoff:enable(true)
     end
 
-    line = form.addLine("Headspeed", advpanel)
+    line = form.addLine(i8n.Headspeed, advpanel)
 
     -- TITLE DISPLAY
-    line = advpanel:addLine("   Alert on RPM difference")
+    line = advpanel:addLine("   "..i8n.AlertonRPMdifference)
     form.addBooleanField(line, nil, function()
         return rpmAlertsParam
     end, function(newValue)
@@ -949,7 +954,7 @@ local function configure(widget)
     end)
 
     -- TITLE DISPLAY
-    line = advpanel:addLine("   Alert if difference > than")
+    line = advpanel:addLine("   "..i8n.Alertifdifferencegtthan)
     rpmperfield = form.addNumberField(line, nil, 0, 200, function()
         return rpmAlertsPercentageParam
     end, function(value)
@@ -966,17 +971,17 @@ local function configure(widget)
 
     -- FILTER
     -- MAX MIN DISPLAY
-    line = advpanel:addLine("Telemetry filtering")
-    form.addChoiceField(line, nil, {{"LOW", 1}, {"MEDIUM", 2}, {"HIGH", 3}}, function()
+    line = advpanel:addLine(i8n.Telemetryfiltering)
+    form.addChoiceField(line, nil, {{i8n.LOW, 1}, {i8n.MEDIUM, 2}, {i8n.HIGH, 3}}, function()
         return filteringParam
     end, function(newValue)
         filteringParam = newValue
     end)
 
     -- LVannouncement DISPLAY
-    line = advpanel:addLine("Announcement interval")
+    line = advpanel:addLine(i8n.Announcementinterval)
     form.addChoiceField(line, nil, {
-        {"5s", 5}, {"10s", 10}, {"15s", 15}, {"20s", 20}, {"25s", 25}, {"30s", 30}, {"35s", 35}, {"40s", 40}, {"45s", 45}, {"50s", 50}, {"55s", 55}, {"60s", 60}, {"No repeat", 50000}
+        {"5s", 5}, {"10s", 10}, {"15s", 15}, {"20s", 20}, {"25s", 25}, {"30s", 30}, {"35s", 35}, {"40s", 40}, {"45s", 45}, {"50s", 50}, {"55s", 55}, {"60s", 60}, {i8n.Norepeat, 50000}
     }, function()
         return announcementIntervalParam
     end, function(newValue)
@@ -984,7 +989,7 @@ local function configure(widget)
     end)
 
     if system.getSource("Rx RSSI1") == nil then -- currently only supported with fport
-        line = advpanel:addLine("Adjustment sensor")
+        line = advpanel:addLine(i8n.Adjustmentsensor)
         form.addBooleanField(line, nil, function()
             return adjFunctionParam
         end, function(newValue)
@@ -993,7 +998,7 @@ local function configure(widget)
     end
 
     -- calcfuel
-    line = advpanel:addLine("Calculate fuel locally")
+    line = advpanel:addLine(i8n.Calcfuellocally)
     form.addBooleanField(line, nil, function()
         return calcfuelParam
     end, function(newValue)
@@ -1066,7 +1071,7 @@ end
 function rf2status.noTelem()
 
     lcd.font(FONT_STD)
-    str = "NO DATA"
+    str = i8n.NODATA
 
     local theme = rf2status.getThemeInfo()
     local w, h = lcd.getWindowSize()
@@ -1122,17 +1127,17 @@ function rf2status.getThemeInfo()
             fullBoxW = 262,
             fullBoxH = h / 2,
             smallBoxSensortextOFFSET = -5,
-            title_voltage = "VOLTAGE",
-            title_fuel = "FUEL",
-            title_rpm = "HEAD SPEED",
-            title_current = "CURRENT",
-            title_mah = "MAH",
-            title_tempMCU = "MCU",
-            title_tempESC = "ESC",
-            title_time = "TIMER",
-            title_governor = "GOVERNOR",
-            title_fm = "FLIGHT MODE",
-            title_rssi = "LQ",
+            title_voltage = i8n.VOLTAGE,
+            title_fuel = i8n.FUEL,
+            title_mah = i8n.MAH,
+            title_rpm = i8n.RPM,
+            title_current = i8n.CURRENT,
+            title_tempMCU = i8n.MCU,
+            title_tempESC = i8n.ESC,
+            title_time = i8n.TIMER,
+            title_governor = i8n.GOVERNOR,
+            title_fm = i8n.FLIGHTMODE,
+            title_rssi = i8n.LQ,
             fontSENSOR = FONT_XXL,
             fontSENSORSmallBox = FONT_STD,
             fontTITLE = FONT_XS,
@@ -1157,17 +1162,17 @@ function rf2status.getThemeInfo()
             fullBoxW = 158,
             fullBoxH = 97,
             smallBoxSensortextOFFSET = -8,
-            title_voltage = "VOLTAGE",
-            title_fuel = "FUEL",
-            title_mah = "MAH",
-            title_rpm = "RPM",
-            title_current = "CURRENT",
-            title_tempMCU = "MCU",
-            title_tempESC = "ESC",
-            title_time = "TIMER",
-            title_governor = "GOVERNOR",
-            title_fm = "FLIGHT MODE",
-            title_rssi = "LQ",
+            title_voltage = i8n.VOLTAGE,
+            title_fuel = i8n.FUEL,
+            title_mah = i8n.MAH,
+            title_rpm = i8n.RPM,
+            title_current = i8n.CURRENT,
+            title_tempMCU = i8n.MCU,
+            title_tempESC = i8n.ESC,
+            title_time = i8n.TIMER,
+            title_governor = i8n.GOVERNOR,
+            title_fm = i8n.FLIGHTMODE,
+            title_rssi = i8n.LQ,
             fontSENSOR = FONT_XXL,
             fontSENSORSmallBox = FONT_STD,
             fontTITLE = 768,
@@ -1191,17 +1196,17 @@ function rf2status.getThemeInfo()
             fullBoxW = 210,
             fullBoxH = 120,
             smallBoxSensortextOFFSET = -10,
-            title_voltage = "VOLTAGE",
-            title_fuel = "FUEL",
-            title_rpm = "RPM",
-            title_current = "CURRENT",
-            title_mah = "MAH",
-            title_tempMCU = "MCU",
-            title_tempESC = "ESC",
-            title_time = "TIMER",
-            title_governor = "GOVERNOR",
-            title_fm = "FLIGHT MODE",
-            title_rssi = "LQ",
+            title_voltage = i8n.VOLTAGE,
+            title_fuel = i8n.FUEL,
+            title_mah = i8n.MAH,
+            title_rpm = i8n.RPM,
+            title_current = i8n.CURRENT,
+            title_tempMCU = i8n.MCU,
+            title_tempESC = i8n.ESC,
+            title_time = i8n.TIMER,
+            title_governor = i8n.GOVERNOR,
+            title_fm = i8n.FLIGHTMODE,
+            title_rssi = i8n.LQ,
             fontSENSOR = FONT_XXL,
             fontSENSORSmallBox = FONT_STD,
             fontTITLE = 768,
@@ -1225,17 +1230,17 @@ function rf2status.getThemeInfo()
             fullBoxW = 158,
             fullBoxH = 96,
             smallBoxSensortextOFFSET = -10,
-            title_voltage = "VOLTAGE",
-            title_fuel = "FUEL",
-            title_rpm = "RPM",
-            title_current = "CURRENT",
-            title_mah = "MAH",
-            title_tempMCU = "MCU",
-            title_tempESC = "ESC",
-            title_time = "TIMER",
-            title_governor = "GOVERNOR",
-            title_fm = "FLIGHT MODE",
-            title_rssi = "LQ",
+            title_voltage = i8n.VOLTAGE,
+            title_fuel = i8n.FUEL,
+            title_mah = i8n.MAH,
+            title_rpm = i8n.RPM,
+            title_current = i8n.CURRENT,
+            title_tempMCU = i8n.MCU,
+            title_tempESC = i8n.ESC,
+            title_time = i8n.TIMER,
+            title_governor = i8n.GOVERNOR,
+            title_fm = i8n.FLIGHTMODE,
+            title_rssi = i8n.LQ,
             fontSENSOR = FONT_XXL,
             fontSENSORSmallBox = FONT_STD,
             fontTITLE = 768,
@@ -1259,17 +1264,17 @@ function rf2status.getThemeInfo()
             fullBoxW = 158,
             fullBoxH = 79,
             smallBoxSensortextOFFSET = -10,
-            title_voltage = "VOLTAGE",
-            title_fuel = "FUEL",
-            title_rpm = "RPM",
-            title_current = "CURRENT",
-            title_mah = "MAH",
-            title_tempMCU = "MCU",
-            title_tempESC = "ESC",
-            title_time = "TIMER",
-            title_governor = "GOVERNOR",
-            title_fm = "FLIGHT MODE",
-            title_rssi = "LQ",
+            title_voltage = i8n.VOLTAGE,
+            title_fuel = i8n.FUEL,
+            title_mah = i8n.MAH,
+            title_rpm = i8n.RPM,
+            title_current = i8n.CURRENT,
+            title_tempMCU = i8n.MCU,
+            title_tempESC = i8n.ESC,
+            title_time = i8n.TIMER,
+            title_governor = i8n.GOVERNOR,
+            title_fm = i8n.FLIGHTMODE,
+            title_rssi = i8n.LQ,
             fontSENSOR = FONT_XXL,
             fontSENSORSmallBox = FONT_STD,
             fontTITLE = FONT_XS,
@@ -1532,7 +1537,7 @@ function rf2status.logsBOX()
         -- light theme
         lcd.color(lcd.RGB(255, 255, 255))
     end
-    str = "Log History"
+    str = i8n.LogHistory
     lcd.font(theme.fontPopupTitle)
     tsizeW, tsizeH = lcd.getTextSize(str)
 
@@ -1586,43 +1591,43 @@ function rf2status.logsBOX()
     lcd.font(theme.fontPopupTitle)
 
     if theme.logsCOL1w ~= 0 then
-        str = "TIME"
+        str = i8n.TIME
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText(col1x + (theme.logsCOL1w / 2) - (tsizeW / 2), theme.logsHeaderOffset + (boxTy + boxTh) + ((boxTh / 2) - (tsizeH / 2)), str)
     end
 
     if theme.logsCOL2w ~= 0 then
-        str = "VOLTAGE"
+        str = i8n.VOLTAGE
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col2x) + (theme.logsCOL2w / 2) - (tsizeW / 2), theme.logsHeaderOffset + (boxTy + boxTh) + (boxTh / 2) - (tsizeH / 2), str)
     end
 
     if theme.logsCOL3w ~= 0 then
-        str = "AMPS"
+        str = i8n.AMPS
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col3x) + (theme.logsCOL3w / 2) - (tsizeW / 2), theme.logsHeaderOffset + (boxTy + boxTh) + (boxTh / 2) - (tsizeH / 2), str)
     end
 
     if theme.logsCOL4w ~= 0 then
-        str = "RPM"
+        str = i8n.RPM
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col4x) + (theme.logsCOL4w / 2) - (tsizeW / 2), theme.logsHeaderOffset + (boxTy + boxTh) + (boxTh / 2) - (tsizeH / 2), str)
     end
 
     if theme.logsCOL5w ~= 0 then
-        str = "LQ"
+        str = i8n.LQ
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col5x) + (theme.logsCOL5w / 2) - (tsizeW / 2), theme.logsHeaderOffset + (boxTy + boxTh) + (boxTh / 2) - (tsizeH / 2), str)
     end
 
     if theme.logsCOL6w ~= 0 then
-        str = "MCU"
+        str = i8n.MCU
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col6x) + (theme.logsCOL6w / 2) - (tsizeW / 2), theme.logsHeaderOffset + (boxTy + boxTh) + (boxTh / 2) - (tsizeH / 2), str)
     end
 
     if theme.logsCOL7w ~= 0 then
-        str = "ESC"
+        str = i8n.ESC
         tsizeW, tsizeH = lcd.getTextSize(str)
         lcd.drawText((col7x) + (theme.logsCOL7w / 2) - (tsizeW / 2), theme.logsHeaderOffset + (boxTy + boxTh) + (boxTh / 2) - (tsizeH / 2), str)
     end
@@ -1850,39 +1855,39 @@ local function paint(widget)
 
         -- hard error
         if theme.supportedRADIO ~= true then
-            rf2status.screenError("UNKNOWN " .. environment.board)
+            rf2status.screenError(i8n.UNKNOWN .. " " .. environment.board)
             return
         end
 
         -- widget size
         if environment.board == "V20" or environment.board == "XES" or environment.board == "X20" or environment.board == "X20S" or environment.board == "X20PRO" or environment.board == "X20PROAW" then
             if w ~= 784 and h ~= 294 then
-                rf2status.screenError("DISPLAY SIZE INVALID")
+                rf2status.screenError(i8n.DISPLAYSIZEINVALID)
                 return
             end
         end
         if environment.board == "X18" or environment.board == "X18S" then
             smallTEXT = true
             if w ~= 472 and h ~= 191 then
-                rf2status.screenError("DISPLAY SIZE INVALID")
+                rf2status.screenError(i8n.DISPLAYSIZEINVALID)
                 return
             end
         end
         if environment.board == "X14" or environment.board == "X14S" then
             if w ~= 630 and h ~= 236 then
-                rf2status.screenError("DISPLAY SIZE INVALID")
+                rf2status.screenError(i8n.DISPLAYSIZEINVALID)
                 return
             end
         end
         if environment.board == "TWXLITE" or environment.board == "TWXLITES" then
             if w ~= 472 and h ~= 191 then
-                rf2status.screenError("DISPLAY SIZE INVALID")
+                rf2status.screenError(i8n.DISPLAYSIZEINVALID)
                 return
             end
         end
         if environment.board == "X10EXPRESS" then
             if w ~= 472 and h ~= 158 then
-                rf2status.screenError("DISPLAY SIZE INVALID")
+                rf2status.screenError(i8n.DISPLAYSIZEINVALID)
                 return
             end
         end
