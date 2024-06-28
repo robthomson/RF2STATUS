@@ -2049,7 +2049,11 @@ local function paint(widget)
                     elseif sensors.rpm > 1000 then
                         fakeC = 6
                     else
-                        fakeC = math.random(1, 3) / 10
+						if sensors.voltage > 0 then
+							fakeC = math.random(1, 3) / 10
+						else
+							fakeC = 0
+						end
                     end
                     sensorVALUE = fakeC
                 end
