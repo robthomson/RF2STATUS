@@ -1022,7 +1022,7 @@ function rf2status.getRssiSensor()
         return 100
     end
 
-    local rssiNames = {"RSSI", "RSSI 2.4G", "RSSI 900M", "Rx RSSI1", "Rx RSSI2"}
+    local rssiNames = {"RSSI", "RSSI Int", "RSSI Ext", "RSSI 2.4G", "RSSI 900M", "Rx RSSI1", "Rx RSSI2"}
     for i, name in ipairs(rssiNames) do
         rssiSensor = system.getSource(name)
         if rssiSensor then
