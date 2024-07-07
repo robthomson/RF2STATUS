@@ -252,7 +252,7 @@ local currentNoiseQ = 100
 
 local layoutOptions = {
     {i8n.TIMER, 1}, {i8n.VOLTAGE, 2}, {i8n.FUEL, 3}, {i8n.CURRENT, 4}, {i8n.MAH, 17}, {i8n.RPM, 5}, {i8n.LQ, 6}, {i8n.TESC, 7}, {i8n.TMCU, 8}, {i8n.IMAGE, 9}, {i8n.GOVERNOR, 10}, {i8n.IMAGEGOVERNOR, 11}, {i8n.LQTIMER, 12},
-    {i8n.TESCTMCU, 13}, {i8n.VOLTAGEFUEL, 14}, {i8n.VOLTAGECURRENT, 15}, {i8n.VOLTAGEMAH, 16}, {i8n.LQTIMERTESCTMCU, 20}, {i8n.MAXCURRENT, 21}
+    {i8n.TESCTMCU, 13}, {i8n.VOLTAGEFUEL, 14}, {i8n.VOLTAGECURRENT, 15}, {i8n.VOLTAGEMAH, 16}, {i8n.LQTIMERTESCTMCU, 20}, {i8n.MAXCURRENT, 21}, {i8n.LQGOVERNOR, 22}
 }
 
 -- default layout as follows
@@ -2426,6 +2426,9 @@ local function paint(widget)
             if sensorTGT == 21 then
                 sensorTGT = 'max_current'
             end
+            if sensorTGT == 22 then
+                sensorTGT = 'lq__gov'
+            end
 
             -- set sensor values based on sensorTGT
             if sensordisplay[sensorTGT] ~= nil then
@@ -2468,6 +2471,33 @@ local function paint(widget)
                     telemetryBox(posX, posY + boxH / 2 + (theme.colSpacing / 2), boxW, boxH / 2 - theme.colSpacing / 2, sensorTITLE, sensorVALUE, sensorUNIT, smallBOX, sensorWARN, sensorMIN, sensorMAX)
 
                 end
+
+                if sensorTGT == 'lq__gov' then
+					-- LQ + GOV
+                    sensorTGT = "rssi"
+                    sensorVALUE = sensordisplay[sensorTGT]['value']
+                    sensorUNIT = sensordisplay[sensorTGT]['unit']
+                    sensorMIN = sensordisplay[sensorTGT]['min']
+                    sensorMAX = sensordisplay[sensorTGT]['max']
+                    sensorWARN = sensordisplay[sensorTGT]['warn']
+                    sensorTITLE = sensordisplay[sensorTGT]['title']
+
+                    smallBOX = true
+                    telemetryBox(posX, posY, boxW, boxH / 2 - (theme.colSpacing / 2), sensorTITLE, sensorVALUE, sensorUNIT, smallBOX, sensorWARN, sensorMIN, sensorMAX)
+
+                    sensorTGT = "governor"
+                    sensorVALUE = sensordisplay[sensorTGT]['value']
+                    sensorUNIT = sensordisplay[sensorTGT]['unit']
+                    sensorMIN = sensordisplay[sensorTGT]['min']
+                    sensorMAX = sensordisplay[sensorTGT]['max']
+                    sensorWARN = sensordisplay[sensorTGT]['warn']
+                    sensorTITLE = sensordisplay[sensorTGT]['title']
+
+                    smallBOX = true
+                    telemetryBox(posX, posY + boxH / 2 + (theme.colSpacing / 2), boxW, boxH / 2 - theme.colSpacing / 2, sensorTITLE, sensorVALUE, sensorUNIT, smallBOX, sensorWARN, sensorMIN, sensorMAX)
+
+                end
+
 
                 if sensorTGT == 'rssi__timer' then
 
@@ -3050,7 +3080,7 @@ if govSOURCE ~= nil then
 				temp_mcuSOURCE = system.getSource("GPS Sats")
 				fuelSOURCE = system.getSource("Rx Batt%")
 				mahSOURCE = system.getSource("Rx Cons")
-				govSOURCE = system.getSource("Gov")
+				govSOURCE = system.getSource("Flight mode")
 				rssiSOURCE = system.getSource("Rx Quality")
 
 				if voltageSOURCE ~= nil then
