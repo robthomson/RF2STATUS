@@ -1264,7 +1264,7 @@ function rf2status.getThemeInfo()
         }
     end
 
-    if environment.board == "X10EXPRESS" then
+    if environment.board == "X10EXPRESS" or environment.board == "X10" then
         ret = {
             supportedRADIO = true,
             colSpacing = 2,
@@ -1892,7 +1892,7 @@ local function paint(widget)
                 return
             end
         end
-        if environment.board == "X10EXPRESS" then
+        if environment.board == "X10EXPRESS" or environment.board == "X10" then
             if w ~= 472 and h ~= 158 then
                 rf2status.screenError(i8n.DISPLAYSIZEINVALID)
                 return
