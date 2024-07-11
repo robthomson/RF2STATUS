@@ -1,6 +1,3 @@
-
-
-
 local WIDGET_NAME = "Rotorflight Flight Status"
 local WIDGET_KEY = "bkshss"
 local WIDGET_DIR = "/scripts/rf2status/"
@@ -10,9 +7,7 @@ local oldsensors = {"refresh", "voltage", "rpm", "current", "temp_esc", "temp_mc
 
 rf2status = {}
 
-
-
-local i8n = assert(loadfile(WIDGET_DIR .. "i8n/"..system.getLocale()..".lua"))()
+local i8n = assert(loadfile(WIDGET_DIR .. "i8n/" .. system.getLocale() .. ".lua"))()
 
 local loopCounter = 0
 local sensors
@@ -42,7 +37,6 @@ local lfAudioAlertCounter = 0
 
 local timeralarmVibrateParam = true
 local timeralarmParam = 210
-
 
 timerAlarmPlay = true
 
@@ -251,8 +245,9 @@ local rssiNoiseQ = 100
 local currentNoiseQ = 100
 
 local layoutOptions = {
-    {i8n.TIMER, 1}, {i8n.VOLTAGE, 2}, {i8n.FUEL, 3}, {i8n.CURRENT, 4}, {i8n.MAH, 17}, {i8n.RPM, 5}, {i8n.LQ, 6}, {i8n.TESC, 7}, {i8n.TMCU, 8}, {i8n.IMAGE, 9}, {i8n.GOVERNOR, 10}, {i8n.IMAGEGOVERNOR, 11}, {i8n.LQTIMER, 12},
-    {i8n.TESCTMCU, 13}, {i8n.VOLTAGEFUEL, 14}, {i8n.VOLTAGECURRENT, 15}, {i8n.VOLTAGEMAH, 16}, {i8n.LQTIMERTESCTMCU, 20}, {i8n.MAXCURRENT, 21}, {i8n.LQGOVERNOR, 22}
+    {i8n.TIMER, 1}, {i8n.VOLTAGE, 2}, {i8n.FUEL, 3}, {i8n.CURRENT, 4}, {i8n.MAH, 17}, {i8n.RPM, 5}, {i8n.LQ, 6}, {i8n.TESC, 7}, {i8n.TMCU, 8}, {i8n.IMAGE, 9}, {i8n.GOVERNOR, 10},
+    {i8n.IMAGEGOVERNOR, 11}, {i8n.LQTIMER, 12}, {i8n.TESCTMCU, 13}, {i8n.VOLTAGEFUEL, 14}, {i8n.VOLTAGECURRENT, 15}, {i8n.VOLTAGEMAH, 16}, {i8n.LQTIMERTESCTMCU, 20}, {i8n.MAXCURRENT, 21},
+    {i8n.LQGOVERNOR, 22}
 }
 
 -- default layout as follows
@@ -351,7 +346,6 @@ local function create(widget)
     gfx_close = lcd.loadBitmap(WIDGET_DIR .. "gfx/close.png")
     rssiSensor = rf2status.getRssiSensor()
 
-
     if tonumber(rf2status.sensorMakeNumber(environment.version)) < 159 then
         rf2status.screenError("ETHOS < V1.5.9")
         return
@@ -439,68 +433,26 @@ local function configure(widget)
     timerpanel = form.addExpansionPanel(i8n.Timerconfiguration)
     timerpanel:open(false)
 
+    timeTable = {
+        {i8n.Disabled, 0}, {"00:30", 30}, {"01:00", 60}, {"01:30", 90}, {"02:00", 120}, {"02:30", 150}, {"03:00", 180}, {"03:30", 210}, {"04:00", 240}, {"04:30", 270}, {"05:00", 300}, {"05:30", 330},
+        {"06:00", 360}, {"06:30", 390}, {"07:00", 420}, {"07:30", 450}, {"08:00", 480}, {"08:30", 510}, {"09:00", 540}, {"09:30", 570}, {"10:00", 600}, {"10:30", 630}, {"11:00", 660}, {"11:30", 690},
+        {"12:00", 720}, {"12:30", 750}, {"13:00", 780}, {"13:30", 810}, {"14:00", 840}, {"14:30", 870}, {"15:00", 900}, {"15:30", 930}, {"16:00", 960}, {"16:30", 990}, {"17:00", 1020},
+        {"17:30", 1050}, {"18:00", 1080}, {"18:30", 1110}, {"19:00", 1140}, {"19:30", 1170}, {"20:00", 1200}
+    }
 
-	timeTable = {
-					{i8n.Disabled, 0},
-					{"00:30", 30},
-					{"01:00", 60},
-					{"01:30", 90},
-					{"02:00", 120},
-					{"02:30", 150},
-					{"03:00", 180},
-					{"03:30", 210},
-					{"04:00", 240},
-					{"04:30", 270},
-					{"05:00", 300},
-					{"05:30", 330},
-					{"06:00", 360},
-					{"06:30", 390},
-					{"07:00", 420},
-					{"07:30", 450},					
-					{"08:00", 480},
-					{"08:30", 510},
-					{"09:00", 540},
-					{"09:30", 570},
-					{"10:00", 600},
-					{"10:30", 630},
-					{"11:00", 660},	
-					{"11:30", 690},
-					{"12:00", 720},
-					{"12:30", 750},
-					{"13:00", 780},
-					{"13:30", 810},					
-					{"14:00", 840},	
-					{"14:30", 870},	
-					{"15:00", 900},						
-					{"15:30", 930},
-					{"16:00", 960},
-					{"16:30", 990},
-					{"17:00", 1020},
-					{"17:30", 1050},
-					{"18:00", 1080},
-					{"18:30", 1110},
-					{"19:00", 1140},
-					{"19:30", 1170},
-					{"20:00", 1200},							
-				}
-
-
-	line = timerpanel:addLine(i8n.Playalarmat)
-     form.addChoiceField(line, nil, timeTable, function()
+    line = timerpanel:addLine(i8n.Playalarmat)
+    form.addChoiceField(line, nil, timeTable, function()
         return timeralarmParam
     end, function(newValue)
         timeralarmParam = newValue
     end)
 
-
     line = timerpanel:addLine(i8n.Vibrate)
     form.addBooleanField(line, nil, function()
         return timeralarmVibrateParam
     end, function(newValue)
-        timeralarmVibrateParam= newValue
+        timeralarmVibrateParam = newValue
     end)
-
-
 
     batterypanel = form.addExpansionPanel(i8n.Batteryconfiguration)
     batterypanel:open(false)
@@ -549,7 +501,7 @@ local function configure(widget)
     end)
 
     -- ALERT INTERVAL
-    line = batterypanel:addLine("     "..i8n.Interval)
+    line = batterypanel:addLine("     " .. i8n.Interval)
     plalrtint = form.addChoiceField(line, nil, {{"5S", 5}, {"10S", 10}, {"15S", 15}, {"20S", 20}, {"30S", 30}}, function()
         return alertintParam
     end, function(newValue)
@@ -562,7 +514,7 @@ local function configure(widget)
     end
 
     -- HAPTIC
-    line = batterypanel:addLine("     ".. i8n.Vibrate)
+    line = batterypanel:addLine("     " .. i8n.Vibrate)
     plalrthap = form.addBooleanField(line, nil, function()
         return alrthptParam
     end, function(newValue)
@@ -726,7 +678,7 @@ local function configure(widget)
     end)
 
     -- TITLE DISPLAY
-    line = govalertpanel:addLine("  ".. i8n.IDLE)
+    line = govalertpanel:addLine("  " .. i8n.IDLE)
     form.addBooleanField(line, nil, function()
         return governorIDLEParam
     end, function(newValue)
@@ -734,70 +686,70 @@ local function configure(widget)
     end)
 
     -- TITLE DISPLAY
-    line = govalertpanel:addLine("  "..i8n.SPOOLUP)
+    line = govalertpanel:addLine("  " .. i8n.SPOOLUP)
     form.addBooleanField(line, nil, function()
         return governorSPOOLUPParam
     end, function(newValue)
         governorSPOOLUPParam = newValue
     end)
 
-    line = govalertpanel:addLine("  "..i8n.RECOVERY)
+    line = govalertpanel:addLine("  " .. i8n.RECOVERY)
     form.addBooleanField(line, nil, function()
         return governorRECOVERYParam
     end, function(newValue)
         governorRECOVERYParam = newValue
     end)
 
-    line = govalertpanel:addLine("  "..i8n.ACTIVE)
+    line = govalertpanel:addLine("  " .. i8n.ACTIVE)
     form.addBooleanField(line, nil, function()
         return governorACTIVEParam
     end, function(newValue)
         governorACTIVEParam = newValue
     end)
 
-    line = govalertpanel:addLine("  "..i8n.THROFF)
+    line = govalertpanel:addLine("  " .. i8n.THROFF)
     form.addBooleanField(line, nil, function()
         return governorTHROFFParam
     end, function(newValue)
         governorTHROFFParam = newValue
     end)
 
-    line = govalertpanel:addLine("  "..i8n.LOSTHS)
+    line = govalertpanel:addLine("  " .. i8n.LOSTHS)
     form.addBooleanField(line, nil, function()
         return governorLOSTHSParam
     end, function(newValue)
         governorLOSTHSParam = newValue
     end)
 
-    line = govalertpanel:addLine("  "..i8n.AUTOROT)
+    line = govalertpanel:addLine("  " .. i8n.AUTOROT)
     form.addBooleanField(line, nil, function()
         return governorAUTOROTParam
     end, function(newValue)
         governorAUTOROTParam = newValue
     end)
 
-    line = govalertpanel:addLine("  "..i8n.BAILOUT)
+    line = govalertpanel:addLine("  " .. i8n.BAILOUT)
     form.addBooleanField(line, nil, function()
         return governorBAILOUTParam
     end, function(newValue)
         governorBAILOUTParam = newValue
     end)
 
-    line = govalertpanel:addLine("  "..i8n.DISABLED)
+    line = govalertpanel:addLine("  " .. i8n.DISABLED)
     form.addBooleanField(line, nil, function()
         return governorDISABLEDParam
     end, function(newValue)
         governorDISABLEDParam = newValue
     end)
 
-    line = govalertpanel:addLine("  "..i8n.DISARMED)
+    line = govalertpanel:addLine("  " .. i8n.DISARMED)
     form.addBooleanField(line, nil, function()
         return governorDISARMEDParam
     end, function(newValue)
         governorDISARMEDParam = newValue
     end)
 
-    line = govalertpanel:addLine("   "..i8n.UNKNOWN)
+    line = govalertpanel:addLine("   " .. i8n.UNKNOWN)
     form.addBooleanField(line, nil, function()
         return governorUNKNOWNParam
     end, function(newValue)
@@ -877,14 +829,14 @@ local function configure(widget)
 
     line = form.addLine(i8n.Temperatureconversion, advpanel)
 
-    line = advpanel:addLine("    "..i8n.ESC)
+    line = advpanel:addLine("    " .. i8n.ESC)
     form.addChoiceField(line, nil, {{i8n.Disable, 1}, {"°C -> °F", 2}, {"°F -> °C", 3}}, function()
         return tempconvertParamESC
     end, function(newValue)
         tempconvertParamESC = newValue
     end)
 
-    line = advpanel:addLine("   "..i8n.MCU)
+    line = advpanel:addLine("   " .. i8n.MCU)
     form.addChoiceField(line, nil, {{i8n.Disable, 1}, {"°C -> °F", 2}, {"°F -> °C", 3}}, function()
         return tempconvertParamMCU
     end, function(newValue)
@@ -894,14 +846,14 @@ local function configure(widget)
     line = form.addLine(i8n.Voltage, advpanel)
 
     -- LVannouncement DISPLAY
-    line = advpanel:addLine("    "..i8n.Sensitivity)
+    line = advpanel:addLine("    " .. i8n.Sensitivity)
     form.addChoiceField(line, nil, {{i8n.HIGH, 1}, {i8n.MEDIUM, 2}, {i8n.LOW, 3}}, function()
         return lowvoltagsenseParam
     end, function(newValue)
         lowvoltagsenseParam = newValue
     end)
 
-    line = advpanel:addLine("    "..i8n.Sagcompensation)
+    line = advpanel:addLine("    " .. i8n.Sagcompensation)
     field = form.addNumberField(line, nil, 0, 10, function()
         return sagParam
     end, function(value)
@@ -912,7 +864,7 @@ local function configure(widget)
     -- field:decimals(1)
 
     -- LVSTICK MONITORING
-    line = advpanel:addLine("    "..i8n.Gimbalmonitoring)
+    line = advpanel:addLine("    " .. i8n.Gimbalmonitoring)
     form.addChoiceField(line, nil, {
         {i8n.DISABLED, 0}, -- recomended
         {"AECR1T23 (ELRS)", 1}, -- recomended
@@ -930,7 +882,7 @@ local function configure(widget)
         lowvoltagStickParam = newValue
     end)
 
-    line = advpanel:addLine("       "..i8n.Stickcutoff)
+    line = advpanel:addLine("       " .. i8n.Stickcutoff)
     fieldstckcutoff = form.addNumberField(line, nil, 65, 95, function()
         return lowvoltagStickCutoffParam
     end, function(value)
@@ -947,7 +899,7 @@ local function configure(widget)
     line = form.addLine(i8n.Headspeed, advpanel)
 
     -- TITLE DISPLAY
-    line = advpanel:addLine("   "..i8n.AlertonRPMdifference)
+    line = advpanel:addLine("   " .. i8n.AlertonRPMdifference)
     form.addBooleanField(line, nil, function()
         return rpmAlertsParam
     end, function(newValue)
@@ -961,7 +913,7 @@ local function configure(widget)
     end)
 
     -- TITLE DISPLAY
-    line = advpanel:addLine("   "..i8n.Alertifdifferencegtthan)
+    line = advpanel:addLine("   " .. i8n.Alertifdifferencegtthan)
     rpmperfield = form.addNumberField(line, nil, 0, 200, function()
         return rpmAlertsPercentageParam
     end, function(value)
@@ -1022,7 +974,7 @@ function rf2status.getRssiSensor()
         return 100
     end
 
-    local rssiNames = {"RSSI", "RSSI 2.4G", "RSSI 900M", "Rx RSSI1", "Rx RSSI2","RSSI Int","RSSI Ext"}
+    local rssiNames = {"RSSI", "RSSI 2.4G", "RSSI 900M", "Rx RSSI1", "Rx RSSI2", "RSSI Int", "RSSI Ext"}
     for i, name in ipairs(rssiNames) do
         rssiSensor = system.getSource(name)
         if rssiSensor then
@@ -1126,8 +1078,8 @@ function rf2status.getThemeInfo()
 
     -- first one is unsporrted
 
-    if environment.board == "XES" or environment.board == "XE" or environment.board == "X20" or environment.board == "X20S" or environment.board == "X20PRO" or environment.board == "X20PROAW" or environment.board == "X20R" or
-        environment.board == "X20RS" then
+    if environment.board == "XES" or environment.board == "XE" or environment.board == "X20" or environment.board == "X20S" or environment.board == "X20PRO" or environment.board == "X20PROAW" or
+        environment.board == "X20R" or environment.board == "X20RS" then
         ret = {
             supportedRADIO = true,
             colSpacing = 4,
@@ -1300,7 +1252,6 @@ function rf2status.getThemeInfo()
 
     return ret
 end
-
 
 local function telemetryBox(x, y, w, h, title, value, unit, smallbox, alarm, minimum, maximum)
 
@@ -1641,120 +1592,122 @@ function rf2status.logsBOX()
 
     c = 0
 
-    for index, value in ipairs(history) do
+    if history ~= nil then
+        for index, value in ipairs(history) do
+            print("hear")
+            if value ~= nil then
+                if value ~= "" and value ~= nil then
+                    rowH = c * boxTh
 
-        if value ~= nil then
-            if value ~= "" and value ~= nil then
-                rowH = c * boxTh
+                    local rowData = rf2status.explode(value, ",")
 
-                local rowData = rf2status.explode(value, ",")
-
-                --[[ rowData is a csv string as follows
+                    --[[ rowData is a csv string as follows
 				
 						theTIME,sensorVoltageMin,sensorVoltageMax,sensorFuelMin,sensorFuelMax,
 						sensorRPMMin,sensorRPMMax,sensorCurrentMin,sensorCurrentMax,sensorRSSIMin,
 						sensorRSSIMax,sensorTempMCUMin,sensorTempMCUMax,sensorTempESCMin,sensorTempESCMax	
 				]] --
-                -- loop of rowData and extract each value bases on idx
-                if rowData ~= nil then
+                    -- loop of rowData and extract each value bases on idx
+                    if rowData ~= nil then
 
-                    for idx, snsr in pairs(rowData) do
+                        for idx, snsr in pairs(rowData) do
 
-                        snsr = snsr:gsub("%s+", "")
+                            snsr = snsr:gsub("%s+", "")
 
-                        if snsr ~= nil and snsr ~= "" then
-                            -- time
-                            if idx == 1 and theme.logsCOL1w ~= 0 then
-                                str = rf2status.SecondsToClockAlt(snsr)
-                                tsizeW, tsizeH = lcd.getTextSize(str)
-                                lcd.drawText(col1x + (theme.logsCOL1w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
-                            end
-                            -- voltagemin
-                            if idx == 2 then
-                                vstr = snsr
-                            end
-                            -- voltagemax
-                            if idx == 3 and theme.logsCOL2w ~= 0 then
-                                str = rf2status.round(vstr / 100, 1) .. 'v / ' .. rf2status.round(snsr / 100, 1) .. 'v'
-                                tsizeW, tsizeH = lcd.getTextSize(str)
-                                lcd.drawText(col2x + (theme.logsCOL2w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
-                            end
-                            -- fuelmin
-                            if idx == 4 then
-                                local logFUELmin = snsr
-                            end
-                            -- fuelmax
-                            if idx == 5 then
-                                local logFUELmax = snsr
-                            end
-                            -- rpmmin
-                            if idx == 6 then
-                                rstr = snsr
-                            end
-                            -- rpmmax
-                            if idx == 7 and theme.logsCOL4w ~= 0 then
-                                str = rstr .. 'rpm / ' .. snsr .. 'rpm'
-                                tsizeW, tsizeH = lcd.getTextSize(str)
-                                lcd.drawText(col4x + (theme.logsCOL4w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
-                            end
-                            -- currentmin
-                            if idx == 8 then
-                                cstr = snsr
-                            end
-                            -- currentmax
-                            if idx == 9 and theme.logsCOL3w ~= 0 then
-                                str = math.floor(cstr / 10) .. 'A / ' .. math.floor(snsr / 10) .. 'A'
-                                tsizeW, tsizeH = lcd.getTextSize(str)
-                                lcd.drawText(col3x + (theme.logsCOL3w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
-                            end
-                            -- rssimin
-                            if idx == 10 then
-                                lqstr = snsr
+                            if snsr ~= nil and snsr ~= "" then
+                                -- time
+                                if idx == 1 and theme.logsCOL1w ~= 0 then
+                                    str = rf2status.SecondsToClockAlt(snsr)
+                                    tsizeW, tsizeH = lcd.getTextSize(str)
+                                    lcd.drawText(col1x + (theme.logsCOL1w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
+                                end
+                                -- voltagemin
+                                if idx == 2 then
+                                    vstr = snsr
+                                end
+                                -- voltagemax
+                                if idx == 3 and theme.logsCOL2w ~= 0 then
+                                    str = rf2status.round(vstr / 100, 1) .. 'v / ' .. rf2status.round(snsr / 100, 1) .. 'v'
+                                    tsizeW, tsizeH = lcd.getTextSize(str)
+                                    lcd.drawText(col2x + (theme.logsCOL2w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
+                                end
+                                -- fuelmin
+                                if idx == 4 then
+                                    local logFUELmin = snsr
+                                end
+                                -- fuelmax
+                                if idx == 5 then
+                                    local logFUELmax = snsr
+                                end
+                                -- rpmmin
+                                if idx == 6 then
+                                    rstr = snsr
+                                end
+                                -- rpmmax
+                                if idx == 7 and theme.logsCOL4w ~= 0 then
+                                    str = rstr .. 'rpm / ' .. snsr .. 'rpm'
+                                    tsizeW, tsizeH = lcd.getTextSize(str)
+                                    lcd.drawText(col4x + (theme.logsCOL4w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
+                                end
+                                -- currentmin
+                                if idx == 8 then
+                                    cstr = snsr
+                                end
+                                -- currentmax
+                                if idx == 9 and theme.logsCOL3w ~= 0 then
+                                    str = math.floor(cstr / 10) .. 'A / ' .. math.floor(snsr / 10) .. 'A'
+                                    tsizeW, tsizeH = lcd.getTextSize(str)
+                                    lcd.drawText(col3x + (theme.logsCOL3w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
+                                end
+                                -- rssimin
+                                if idx == 10 then
+                                    lqstr = snsr
 
+                                end
+                                -- rssimax
+                                if idx == 11 and theme.logsCOL5w ~= 0 then
+                                    str = lqstr .. '% / ' .. snsr .. '%'
+                                    tsizeW, tsizeH = lcd.getTextSize(str)
+                                    lcd.drawText(col5x + (theme.logsCOL5w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
+                                end
+                                -- mcumin
+                                if idx == 12 then
+                                    mcustr = snsr
+                                end
+                                -- mcumax
+                                if idx == 13 and theme.logsCOL6w ~= 0 then
+                                    str = rf2status.round(mcustr / 100, 0) .. '° / ' .. rf2status.round(snsr / 100, 0) .. '°'
+                                    strf = rf2status.round(mcustr / 100, 0) .. '. / ' .. rf2status.round(snsr / 100, 0) .. '.'
+                                    tsizeW, tsizeH = lcd.getTextSize(strf)
+                                    lcd.drawText(col6x + (theme.logsCOL6w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
+                                end
+                                -- escmin
+                                if idx == 14 then
+                                    escstr = snsr
+                                end
+                                -- escmax
+                                if idx == 15 and theme.logsCOL7w ~= 0 then
+                                    str = rf2status.round(escstr / 100, 0) .. '° / ' .. rf2status.round(snsr / 100, 0) .. '°'
+                                    strf = rf2status.round(escstr / 100, 0) .. '. / ' .. rf2status.round(snsr / 100, 0) .. '.'
+                                    tsizeW, tsizeH = lcd.getTextSize(strf)
+                                    lcd.drawText(col7x + (theme.logsCOL7w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
+                                end
                             end
-                            -- rssimax
-                            if idx == 11 and theme.logsCOL5w ~= 0 then
-                                str = lqstr .. '% / ' .. snsr .. '%'
-                                tsizeW, tsizeH = lcd.getTextSize(str)
-                                lcd.drawText(col5x + (theme.logsCOL5w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
+                            -- end loop of each storage line		
+                        end
+                        c = c + 1
+
+                        if h < 200 then
+                            if c > 5 then
+                                break
                             end
-                            -- mcumin
-                            if idx == 12 then
-                                mcustr = snsr
-                            end
-                            -- mcumax
-                            if idx == 13 and theme.logsCOL6w ~= 0 then
-                                str = rf2status.round(mcustr / 100, 0) .. '° / ' .. rf2status.round(snsr / 100, 0) .. '°'
-                                strf = rf2status.round(mcustr / 100, 0) .. '. / ' .. rf2status.round(snsr / 100, 0) .. '.'
-                                tsizeW, tsizeH = lcd.getTextSize(strf)
-                                lcd.drawText(col6x + (theme.logsCOL6w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
-                            end
-                            -- escmin
-                            if idx == 14 then
-                                escstr = snsr
-                            end
-                            -- escmax
-                            if idx == 15 and theme.logsCOL7w ~= 0 then
-                                str = rf2status.round(escstr / 100, 0) .. '° / ' .. rf2status.round(snsr / 100, 0) .. '°'
-                                strf = rf2status.round(escstr / 100, 0) .. '. / ' .. rf2status.round(snsr / 100, 0) .. '.'
-                                tsizeW, tsizeH = lcd.getTextSize(strf)
-                                lcd.drawText(col7x + (theme.logsCOL7w / 2) - (tsizeW / 2), boxTy + tsizeH / 2 + (boxTh * 2) + rowH, str)
+                        else
+                            if c > 7 then
+                                break
                             end
                         end
-                        -- end loop of each storage line		
+                        -- end of each log storage slot
                     end
-                    c = c + 1
-
-                    if h < 200 then
-                        if c > 5 then
-                            break
-                        end
-                    else
-                        if c > 7 then
-                            break
-                        end
-                    end
-                    -- end of each log storage slot
                 end
             end
         end
@@ -2056,11 +2009,11 @@ local function paint(widget)
                     elseif sensors.rpm > 1000 then
                         fakeC = 6
                     else
-						if sensors.voltage > 0 then
-							fakeC = math.random(1, 3) / 10
-						else
-							fakeC = 0
-						end
+                        if sensors.voltage > 0 then
+                            fakeC = math.random(1, 3) / 10
+                        else
+                            fakeC = 0
+                        end
                     end
                     sensorVALUE = fakeC
                 end
@@ -2473,7 +2426,7 @@ local function paint(widget)
                 end
 
                 if sensorTGT == 'lq__gov' then
-					-- LQ + GOV
+                    -- LQ + GOV
                     sensorTGT = "rssi"
                     sensorVALUE = sensordisplay[sensorTGT]['value']
                     sensorUNIT = sensordisplay[sensorTGT]['unit']
@@ -2497,7 +2450,6 @@ local function paint(widget)
                     telemetryBox(posX, posY + boxH / 2 + (theme.colSpacing / 2), boxW, boxH / 2 - theme.colSpacing / 2, sensorTITLE, sensorVALUE, sensorUNIT, smallBOX, sensorWARN, sensorMIN, sensorMAX)
 
                 end
-
 
                 if sensorTGT == 'rssi__timer' then
 
@@ -2679,8 +2631,8 @@ local function paint(widget)
                                  sensorVALUE, sensorUNIT, smallBOX, sensorWARN, sensorMIN, sensorMAX)
 
                 end
-				
-               if sensorTGT == 'max_current' then
+
+                if sensorTGT == 'max_current' then
 
                     sensorTGT = "current"
                     sensorVALUE = sensordisplay[sensorTGT]['value']
@@ -2690,14 +2642,14 @@ local function paint(widget)
                     sensorWARN = sensordisplay[sensorTGT]['warn']
                     sensorTITLE = sensordisplay[sensorTGT]['title']
 
-					if sensorMAX == "-" or sensorMAX == nil then
-						sensorMAX = 0
-					end
+                    if sensorMAX == "-" or sensorMAX == nil then
+                        sensorMAX = 0
+                    end
 
                     smallBOX = false
-                    telemetryBox(posX, posY, boxW, boxH, "MAX " ..sensorTITLE, sensorMAX, sensorUNIT, smallBOX)
+                    telemetryBox(posX, posY, boxW, boxH, "MAX " .. sensorTITLE, sensorMAX, sensorUNIT, smallBOX)
 
-                end				
+                end
 
             end
 
@@ -2708,8 +2660,10 @@ local function paint(widget)
             rf2status.noTelem()
         end
 
-        if showLOGS then
-            rf2status.logsBOX()
+        if showLOGS ~= nil then
+            if showLOGS then
+                rf2status.logsBOX()
+            end
         end
 
     end
@@ -2892,309 +2846,305 @@ function rf2status.getSensors()
     elseif linkUP ~= 0 then
 
         local telemetrySOURCE = system.getSource("Rx RSSI1")
-		
 
         if telemetrySOURCE ~= nil then
             -- we are running crsf
             -- print("CRSF")
-			local crsfSOURCE = system.getSource("Vbat")
-			
-			if crsfSOURCE ~= nil then
-				-- crsf passthru
-				voltageSOURCE = system.getSource("Vbat")
-				rpmSOURCE = system.getSource("Hspd")
-				currentSOURCE = system.getSource("Curr")
-				temp_escSOURCE = system.getSource("EscT")
-				temp_mcuSOURCE = system.getSource("Tmcu")
-				fuelSOURCE = system.getSource("Fuel")
-				mahSOURCE = system.getSource("Capa")
-				govSOURCE = system.getSource("Gov")
-				rssiSOURCE = system.getSource("Rx Quality")
-				adjfSOURCE = system.getSource("AdjF")
-				adjvSOURCE = system.getSource("AdjV")
+            local crsfSOURCE = system.getSource("Vbat")
 
-				if voltageSOURCE ~= nil then
-					voltage = voltageSOURCE:value()
-					if voltage ~= nil then
-						voltage = voltage * 100
-					else
-						voltage = 0
-					end
-				else
-					voltage = 0
-				end
+            if crsfSOURCE ~= nil then
+                -- crsf passthru
+                voltageSOURCE = system.getSource("Vbat")
+                rpmSOURCE = system.getSource("Hspd")
+                currentSOURCE = system.getSource("Curr")
+                temp_escSOURCE = system.getSource("EscT")
+                temp_mcuSOURCE = system.getSource("Tmcu")
+                fuelSOURCE = system.getSource("Fuel")
+                mahSOURCE = system.getSource("Capa")
+                govSOURCE = system.getSource("Gov")
+                rssiSOURCE = system.getSource("Rx Quality")
+                adjfSOURCE = system.getSource("AdjF")
+                adjvSOURCE = system.getSource("AdjV")
 
-				if rpmSOURCE ~= nil then
-					if rpmSOURCE:maximum() == 1000.0 then
-						rpmSOURCE:maximum(65000)
-					end
+                if voltageSOURCE ~= nil then
+                    voltage = voltageSOURCE:value()
+                    if voltage ~= nil then
+                        voltage = voltage * 100
+                    else
+                        voltage = 0
+                    end
+                else
+                    voltage = 0
+                end
 
-					rpm = rpmSOURCE:value()
-					if rpm ~= nil then
-						rpm = rpm
-					else
-						rpm = 0
-					end
-				else
-					rpm = 0
-				end
+                if rpmSOURCE ~= nil then
+                    if rpmSOURCE:maximum() == 1000.0 then
+                        rpmSOURCE:maximum(65000)
+                    end
 
-				if currentSOURCE ~= nil then
-					if currentSOURCE:maximum() == 50.0 then
-						currentSOURCE:maximum(400.0)
-					end
+                    rpm = rpmSOURCE:value()
+                    if rpm ~= nil then
+                        rpm = rpm
+                    else
+                        rpm = 0
+                    end
+                else
+                    rpm = 0
+                end
 
-					current = currentSOURCE:value()
-					if current ~= nil then
-						current = current * 10
-					else
-						current = 0
-					end
-				else
-					current = 0
-				end
+                if currentSOURCE ~= nil then
+                    if currentSOURCE:maximum() == 50.0 then
+                        currentSOURCE:maximum(400.0)
+                    end
 
-				if temp_escSOURCE ~= nil then
-					temp_esc = temp_escSOURCE:value()
-					if temp_esc ~= nil then
-						temp_esc = temp_esc * 100
-					else
-						temp_esc = 0
-					end
-				else
-					temp_esc = 0
-				end
+                    current = currentSOURCE:value()
+                    if current ~= nil then
+                        current = current * 10
+                    else
+                        current = 0
+                    end
+                else
+                    current = 0
+                end
 
-				if temp_mcuSOURCE ~= nil then
-					temp_mcu = temp_mcuSOURCE:value()
-					if temp_mcu ~= nil then
-						temp_mcu = (temp_mcu) * 100
-					else
-						temp_mcu = 0
-					end
-				else
-					temp_mcu = 0
-				end
+                if temp_escSOURCE ~= nil then
+                    temp_esc = temp_escSOURCE:value()
+                    if temp_esc ~= nil then
+                        temp_esc = temp_esc * 100
+                    else
+                        temp_esc = 0
+                    end
+                else
+                    temp_esc = 0
+                end
 
-				if fuelSOURCE ~= nil then
-					fuel = fuelSOURCE:value()
-					if fuel ~= nil then
-						fuel = fuel
-					else
-						fuel = 0
-					end
-				else
-					fuel = 0
-				end
+                if temp_mcuSOURCE ~= nil then
+                    temp_mcu = temp_mcuSOURCE:value()
+                    if temp_mcu ~= nil then
+                        temp_mcu = (temp_mcu) * 100
+                    else
+                        temp_mcu = 0
+                    end
+                else
+                    temp_mcu = 0
+                end
 
-				if mahSOURCE ~= nil then
-					mah = mahSOURCE:value()
-					if mah ~= nil then
-						mah = mah
-					else
-						mah = 0
-					end
-				else
-					mah = 0
-				end
+                if fuelSOURCE ~= nil then
+                    fuel = fuelSOURCE:value()
+                    if fuel ~= nil then
+                        fuel = fuel
+                    else
+                        fuel = 0
+                    end
+                else
+                    fuel = 0
+                end
 
-if govSOURCE ~= nil then
-					govId = govSOURCE:value()
+                if mahSOURCE ~= nil then
+                    mah = mahSOURCE:value()
+                    if mah ~= nil then
+                        mah = mah
+                    else
+                        mah = 0
+                    end
+                else
+                    mah = 0
+                end
 
-					-- print(govId)
-					if govId == 0 then
-						govmode = "OFF"
-					elseif govId == 1 then
-						govmode = "IDLE"
-					elseif govId == 2 then
-						govmode = "SPOOLUP"
-					elseif govId == 3 then
-						govmode = "RECOVERY"
-					elseif govId == 4 then
-						govmode = "ACTIVE"
-					elseif govId == 5 then
-						govmode = "THR-OFF"
-					elseif govId == 6 then
-						govmode = "LOST-HS"
-					elseif govId == 7 then
-						govmode = "AUTOROT"
-					elseif govId == 8 then
-						govmode = "BAILOUT"
-					elseif govId == 100 then
-						govmode = "DISABLED"
-					elseif govId == 101 then
-						govmode = "DISARMED"
-					else
-						govmode = "UNKNOWN"
-					end
-				else
-					govmode = ""
-				end
-				if system.getSource({category = CATEGORY_FLIGHT, member = FLIGHT_CURRENT_MODE}):stringValue() then
-					fm = system.getSource({category = CATEGORY_FLIGHT, member = FLIGHT_CURRENT_MODE}):stringValue()
-				else
-					fm = ""
-				end
-				
+                if govSOURCE ~= nil then
+                    govId = govSOURCE:value()
 
-				if rssiSOURCE ~= nil then
-					rssi = rssiSOURCE:value()
-					if rssi ~= nil then
-						rssi = rssi
-					else
-						rssi = 0
-					end
-				else
-					rssi = 0
-				end
+                    -- print(govId)
+                    if govId == 0 then
+                        govmode = "OFF"
+                    elseif govId == 1 then
+                        govmode = "IDLE"
+                    elseif govId == 2 then
+                        govmode = "SPOOLUP"
+                    elseif govId == 3 then
+                        govmode = "RECOVERY"
+                    elseif govId == 4 then
+                        govmode = "ACTIVE"
+                    elseif govId == 5 then
+                        govmode = "THR-OFF"
+                    elseif govId == 6 then
+                        govmode = "LOST-HS"
+                    elseif govId == 7 then
+                        govmode = "AUTOROT"
+                    elseif govId == 8 then
+                        govmode = "BAILOUT"
+                    elseif govId == 100 then
+                        govmode = "DISABLED"
+                    elseif govId == 101 then
+                        govmode = "DISARMED"
+                    else
+                        govmode = "UNKNOWN"
+                    end
+                else
+                    govmode = ""
+                end
+                if system.getSource({category = CATEGORY_FLIGHT, member = FLIGHT_CURRENT_MODE}):stringValue() then
+                    fm = system.getSource({category = CATEGORY_FLIGHT, member = FLIGHT_CURRENT_MODE}):stringValue()
+                else
+                    fm = ""
+                end
 
-				if adjfSOURCE ~= nil then
-					adjfunc = adjfSOURCE:value()
-					if adjfunc ~= nil then
-						adjfunc = adjfunc
-					else
-						adjfunc = 0
-					end
-				else
-					adjfunc = 0
-				end
+                if rssiSOURCE ~= nil then
+                    rssi = rssiSOURCE:value()
+                    if rssi ~= nil then
+                        rssi = rssi
+                    else
+                        rssi = 0
+                    end
+                else
+                    rssi = 0
+                end
 
-				if adjvSOURCE ~= nil then
-					adjvalue = adjvSOURCE:value()
-					if adjvalue ~= nil then
-						adjvalue = adjvalue
-					else
-						adjvalue = 0
-					end
-				else
-					adjvalue = 0
-				end
-			
+                if adjfSOURCE ~= nil then
+                    adjfunc = adjfSOURCE:value()
+                    if adjfunc ~= nil then
+                        adjfunc = adjfunc
+                    else
+                        adjfunc = 0
+                    end
+                else
+                    adjfunc = 0
+                end
 
-			else
-            -- LEGACY CRSF REUSE
-				voltageSOURCE = system.getSource("Rx Batt")
-				rpmSOURCE = system.getSource("GPS Alt")
-				currentSOURCE = system.getSource("Rx Curr")
-				temp_escSOURCE = system.getSource("GPS Speed")
-				temp_mcuSOURCE = system.getSource("GPS Sats")
-				fuelSOURCE = system.getSource("Rx Batt%")
-				mahSOURCE = system.getSource("Rx Cons")
-				govSOURCE = system.getSource("Flight mode")
-				rssiSOURCE = system.getSource("Rx Quality")
+                if adjvSOURCE ~= nil then
+                    adjvalue = adjvSOURCE:value()
+                    if adjvalue ~= nil then
+                        adjvalue = adjvalue
+                    else
+                        adjvalue = 0
+                    end
+                else
+                    adjvalue = 0
+                end
 
-				if voltageSOURCE ~= nil then
-					voltage = voltageSOURCE:value()
-					if voltage ~= nil then
-						voltage = voltage * 100
-					else
-						voltage = 0
-					end
-				else
-					voltage = 0
-				end
+            else
+                -- LEGACY CRSF REUSE
+                voltageSOURCE = system.getSource("Rx Batt")
+                rpmSOURCE = system.getSource("GPS Alt")
+                currentSOURCE = system.getSource("Rx Curr")
+                temp_escSOURCE = system.getSource("GPS Speed")
+                temp_mcuSOURCE = system.getSource("GPS Sats")
+                fuelSOURCE = system.getSource("Rx Batt%")
+                mahSOURCE = system.getSource("Rx Cons")
+                govSOURCE = system.getSource("Flight mode")
+                rssiSOURCE = system.getSource("Rx Quality")
 
-				if rpmSOURCE ~= nil then
-					if rpmSOURCE:maximum() == 1000.0 then
-						rpmSOURCE:maximum(65000)
-					end
+                if voltageSOURCE ~= nil then
+                    voltage = voltageSOURCE:value()
+                    if voltage ~= nil then
+                        voltage = voltage * 100
+                    else
+                        voltage = 0
+                    end
+                else
+                    voltage = 0
+                end
 
-					rpm = rpmSOURCE:value()
-					if rpm ~= nil then
-						rpm = rpm
-					else
-						rpm = 0
-					end
-				else
-					rpm = 0
-				end
+                if rpmSOURCE ~= nil then
+                    if rpmSOURCE:maximum() == 1000.0 then
+                        rpmSOURCE:maximum(65000)
+                    end
 
-				if currentSOURCE ~= nil then
-					if currentSOURCE:maximum() == 50.0 then
-						currentSOURCE:maximum(400.0)
-					end
+                    rpm = rpmSOURCE:value()
+                    if rpm ~= nil then
+                        rpm = rpm
+                    else
+                        rpm = 0
+                    end
+                else
+                    rpm = 0
+                end
 
-					current = currentSOURCE:value()
-					if current ~= nil then
-						current = current * 10
-					else
-						current = 0
-					end
-				else
-					current = 0
-				end
+                if currentSOURCE ~= nil then
+                    if currentSOURCE:maximum() == 50.0 then
+                        currentSOURCE:maximum(400.0)
+                    end
 
-				if temp_escSOURCE ~= nil then
-					temp_esc = temp_escSOURCE:value()
-					if temp_esc ~= nil then
-						temp_esc = temp_esc * 100
-					else
-						temp_esc = 0
-					end
-				else
-					temp_esc = 0
-				end
+                    current = currentSOURCE:value()
+                    if current ~= nil then
+                        current = current * 10
+                    else
+                        current = 0
+                    end
+                else
+                    current = 0
+                end
 
-				if temp_mcuSOURCE ~= nil then
-					temp_mcu = temp_mcuSOURCE:value()
-					if temp_mcu ~= nil then
-						temp_mcu = (temp_mcu) * 100
-					else
-						temp_mcu = 0
-					end
-				else
-					temp_mcu = 0
-				end
+                if temp_escSOURCE ~= nil then
+                    temp_esc = temp_escSOURCE:value()
+                    if temp_esc ~= nil then
+                        temp_esc = temp_esc * 100
+                    else
+                        temp_esc = 0
+                    end
+                else
+                    temp_esc = 0
+                end
 
-				if fuelSOURCE ~= nil then
-					fuel = fuelSOURCE:value()
-					if fuel ~= nil then
-						fuel = fuel
-					else
-						fuel = 0
-					end
-				else
-					fuel = 0
-				end
+                if temp_mcuSOURCE ~= nil then
+                    temp_mcu = temp_mcuSOURCE:value()
+                    if temp_mcu ~= nil then
+                        temp_mcu = (temp_mcu) * 100
+                    else
+                        temp_mcu = 0
+                    end
+                else
+                    temp_mcu = 0
+                end
 
-				if mahSOURCE ~= nil then
-					mah = mahSOURCE:value()
-					if mah ~= nil then
-						mah = mah
-					else
-						mah = 0
-					end
-				else
-					mah = 0
-				end
+                if fuelSOURCE ~= nil then
+                    fuel = fuelSOURCE:value()
+                    if fuel ~= nil then
+                        fuel = fuel
+                    else
+                        fuel = 0
+                    end
+                else
+                    fuel = 0
+                end
 
-			    if govSOURCE ~= nil then
-					govmode = govSOURCE:stringValue()
-				end
-				if system.getSource({category = CATEGORY_FLIGHT, member = FLIGHT_CURRENT_MODE}):stringValue() then
-					fm = system.getSource({category = CATEGORY_FLIGHT, member = FLIGHT_CURRENT_MODE}):stringValue()
-				else
-					fm = ""
-				end
+                if mahSOURCE ~= nil then
+                    mah = mahSOURCE:value()
+                    if mah ~= nil then
+                        mah = mah
+                    else
+                        mah = 0
+                    end
+                else
+                    mah = 0
+                end
 
-				if rssiSOURCE ~= nil then
-					rssi = rssiSOURCE:value()
-					if rssi ~= nil then
-						rssi = rssi
-					else
-						rssi = 0
-					end
-				else
-					rssi = 0
-				end
+                if govSOURCE ~= nil then
+                    govmode = govSOURCE:stringValue()
+                end
+                if system.getSource({category = CATEGORY_FLIGHT, member = FLIGHT_CURRENT_MODE}):stringValue() then
+                    fm = system.getSource({category = CATEGORY_FLIGHT, member = FLIGHT_CURRENT_MODE}):stringValue()
+                else
+                    fm = ""
+                end
 
-				-- note.
-				-- need to modify firmware to allow this to work for crsf correctly
-				adjsource = 0
-				adjvalue = 0
-			end
-			
-			
+                if rssiSOURCE ~= nil then
+                    rssi = rssiSOURCE:value()
+                    if rssi ~= nil then
+                        rssi = rssi
+                    else
+                        rssi = 0
+                    end
+                else
+                    rssi = 0
+                end
+
+                -- note.
+                -- need to modify firmware to allow this to work for crsf correctly
+                adjsource = 0
+                adjvalue = 0
+            end
+
         else
             -- we are run sport	
             -- set sources for everthing below
@@ -4019,6 +3969,7 @@ function rf2status.readHistory()
 
     name = string.gsub(model.name(), "%s+", "_")
     name = string.gsub(name, "%W", "_")
+
     file = WIDGET_DIR .. "logs/" .. name .. ".log"
     local f = io.open(file, "rb")
 
@@ -4040,6 +3991,7 @@ function rf2status.readHistory()
             c = c + 1
         end
         io.close(f)
+
     else
         return history
     end
@@ -4112,9 +4064,8 @@ local function read()
     layoutBox4Param = storage.read("mem61")
     layoutBox5Param = storage.read("mem62")
     layoutBox6Param = storage.read("mem63")
-	timeralarmVibrateParam = storage.read("mem64")
-	timeralarmParam = storage.read("mem65")
-	
+    timeralarmVibrateParam = storage.read("mem64")
+    timeralarmParam = storage.read("mem65")
 
     if layoutBox1Param == nil then
         layoutBox1Param = 11
@@ -4204,7 +4155,7 @@ local function write()
     storage.write("mem62", layoutBox5Param)
     storage.write("mem63", layoutBox6Param)
     storage.write("mem64", timeralarmVibrateParam)
-	storage.write("mem65", timeralarmParam)	
+    storage.write("mem65", timeralarmParam)
 
     updateFILTERING()
 end
@@ -4384,39 +4335,37 @@ function rf2status.playESC(widget)
 end
 
 function rf2status.playTIMERALARM(widget)
-	if theTIME ~= nil and timeralarmParam ~= nil and timeralarmParam ~= 0 then
-		
-		-- reset timer Delay
-		if theTIME > timeralarmParam + 2 then
-			timerAlarmPlay = true
-		end
-		-- trigger first timer
-		if timerAlarmPlay == true then
-			if theTIME >= timeralarmParam and theTIME <= timeralarmParam + 1 then
+    if theTIME ~= nil and timeralarmParam ~= nil and timeralarmParam ~= 0 then
 
-			
-				system.playFile(WIDGET_DIR .. "sounds/alerts/beep.wav")
-				
-				hours = string.format("%02.f", math.floor(theTIME / 3600))
-				mins = string.format("%02.f", math.floor(theTIME / 60 - (hours * 60)))
-				secs = string.format("%02.f", math.floor(theTIME - hours * 3600 - mins * 60))			
+        -- reset timer Delay
+        if theTIME > timeralarmParam + 2 then
+            timerAlarmPlay = true
+        end
+        -- trigger first timer
+        if timerAlarmPlay == true then
+            if theTIME >= timeralarmParam and theTIME <= timeralarmParam + 1 then
 
-				system.playFile(WIDGET_DIR .. "sounds/alerts/timer.wav")
-				if mins ~= "00" then
-					system.playNumber(mins, UNIT_MINUTE, 2)
-				end
-				system.playNumber(secs, UNIT_SECOND, 2)
-				
-				if timeralarmVibrateParam == true then
-				    system.playHaptic("- - -")
-				end
-				
-				timerAlarmPlay = false
-			end
-		end
+                system.playFile(WIDGET_DIR .. "sounds/alerts/beep.wav")
 
+                hours = string.format("%02.f", math.floor(theTIME / 3600))
+                mins = string.format("%02.f", math.floor(theTIME / 60 - (hours * 60)))
+                secs = string.format("%02.f", math.floor(theTIME - hours * 3600 - mins * 60))
 
-	end
+                system.playFile(WIDGET_DIR .. "sounds/alerts/timer.wav")
+                if mins ~= "00" then
+                    system.playNumber(mins, UNIT_MINUTE, 2)
+                end
+                system.playNumber(secs, UNIT_SECOND, 2)
+
+                if timeralarmVibrateParam == true then
+                    system.playHaptic("- - -")
+                end
+
+                timerAlarmPlay = false
+            end
+        end
+
+    end
 end
 
 function rf2status.playTIMER(widget)
@@ -4878,14 +4827,11 @@ local function wakeup(widget)
             rf2status.playMCU(widget)
             -- timer
             rf2status.playTIMER(widget)
-			-- timer alarm
-			rf2status.playTIMERALARM(widget)			
-			
+            -- timer alarm
+            rf2status.playTIMERALARM(widget)
+
             -- adjValues
             playADJ(widget)
-			
-
-
 
             if ((tonumber(os.clock()) - tonumber(linkUPTime)) >= 10) then
 
@@ -5005,7 +4951,6 @@ end
 
 local function viewLogs()
     showLOGS = true
-
 end
 
 local function menu(widget)
