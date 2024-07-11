@@ -3368,7 +3368,7 @@ function rf2status.getSensors()
         -- maxCellVoltage = 4.196
         -- minCellVoltage = 3.2
         avgCellVoltage = (voltage / 100) / cellsParam
-        batteryPercentage = 100 * (avgCellVoltage - minCellVoltage) / ((maxCellVoltage + (0.1 * cellsParam)) - minCellVoltage)
+        batteryPercentage = 100 * (avgCellVoltage - minCellVoltage) / ((maxCellVoltage + (0.00000001 * cellsParam)) - minCellVoltage)
         fuel = batteryPercentage
         fuel = rf2status.round(fuel, 0)
 
