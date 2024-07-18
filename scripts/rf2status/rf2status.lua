@@ -3,7 +3,7 @@ rf2status = {}
 
 local arg={...}
 
-local WIDGET_DIR = arg[1].WIDGET_DIR
+local widgetDir = arg[1].widgetDir
 local compile = arg[2]
 
 local environment = system.getVersion()
@@ -213,7 +213,7 @@ rf2status.temp_mcuNoiseQ = 100
 rf2status.temp_escNoiseQ = 100
 rf2status.rssiNoiseQ = 100
 rf2status.currentNoiseQ = 100
-rf2status.i8n = assert(compile.loadScript(WIDGET_DIR .. "i8n/" .. system.getLocale() .. ".lua"))()
+rf2status.i8n = assert(compile.loadScript(widgetDir .. "i8n/" .. system.getLocale() .. ".lua"))()
 rf2status.layoutOptions = {
     {rf2status.i8n.TIMER, 1}, {rf2status.i8n.VOLTAGE, 2}, {rf2status.i8n.FUEL, 3}, {rf2status.i8n.CURRENT, 4}, {rf2status.i8n.MAH, 17}, {rf2status.i8n.RPM, 5}, {rf2status.i8n.LQ, 6}, {rf2status.i8n.TESC, 7}, {rf2status.i8n.TMCU, 8}, {rf2status.i8n.IMAGE, 9}, {rf2status.i8n.GOVERNOR, 10},
     {rf2status.i8n.IMAGEGOVERNOR, 11}, {rf2status.i8n.LQTIMER, 12}, {rf2status.i8n.TESCTMCU, 13}, {rf2status.i8n.VOLTAGEFUEL, 14}, {rf2status.i8n.VOLTAGECURRENT, 15}, {rf2status.i8n.VOLTAGEMAH, 16}, {rf2status.i8n.LQTIMERTESCTMCU, 20}, {rf2status.i8n.MAXCURRENT, 21},
@@ -309,8 +309,8 @@ rf2status.adjfunctions = {
 
 function rf2status.create(widget)
     rf2status.gfx_model = lcd.loadBitmap(model.bitmap())
-    rf2status.gfx_heli = lcd.loadBitmap(WIDGET_DIR .. "gfx/heli.png")
-    rf2status.gfx_close = lcd.loadBitmap(WIDGET_DIR .. "gfx/close.png")
+    rf2status.gfx_heli = lcd.loadBitmap(widgetDir .. "gfx/heli.png")
+    rf2status.gfx_close = lcd.loadBitmap(widgetDir .. "gfx/close.png")
     rf2status.rssiSensor = rf2status.getRssiSensor()
 
     if tonumber(rf2status.sensorMakeNumber(environment.version)) < 159 then
@@ -2694,7 +2694,7 @@ function rf2status.paint(widget)
         if (tonumber(os.clock()) - tonumber(rf2status.lfAudioAlertCounter)) >= rf2status.alertintParam then
             rf2status.lfAudioAlertCounter = os.clock()
 
-            system.playFile(WIDGET_DIR .. "sounds/alerts/lowfuel.wav")
+            system.playFile(widgetDir .. "sounds/alerts/lowfuel.wav")
 
             -- system.playNumber(rf2status.sensors.voltage / 100, 2, 2)
             if alrthptParam == true then
@@ -2745,7 +2745,7 @@ function rf2status.paint(widget)
                 rf2status.lvAudioAlertCounter = os.clock()
 
                 if rf2status.lvStickannouncement == false then -- do not play if sticks at high end points
-                    system.playFile(WIDGET_DIR .. "sounds/alerts/lowvoltage.wav")
+                    system.playFile(widgetDir .. "sounds/alerts/lowvoltage.wav")
                     -- system.playNumber(rf2status.sensors.voltage / 100, 2, 2)
                     if alrthptParam == true then
                         system.playHaptic("- . -")
@@ -3616,7 +3616,7 @@ function rf2status.sensorsMAXMIN(sensors)
             name = string.gsub(model.name(), "%s+", "_")
             name = string.gsub(name, "%W", "_")
 
-            file = WIDGET_DIR .. "logs/" .. name .. ".log"
+            file = widgetDir .. "logs/" .. name .. ".log"
             f = io.open(file, 'w')
             f:write("")
             io.close(f)
@@ -3935,7 +3935,7 @@ function rf2status.readHistory()
     name = string.gsub(model.name(), "%s+", "_")
     name = string.gsub(name, "%W", "_")
 
-    file = WIDGET_DIR .. "logs/" .. name .. ".log"
+    file = widgetDir .. "logs/" .. name .. ".log"
     local f = io.open(file, "rb")
 
     if f ~= nil then
@@ -4185,7 +4185,7 @@ function rf2status.playLQ(widget)
                         rf2status.lqtime.lqannouncementTimerStart = os.time()
                         rf2status.lqtime.lqaudioannouncementCounter = os.clock()
                         -- print ("Play LQ Alert (first)")
-                        system.playFile(WIDGET_DIR .. "sounds/alerts/lq.wav")
+                        system.playFile(widgetDir .. "sounds/alerts/lq.wav")
                         system.playNumber(rf2status.sensors.rssi, UNIT_PERCENT, 2)
                         lqDoneFirst = true
                     end
@@ -4198,7 +4198,7 @@ function rf2status.playLQ(widget)
                         if ((tonumber(os.clock()) - tonumber(rf2status.lqtime.lqaudioannouncementCounter)) >= rf2status.announcementIntervalParam) then
                             rf2status.lqtime.lqaudioannouncementCounter = os.clock()
                             -- print ("Play LQ Alert (repeat)")
-                            system.playFile(WIDGET_DIR .. "sounds/alerts/lq.wav")
+                            system.playFile(widgetDir .. "sounds/alerts/lq.wav")
                             system.playNumber(rf2status.sensors.rssi, UNIT_PERCENT, 2)
                         end
                     end
@@ -4229,7 +4229,7 @@ function rf2status.playMCU(widget)
                         rf2status.mcutime.mcuannouncementTimerStart = os.time()
                         rf2status.mcutime.mcuaudioannouncementCounter = os.clock()
                         -- print ("Playing MCU (first)")
-                        system.playFile(WIDGET_DIR .. "sounds/alerts/mcu.wav")
+                        system.playFile(widgetDir .. "sounds/alerts/mcu.wav")
                         system.playNumber(rf2status.sensors.temp_mcu / 100, UNIT_DEGREE, 2)
                         mcuDoneFirst = true
                     end
@@ -4242,7 +4242,7 @@ function rf2status.playMCU(widget)
                         if ((tonumber(os.clock()) - tonumber(rf2status.mcutime.mcuaudioannouncementCounter)) >= rf2status.announcementIntervalParam) then
                             rf2status.mcutime.mcuaudioannouncementCounter = os.clock()
                             -- print ("Playing MCU (repeat)")
-                            system.playFile(WIDGET_DIR .. "sounds/alerts/mcu.wav")
+                            system.playFile(widgetDir .. "sounds/alerts/mcu.wav")
                             system.playNumber(rf2status.sensors.temp_mcu / 100, UNIT_DEGREE, 2)
                         end
                     end
@@ -4273,7 +4273,7 @@ function rf2status.playESC(widget)
                         rf2status.esctime.escannouncementTimerStart = os.time()
                         rf2status.esctime.escaudioannouncementCounter = os.clock()
                         -- print ("Playing ESC (first)")
-                        system.playFile(WIDGET_DIR .. "sounds/alerts/esc.wav")
+                        system.playFile(widgetDir .. "sounds/alerts/esc.wav")
                         system.playNumber(rf2status.sensors.temp_esc / 100, UNIT_DEGREE, 2)
                         escDoneFirst = true
                     end
@@ -4286,7 +4286,7 @@ function rf2status.playESC(widget)
                         if ((tonumber(os.clock()) - tonumber(rf2status.esctime.escaudioannouncementCounter)) >= rf2status.announcementIntervalParam) then
                             rf2status.esctime.escaudioannouncementCounter = os.clock()
                             -- print ("Playing ESC (repeat)")
-                            system.playFile(WIDGET_DIR .. "sounds/alerts/esc.wav")
+                            system.playFile(widgetDir .. "sounds/alerts/esc.wav")
                             system.playNumber(rf2status.sensors.temp_esc / 100, UNIT_DEGREE, 2)
                         end
                     end
@@ -4310,13 +4310,13 @@ function rf2status.playTIMERALARM(widget)
         if rf2status.timerAlarmPlay == true then
             if rf2status.theTIME >= rf2status.timeralarmParam and rf2status.theTIME <= rf2status.timeralarmParam + 1 then
 
-                system.playFile(WIDGET_DIR .. "sounds/alerts/beep.wav")
+                system.playFile(widgetDir .. "sounds/alerts/beep.wav")
 
                 hours = string.format("%02.f", math.floor(rf2status.theTIME / 3600))
                 mins = string.format("%02.f", math.floor(rf2status.theTIME / 60 - (hours * 60)))
                 secs = string.format("%02.f", math.floor(rf2status.theTIME - hours * 3600 - mins * 60))
 
-                system.playFile(WIDGET_DIR .. "sounds/alerts/timer.wav")
+                system.playFile(widgetDir .. "sounds/alerts/timer.wav")
                 if mins ~= "00" then
                     system.playNumber(mins, UNIT_MINUTE, 2)
                 end
@@ -4414,7 +4414,7 @@ function rf2status.playFuel(widget)
                         rf2status.fueltime.fuelannouncementTimerStart = os.time()
                         rf2status.fueltime.fuelaudioannouncementCounter = os.clock()
                         -- print("Play fuel alert (first)")
-                        system.playFile(WIDGET_DIR .. "sounds/alerts/fuel.wav")
+                        system.playFile(widgetDir .. "sounds/alerts/fuel.wav")
                         system.playNumber(rf2status.sensors.fuel, UNIT_PERCENT, 2)
                         fuelDoneFirst = true
                     end
@@ -4427,7 +4427,7 @@ function rf2status.playFuel(widget)
                         if ((tonumber(os.clock()) - tonumber(rf2status.fueltime.fuelaudioannouncementCounter)) >= rf2status.announcementIntervalParam) then
                             rf2status.fueltime.fuelaudioannouncementCounter = os.clock()
                             -- print("Play fuel alert (repeat)")
-                            system.playFile(WIDGET_DIR .. "sounds/alerts/fuel.wav")
+                            system.playFile(widgetDir .. "sounds/alerts/fuel.wav")
                             system.playNumber(rf2status.sensors.fuel, UNIT_PERCENT, 2)
 
                         end
@@ -4501,7 +4501,7 @@ function rf2status.playVoltage(widget)
                         rf2status.lvannouncementTimerStart = os.time()
                         rf2status.lvaudioannouncementCounter = os.clock()
                         -- print("Play voltage alert (first)")
-                        -- system.playFile(WIDGET_DIR .. "sounds/alerts/voltage.wav")						
+                        -- system.playFile(widgetDir .. "sounds/alerts/voltage.wav")						
                         system.playNumber(rf2status.sensors.voltage / 100, 2, 2)
                         voltageDoneFirst = true
                     end
@@ -4515,7 +4515,7 @@ function rf2status.playVoltage(widget)
                             if ((tonumber(os.clock()) - tonumber(rf2status.lvaudioannouncementCounter)) >= rf2status.announcementIntervalParam) then
                                 rf2status.lvaudioannouncementCounter = os.clock()
                                 -- print("Play voltage alert (repeat)")
-                                -- system.playFile(WIDGET_DIR .. "sounds/alerts/voltage.wav")								
+                                -- system.playFile(widgetDir .. "sounds/alerts/voltage.wav")								
                                 system.playNumber(rf2status.sensors.voltage / 100, 2, 2)
                             end
                         end
@@ -4579,75 +4579,75 @@ function rf2status.playGovernor()
 
             if rf2status.sensors.govmode == "UNKNOWN" and rf2status.governorUNKNOWNParam == true then
                 if rf2status.govmodeParam == 0 then
-                    system.playFile(WIDGET_DIR .. "sounds/events/governor.wav")
+                    system.playFile(widgetDir .. "sounds/events/governor.wav")
                 end
-                system.playFile(WIDGET_DIR .. "sounds/events/unknown.wav")
+                system.playFile(widgetDir .. "sounds/events/unknown.wav")
             end
             if rf2status.sensors.govmode == "DISARMED" and rf2status.governorDISARMEDParam == true then
                 if rf2status.govmodeParam == 0 then
-                    system.playFile(WIDGET_DIR .. "sounds/events/governor.wav")
+                    system.playFile(widgetDir .. "sounds/events/governor.wav")
                 end
-                system.playFile(WIDGET_DIR .. "sounds/events/disarmed.wav")
+                system.playFile(widgetDir .. "sounds/events/disarmed.wav")
             end
             if rf2status.sensors.govmode == "DISABLED" and rf2status.governorDISABLEDParam == true then
                 if rf2status.govmodeParam == 0 then
-                    system.playFile(WIDGET_DIR .. "sounds/events/governor.wav")
+                    system.playFile(widgetDir .. "sounds/events/governor.wav")
                 end
-                system.playFile(WIDGET_DIR .. "sounds/events/disabled.wav")
+                system.playFile(widgetDir .. "sounds/events/disabled.wav")
             end
             if rf2status.sensors.govmode == "BAILOUT" and rf2status.governorBAILOUTParam == true then
                 if rf2status.govmodeParam == 0 then
-                    system.playFile(WIDGET_DIR .. "sounds/events/governor.wav")
+                    system.playFile(widgetDir .. "sounds/events/governor.wav")
                 end
-                system.playFile(WIDGET_DIR .. "sounds/events/bailout.wav")
+                system.playFile(widgetDir .. "sounds/events/bailout.wav")
             end
             if rf2status.sensors.govmode == "AUTOROT" and rf2status.governorAUTOROTParam == true then
                 if rf2status.govmodeParam == 0 then
-                    system.playFile(WIDGET_DIR .. "sounds/events/governor.wav")
+                    system.playFile(widgetDir .. "sounds/events/governor.wav")
                 end
-                system.playFile(WIDGET_DIR .. "sounds/events/autorot.wav")
+                system.playFile(widgetDir .. "sounds/events/autorot.wav")
             end
             if rf2status.sensors.govmode == "LOST-HS" and rf2status.governorLOSTHSParam == true then
                 if rf2status.govmodeParam == 0 then
-                    system.playFile(WIDGET_DIR .. "sounds/events/governor.wav")
+                    system.playFile(widgetDir .. "sounds/events/governor.wav")
                 end
-                system.playFile(WIDGET_DIR .. "sounds/events/lost-hs.wav")
+                system.playFile(widgetDir .. "sounds/events/lost-hs.wav")
             end
             if rf2status.sensors.govmode == "THR-OFF" and rf2status.governorTHROFFParam == true then
                 if rf2status.govmodeParam == 0 then
-                    system.playFile(WIDGET_DIR .. "sounds/events/governor.wav")
+                    system.playFile(widgetDir .. "sounds/events/governor.wav")
                 end
-                system.playFile(WIDGET_DIR .. "sounds/events/thr-off.wav")
+                system.playFile(widgetDir .. "sounds/events/thr-off.wav")
             end
             if rf2status.sensors.govmode == "ACTIVE" and rf2status.governorACTIVEParam == true then
                 if rf2status.govmodeParam == 0 then
-                    system.playFile(WIDGET_DIR .. "sounds/events/governor.wav")
+                    system.playFile(widgetDir .. "sounds/events/governor.wav")
                 end
-                system.playFile(WIDGET_DIR .. "sounds/events/active.wav")
+                system.playFile(widgetDir .. "sounds/events/active.wav")
             end
             if rf2status.sensors.govmode == "RECOVERY" and rf2status.governorRECOVERYParam == true then
                 if rf2status.govmodeParam == 0 then
-                    system.playFile(WIDGET_DIR .. "sounds/events/governor.wav")
+                    system.playFile(widgetDir .. "sounds/events/governor.wav")
                 end
-                system.playFile(WIDGET_DIR .. "sounds/events/recovery.wav")
+                system.playFile(widgetDir .. "sounds/events/recovery.wav")
             end
             if rf2status.sensors.govmode == "SPOOLUP" and rf2status.governorSPOOLUPParam == true then
                 if rf2status.govmodeParam == 0 then
-                    system.playFile(WIDGET_DIR .. "sounds/events/governor.wav")
+                    system.playFile(widgetDir .. "sounds/events/governor.wav")
                 end
-                system.playFile(WIDGET_DIR .. "sounds/events/spoolup.wav")
+                system.playFile(widgetDir .. "sounds/events/spoolup.wav")
             end
             if rf2status.sensors.govmode == "IDLE" and rf2status.governorIDLEParam == true then
                 if rf2status.govmodeParam == 0 then
-                    system.playFile(WIDGET_DIR .. "sounds/events/governor.wav")
+                    system.playFile(widgetDir .. "sounds/events/governor.wav")
                 end
-                system.playFile(WIDGET_DIR .. "sounds/events/idle.wav")
+                system.playFile(widgetDir .. "sounds/events/idle.wav")
             end
             if rf2status.sensors.govmode == "OFF" and rf2status.governorOFFParam == true then
                 if rf2status.govmodeParam == 0 then
-                    system.playFile(WIDGET_DIR .. "sounds/events/governor.wav")
+                    system.playFile(widgetDir .. "sounds/events/governor.wav")
                 end
-                system.playFile(WIDGET_DIR .. "sounds/events/off.wav")
+                system.playFile(widgetDir .. "sounds/events/off.wav")
             end
 
         end
@@ -4731,7 +4731,7 @@ function rf2status.playADJ()
                     if adjfunction ~= nil then
                         -- print("ADJfunc announcemented for: " .. "id".. ADJSOURCE)
                         for wavi, wavv in ipairs(adjfunction.wavs) do
-                            system.playFile(WIDGET_DIR .. "sounds/adjfunc/" .. wavv .. ".wav")
+                            system.playFile(widgetDir .. "sounds/adjfunc/" .. wavv .. ".wav")
                         end
                     end
                     rf2status.adjfuncIdChanged = false
@@ -4803,7 +4803,7 @@ function rf2status.wakeup(widget)
                 -- IDLE
                 if rf2status.switchIdlelowParam ~= nil and rf2status.switchIdlelowParam:state() == true then
                     if rf2status.switchstatus.idlelow == nil or rf2status.switchstatus.idlelow == false then
-                        system.playFile(WIDGET_DIR .. "sounds/switches/idle-l.wav")
+                        system.playFile(widgetDir .. "sounds/switches/idle-l.wav")
                         rf2status.switchstatus.idlelow = true
                         rf2status.switchstatus.idlemedium = false
                         rf2status.switchstatus.idlehigh = false
@@ -4813,7 +4813,7 @@ function rf2status.wakeup(widget)
                 end
                 if rf2status.switchIdlemediumParam ~= nil and rf2status.switchIdlemediumParam:state() == true then
                     if rf2status.switchstatus.idlemedium == nil or rf2status.switchstatus.idlemedium == false then
-                        system.playFile(WIDGET_DIR .. "sounds/switches/idle-m.wav")
+                        system.playFile(widgetDir .. "sounds/switches/idle-m.wav")
                         rf2status.switchstatus.idlelow = false
                         rf2status.switchstatus.idlemedium = true
                         rf2status.switchstatus.idlehigh = false
@@ -4823,7 +4823,7 @@ function rf2status.wakeup(widget)
                 end
                 if rf2status.switchIdlehighParam ~= nil and rf2status.switchIdlehighParam:state() == true then
                     if rf2status.switchstatus.idlehigh == nil or rf2status.switchstatus.idlehigh == false then
-                        system.playFile(WIDGET_DIR .. "sounds/switches/idle-h.wav")
+                        system.playFile(widgetDir .. "sounds/switches/idle-h.wav")
                         rf2status.switchstatus.idlelow = false
                         rf2status.switchstatus.idlemedium = false
                         rf2status.switchstatus.idlehigh = true
@@ -4835,7 +4835,7 @@ function rf2status.wakeup(widget)
                 -- RATES
                 if rf2status.switchrateslowParam ~= nil and rf2status.switchrateslowParam:state() == true then
                     if rf2status.switchstatus.rateslow == nil or rf2status.switchstatus.rateslow == false then
-                        system.playFile(WIDGET_DIR .. "sounds/switches/rates-l.wav")
+                        system.playFile(widgetDir .. "sounds/switches/rates-l.wav")
                         rf2status.switchstatus.rateslow = true
                         rf2status.switchstatus.ratesmedium = false
                         rf2status.switchstatus.rateshigh = false
@@ -4845,7 +4845,7 @@ function rf2status.wakeup(widget)
                 end
                 if rf2status.switchratesmediumParam ~= nil and rf2status.switchratesmediumParam:state() == true then
                     if rf2status.switchstatus.ratesmedium == nil or rf2status.switchstatus.ratesmedium == false then
-                        system.playFile(WIDGET_DIR .. "sounds/switches/rates-m.wav")
+                        system.playFile(widgetDir .. "sounds/switches/rates-m.wav")
                         rf2status.switchstatus.rateslow = false
                         rf2status.switchstatus.ratesmedium = true
                         rf2status.switchstatus.rateshigh = false
@@ -4855,7 +4855,7 @@ function rf2status.wakeup(widget)
                 end
                 if rf2status.switchrateshighParam ~= nil and rf2status.switchrateshighParam:state() == true then
                     if rf2status.switchstatus.rateshigh == nil or rf2status.switchstatus.rateshigh == false then
-                        system.playFile(WIDGET_DIR .. "sounds/switches/rates-h.wav")
+                        system.playFile(widgetDir .. "sounds/switches/rates-h.wav")
                         rf2status.switchstatus.rateslow = false
                         rf2status.switchstatus.ratesmedium = false
                         rf2status.switchstatus.rateshigh = true
@@ -4867,7 +4867,7 @@ function rf2status.wakeup(widget)
                 -- RESCUE
                 if rf2status.switchrescueonParam ~= nil and rf2status.switchrescueonParam:state() == true then
                     if rf2status.switchstatus.rescueon == nil or rf2status.switchstatus.rescueon == false then
-                        system.playFile(WIDGET_DIR .. "sounds/switches/rescue-on.wav")
+                        system.playFile(widgetDir .. "sounds/switches/rescue-on.wav")
                         rf2status.switchstatus.rescueon = true
                         rf2status.switchstatus.rescueoff = false
                     end
@@ -4876,7 +4876,7 @@ function rf2status.wakeup(widget)
                 end
                 if rf2status.switchrescueoffParam ~= nil and rf2status.switchrescueoffParam:state() == true then
                     if rf2status.switchstatus.rescueoff == nil or rf2status.switchstatus.rescueoff == false then
-                        system.playFile(WIDGET_DIR .. "sounds/switches/rescue-off.wav")
+                        system.playFile(widgetDir .. "sounds/switches/rescue-off.wav")
                         rf2status.switchstatus.rescueon = false
                         rf2status.switchstatus.rescueoff = true
                     end
@@ -4887,7 +4887,7 @@ function rf2status.wakeup(widget)
                 -- BBL
                 if rf2status.switchbblonParam ~= nil and rf2status.switchbblonParam:state() == true then
                     if rf2status.switchstatus.bblon == nil or rf2status.switchstatus.bblon == false then
-                        system.playFile(WIDGET_DIR .. "sounds/switches/bbl-on.wav")
+                        system.playFile(widgetDir .. "sounds/switches/bbl-on.wav")
                         rf2status.switchstatus.bblon = true
                         rf2status.switchstatus.bbloff = false
                     end
@@ -4896,7 +4896,7 @@ function rf2status.wakeup(widget)
                 end
                 if rf2status.switchbbloffParam ~= nil and rf2status.switchbbloffParam:state() == true then
                     if rf2status.switchstatus.bbloff == nil or rf2status.switchstatus.bbloff == false then
-                        system.playFile(WIDGET_DIR .. "sounds/switches/bbl-off.wav")
+                        system.playFile(widgetDir .. "sounds/switches/bbl-off.wav")
                         rf2status.switchstatus.bblon = false
                         rf2status.switchstatus.bbloff = true
                     end

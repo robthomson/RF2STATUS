@@ -1,12 +1,13 @@
 
 local config = {}
-config.WIDGET_NAME = "Rotorflight Flight Status"
-config.WIDGET_KEY = "bkshss"
-config.WIDGET_DIR = "/scripts/rf2status/"
+config.widgetName = "Rotorflight Flight Status"
+config.widgetKey = "bkshss"
+config.widgetDir = "/scripts/rf2status/"
+config.useCompiler = true
 
-compile = assert(loadfile(config.WIDGET_DIR .. "compile.lua"))(config)
+compile = assert(loadfile(config.widgetDir .. "compile.lua"))(config)
 
-rf2status = assert(compile.loadScript(config.WIDGET_DIR .. "rf2status.lua"))(config,compile)
+rf2status = assert(compile.loadScript(config.widgetDir .. "rf2status.lua"))(config,compile)
 
 local function paint()
 	return rf2status.paint()
@@ -28,19 +29,23 @@ local function write()
 	return rf2status.write()
 end
 
-local function event()
-	return rf2status.event()
+local function event(widget, category, value, x, y)
+	return rf2status.event(widget, category, value, x, y)
 end
 
 local function create()
 	return rf2status.create()
 end
 
+local function menu()
+	return rf2status.menu()
+end
+
 
 local function init()
     system.registerWidget({
-        key = config.WIDGET_KEY,
-        name = config.WIDGET_NAME,
+        key = config.widgetKey,
+        name = config.widgetName,
         create = create,
         configure = configure,
         paint = paint,
