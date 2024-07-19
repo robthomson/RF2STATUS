@@ -3,7 +3,7 @@
 #!/bin/sh
 
 
-list=$(find ../src/ -name "*.lua")
+list=$(find ./ -name "*.lua")
 
 for x in $list ; do
 
