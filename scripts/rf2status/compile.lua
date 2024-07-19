@@ -25,6 +25,10 @@ function compile.loadScript(script)
         end
         return loadfile(cachefile)
     else
+        -- print(script)
+        if compile.file_exists(cachefile) == true then
+            os.remove(cachefile)
+        end			
         return loadfile(script)
     end
 
