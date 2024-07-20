@@ -1545,7 +1545,7 @@ function rf2status.logsBOX()
 
     if history ~= nil then
         for index, value in ipairs(history) do
-            print("hear")
+            --print("hear")
             if value ~= nil then
                 if value ~= "" and value ~= nil then
                     rowH = c * boxTh
@@ -2644,7 +2644,7 @@ function rf2status.paint(widget)
                     -- system.playNumber(rf2status.sensors.voltage / 100, 2, 2)
                     if alrthptParam == true then system.playHaptic("- . -") end
                 else
-                    print("Alarm supressed due to stick positions")
+                    --print("Alarm supressed due to stick positions")
                 end
 
             end

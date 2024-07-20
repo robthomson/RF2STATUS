@@ -16,9 +16,11 @@ end
 
 function compile.loadScript(script)
 
+	local cachefile
+	cachefile = widgetDir .. "compiled/" .. script:gsub("/", "_") .. "c"
+
     if config.useCompiler == true then
-        local cachefile
-        cachefile = widgetDir .. "compiled/" .. script:gsub("/", "_") .. "c"
+
         if compile.file_exists(cachefile) ~= true then
             system.compile(script)
             os.rename(script .. 'c', cachefile)
