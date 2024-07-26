@@ -2671,6 +2671,20 @@ end
 function rf2status.getSensors()
     if rf2status.isInConfiguration == true then return rf2status.sensors end
 
+	local tv
+	local voltage
+	local temp_esc
+	local temp_mcu
+	local mah
+	local mah
+	local fuel
+	local fm
+	local rssi
+	local adjSOURCE
+	local adjvalue
+	local current
+
+
     lcd.resetFocusTimeout()
 
     if environment.simulation == true then
