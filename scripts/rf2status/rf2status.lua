@@ -2324,15 +2324,18 @@ function rf2status.paint(widget)
                 if sensorTGT == 'rssi__timer' then
 
                     sensorTGT = "rssi"
-                    sensorVALUE = rf2status.sensordisplay[sensorTGT]['value']
-                    sensorUNIT = rf2status.sensordisplay[sensorTGT]['unit']
-                    sensorMIN = rf2status.sensordisplay[sensorTGT]['min']
-                    sensorMAX = rf2status.sensordisplay[sensorTGT]['max']
-                    sensorWARN = rf2status.sensordisplay[sensorTGT]['warn']
-                    sensorTITLE = rf2status.sensordisplay[sensorTGT]['title']
+					if rf2status.sensordisplay[sensorTGT] ~= nil then
+						sensorVALUE = rf2status.sensordisplay[sensorTGT]['value']
+						sensorUNIT = rf2status.sensordisplay[sensorTGT]['unit']
+						sensorMIN = rf2status.sensordisplay[sensorTGT]['min']
+						sensorMAX = rf2status.sensordisplay[sensorTGT]['max']
+						sensorWARN = rf2status.sensordisplay[sensorTGT]['warn']
+						sensorTITLE = rf2status.sensordisplay[sensorTGT]['title']
+					
+						smallBOX = true
+						rf2status.telemetryBox(posX, posY, boxW, boxH / 2 - (theme.colSpacing / 2), sensorTITLE, sensorVALUE, sensorUNIT, smallBOX, sensorWARN, sensorMIN, sensorMAX)
+					end
 
-                    smallBOX = true
-                    rf2status.telemetryBox(posX, posY, boxW, boxH / 2 - (theme.colSpacing / 2), sensorTITLE, sensorVALUE, sensorUNIT, smallBOX, sensorWARN, sensorMIN, sensorMAX)
 
                     sensorTGT = "timer"
                     sensorVALUE = rf2status.sensordisplay[sensorTGT]['value']
