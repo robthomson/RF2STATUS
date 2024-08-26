@@ -2689,7 +2689,7 @@ function rf2status.getSensors()
 	local current
 
 
-    lcd.resetFocusTimeout()
+    --lcd.resetFocusTimeout()
 
     if environment.simulation == true then
 
@@ -4485,9 +4485,17 @@ end
 -- MAIN WAKEUP FUNCTION. THIS SIMPLY FARMS OUT AT DIFFERING SCHEDULES TO SUB FUNCTIONS
 function rf2status.wakeup(widget)
 
+
+	local schedulerUI
+	if lcd.isVisible() then
+		schedulerUI = 0.25
+	else
+		schedulerUI = 1	
+	end
+
 	--keep cpu load down by running UI at reduced interval
 	local now = os.clock()
-	if (now - rf2status.wakeupSchedulerUI) >= 0.25 then	
+	if (now - rf2status.wakeupSchedulerUI) >= schedulerUI then	
 		rf2status.wakeupSchedulerUI = now
 		rf2status.wakeupUI()
 	end	
