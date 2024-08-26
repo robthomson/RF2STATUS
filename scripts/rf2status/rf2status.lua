@@ -205,6 +205,7 @@ rf2status.sensorTempESCMax = 0
 rf2status.sensorRSSIMin = 0
 rf2status.sensorRSSIMax = 0
 rf2status.lastMaxMin = 0
+rf2status.wakeupSchedulerUI = os.clock()
 rf2status.voltageNoiseQ = 100
 rf2status.fuelNoiseQ = 100
 rf2status.rpmNoiseQ = 100
@@ -4480,7 +4481,22 @@ function rf2status.playADJ()
 
 end
 
+
+-- MAIN WAKEUP FUNCTION. THIS SIMPLY FARMS OUT AT DIFFERING SCHEDULES TO SUB FUNCTIONS
 function rf2status.wakeup(widget)
+
+	--keep cpu load down by running UI at reduced interval
+	local now = os.clock()
+	if (now - rf2status.wakeupSchedulerUI) >= 0.25 then	
+		rf2status.wakeupSchedulerUI = now
+		rf2status.wakeupUI()
+	end	
+
+
+
+end
+
+function rf2status.wakeupUI(widget)
     rf2status.refresh = false
 
     rf2status.linkUP = rf2status.getRSSI()
