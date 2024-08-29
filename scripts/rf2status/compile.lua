@@ -15,25 +15,20 @@ function compile.file_exists(name)
 end
 
 function compile.baseName()
-	local baseName
-	baseName = config.widgetDir:gsub("/scripts/","")
-	baseName = baseName:gsub("/","")
-	return baseName
+    local baseName
+    baseName = config.widgetDir:gsub("/scripts/", "")
+    baseName = baseName:gsub("/", "")
+    return baseName
 end
 
 function compile.loadScript(script)
 
-	local cachefile
-	cachefile = widgetDir .. "compiled/" .. script:gsub("/", "_") .. "c"
+    local cachefile
+    cachefile = widgetDir .. "compiled/" .. script:gsub("/", "_") .. "c"
 
-    if compile.file_exists("/scripts/" .. compile.baseName() .. ".nocompile" ) == true then
-		config.useCompiler = false
-	end
+    if compile.file_exists("/scripts/" .. compile.baseName() .. ".nocompile") == true then config.useCompiler = false end
 
-    if compile.file_exists("/scripts/nocompile" ) == true then
-		config.useCompiler = false
-	end
-
+    if compile.file_exists("/scripts/nocompile") == true then config.useCompiler = false end
 
     if config.useCompiler == true then
 
@@ -44,9 +39,7 @@ function compile.loadScript(script)
         return loadfile(cachefile)
     else
         -- print(script)
-        if compile.file_exists(cachefile) == true then
-            os.remove(cachefile)
-        end			
+        if compile.file_exists(cachefile) == true then os.remove(cachefile) end
         return loadfile(script)
     end
 

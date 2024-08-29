@@ -1546,7 +1546,7 @@ function rf2status.logsBOX()
 
     if history ~= nil then
         for index, value in ipairs(history) do
-            --print("hear")
+            -- print("hear")
             if value ~= nil then
                 if value ~= "" and value ~= nil then
                     rowH = c * boxTh
@@ -2325,18 +2325,17 @@ function rf2status.paint(widget)
                 if sensorTGT == 'rssi__timer' then
 
                     sensorTGT = "rssi"
-					if rf2status.sensordisplay[sensorTGT] ~= nil then
-						sensorVALUE = rf2status.sensordisplay[sensorTGT]['value']
-						sensorUNIT = rf2status.sensordisplay[sensorTGT]['unit']
-						sensorMIN = rf2status.sensordisplay[sensorTGT]['min']
-						sensorMAX = rf2status.sensordisplay[sensorTGT]['max']
-						sensorWARN = rf2status.sensordisplay[sensorTGT]['warn']
-						sensorTITLE = rf2status.sensordisplay[sensorTGT]['title']
-					
-						smallBOX = true
-						rf2status.telemetryBox(posX, posY, boxW, boxH / 2 - (theme.colSpacing / 2), sensorTITLE, sensorVALUE, sensorUNIT, smallBOX, sensorWARN, sensorMIN, sensorMAX)
-					end
+                    if rf2status.sensordisplay[sensorTGT] ~= nil then
+                        sensorVALUE = rf2status.sensordisplay[sensorTGT]['value']
+                        sensorUNIT = rf2status.sensordisplay[sensorTGT]['unit']
+                        sensorMIN = rf2status.sensordisplay[sensorTGT]['min']
+                        sensorMAX = rf2status.sensordisplay[sensorTGT]['max']
+                        sensorWARN = rf2status.sensordisplay[sensorTGT]['warn']
+                        sensorTITLE = rf2status.sensordisplay[sensorTGT]['title']
 
+                        smallBOX = true
+                        rf2status.telemetryBox(posX, posY, boxW, boxH / 2 - (theme.colSpacing / 2), sensorTITLE, sensorVALUE, sensorUNIT, smallBOX, sensorWARN, sensorMIN, sensorMAX)
+                    end
 
                     sensorTGT = "timer"
                     sensorVALUE = rf2status.sensordisplay[sensorTGT]['value']
@@ -2648,7 +2647,7 @@ function rf2status.paint(widget)
                     -- system.playNumber(rf2status.sensors.voltage / 100, 2, 2)
                     if alrthptParam == true then system.playHaptic("- . -") end
                 else
-                    --print("Alarm supressed due to stick positions")
+                    -- print("Alarm supressed due to stick positions")
                 end
 
             end
@@ -2675,21 +2674,20 @@ end
 function rf2status.getSensors()
     if rf2status.isInConfiguration == true then return rf2status.sensors end
 
-	local tv
-	local voltage
-	local temp_esc
-	local temp_mcu
-	local mah
-	local mah
-	local fuel
-	local fm
-	local rssi
-	local adjSOURCE
-	local adjvalue
-	local current
+    local tv
+    local voltage
+    local temp_esc
+    local temp_mcu
+    local mah
+    local mah
+    local fuel
+    local fm
+    local rssi
+    local adjSOURCE
+    local adjvalue
+    local current
 
-
-    --lcd.resetFocusTimeout()
+    -- lcd.resetFocusTimeout()
 
     if environment.simulation == true then
 
@@ -4481,26 +4479,22 @@ function rf2status.playADJ()
 
 end
 
-
 -- MAIN WAKEUP FUNCTION. THIS SIMPLY FARMS OUT AT DIFFERING SCHEDULES TO SUB FUNCTIONS
 function rf2status.wakeup(widget)
 
+    local schedulerUI
+    if lcd.isVisible() then
+        schedulerUI = 0.25
+    else
+        schedulerUI = 1
+    end
 
-	local schedulerUI
-	if lcd.isVisible() then
-		schedulerUI = 0.25
-	else
-		schedulerUI = 1	
-	end
-
-	--keep cpu load down by running UI at reduced interval
-	local now = os.clock()
-	if (now - rf2status.wakeupSchedulerUI) >= schedulerUI then	
-		rf2status.wakeupSchedulerUI = now
-		rf2status.wakeupUI()
-	end	
-
-
+    -- keep cpu load down by running UI at reduced interval
+    local now = os.clock()
+    if (now - rf2status.wakeupSchedulerUI) >= schedulerUI then
+        rf2status.wakeupSchedulerUI = now
+        rf2status.wakeupUI()
+    end
 
 end
 
