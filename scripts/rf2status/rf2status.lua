@@ -2539,123 +2539,6 @@ function rf2status.paint(widget)
 
     end
 
-    -- TIME
-    if rf2status.linkUP ~= 0 then
-        if armswitchParam ~= nil then
-            if armswitchParam:state() == false then
-                rf2status.stopTimer = true
-                stopTIME = os.clock()
-                timerNearlyActive = 1
-                rf2status.theTIME = 0
-            end
-        end
-
-        if rf2status.idleupswitchParam ~= nil then
-            if rf2status.idleupswitchParam:state() then
-                if timerNearlyActive == 1 then
-                    timerNearlyActive = 0
-                    startTIME = os.clock()
-                end
-                if startTIME ~= nil then rf2status.theTIME = os.clock() - startTIME end
-            end
-        end
-
-    end
-
-    -- LOW FUEL ALERTS
-    -- big conditional to announcement rf2status.lfTimer if needed
-    if rf2status.linkUP ~= 0 then
-        if rf2status.idleupswitchParam ~= nil then
-            if rf2status.idleupswitchParam:state() then
-                if (rf2status.sensors.fuel <= rf2status.lowfuelParam and rf2status.alertonParam == 1) then
-                    rf2status.lfTimer = true
-                elseif (rf2status.sensors.fuel <= rf2status.lowfuelParam and rf2status.alertonParam == 2) then
-                    rf2status.lfTimer = true
-                else
-                    rf2status.lfTimer = false
-                end
-            else
-                rf2status.lfTimer = false
-            end
-        else
-            rf2status.lfTimer = false
-        end
-    else
-        rf2status.lfTimer = false
-    end
-
-    if rf2status.lfTimer == true then
-        -- start timer
-        if rf2status.lfTimerStart == nil then rf2status.lfTimerStart = os.time() end
-    else
-        rf2status.lfTimerStart = nil
-    end
-
-    if rf2status.lfTimerStart ~= nil then
-        -- only announcement if we have been on for 5 seconds or more
-        if (tonumber(os.clock()) - tonumber(rf2status.lfAudioAlertCounter)) >= rf2status.alertintParam then
-            rf2status.lfAudioAlertCounter = os.clock()
-
-            system.playFile(widgetDir .. "sounds/alerts/lowfuel.wav")
-
-            -- system.playNumber(rf2status.sensors.voltage / 100, 2, 2)
-            if alrthptParam == true then system.playHaptic("- . -") end
-
-        end
-    else
-        -- stop timer
-        rf2status.lfTimerStart = nil
-    end
-
-    -- LOW VOLTAGE ALERTS
-    -- big conditional to announcement rf2status.lvTimer if needed
-    if rf2status.linkUP ~= 0 then
-        if rf2status.idleupswitchParam ~= nil then
-            if rf2status.idleupswitchParam:state() then
-                if (rf2status.voltageIsLow and rf2status.alertonParam == 0) then
-                    rf2status.lvTimer = true
-                elseif (rf2status.voltageIsLow and rf2status.alertonParam == 2) then
-                    rf2status.lvTimer = true
-                else
-                    rf2status.lvTimer = false
-                end
-            else
-                rf2status.lvTimer = false
-            end
-        else
-            rf2status.lvTimer = false
-        end
-    else
-        rf2status.lvTimer = false
-    end
-
-    if rf2status.lvTimer == true then
-        -- start timer
-        if rf2status.lvTimerStart == nil then rf2status.lvTimerStart = os.time() end
-    else
-        rf2status.lvTimerStart = nil
-    end
-
-    if rf2status.lvTimerStart ~= nil then
-        if (os.time() - rf2status.lvTimerStart >= rf2status.sagParam) then
-            -- only announcement if we have been on for 5 seconds or more
-            if (tonumber(os.clock()) - tonumber(rf2status.lvAudioAlertCounter)) >= rf2status.alertintParam then
-                rf2status.lvAudioAlertCounter = os.clock()
-
-                if rf2status.lvStickannouncement == false then -- do not play if sticks at high end points
-                    system.playFile(widgetDir .. "sounds/alerts/lowvoltage.wav")
-                    -- system.playNumber(rf2status.sensors.voltage / 100, 2, 2)
-                    if alrthptParam == true then system.playHaptic("- . -") end
-                else
-                    -- print("Alarm supressed due to stick positions")
-                end
-
-            end
-        end
-    else
-        -- stop timer
-        rf2status.lvTimerStart = nil
-    end
 
 end
 
@@ -4647,6 +4530,128 @@ function rf2status.wakeupUI(widget)
                 end
 
             end
+			
+			
+			---
+			-- TIME
+			if rf2status.linkUP ~= 0 then
+				if armswitchParam ~= nil then
+					if armswitchParam:state() == false then
+						rf2status.stopTimer = true
+						stopTIME = os.clock()
+						timerNearlyActive = 1
+						rf2status.theTIME = 0
+					end
+				end
+
+				if rf2status.idleupswitchParam ~= nil then
+					if rf2status.idleupswitchParam:state() then
+						if timerNearlyActive == 1 then
+							timerNearlyActive = 0
+							startTIME = os.clock()
+						end
+						if startTIME ~= nil then rf2status.theTIME = os.clock() - startTIME end
+					end
+				end
+
+			end
+
+			-- LOW FUEL ALERTS
+			-- big conditional to announcement rf2status.lfTimer if needed
+			if rf2status.linkUP ~= 0 then
+				if rf2status.idleupswitchParam ~= nil then
+					if rf2status.idleupswitchParam:state() then
+						if (rf2status.sensors.fuel <= rf2status.lowfuelParam and rf2status.alertonParam == 1) then
+							rf2status.lfTimer = true
+						elseif (rf2status.sensors.fuel <= rf2status.lowfuelParam and rf2status.alertonParam == 2) then
+							rf2status.lfTimer = true
+						else
+							rf2status.lfTimer = false
+						end
+					else
+						rf2status.lfTimer = false
+					end
+				else
+					rf2status.lfTimer = false
+				end
+			else
+				rf2status.lfTimer = false
+			end
+
+			if rf2status.lfTimer == true then
+				-- start timer
+				if rf2status.lfTimerStart == nil then rf2status.lfTimerStart = os.time() end
+			else
+				rf2status.lfTimerStart = nil
+			end
+
+			if rf2status.lfTimerStart ~= nil then
+				-- only announcement if we have been on for 5 seconds or more
+				if (tonumber(os.clock()) - tonumber(rf2status.lfAudioAlertCounter)) >= rf2status.alertintParam then
+					rf2status.lfAudioAlertCounter = os.clock()
+
+					system.playFile(widgetDir .. "sounds/alerts/lowfuel.wav")
+
+					-- system.playNumber(rf2status.sensors.voltage / 100, 2, 2)
+					if alrthptParam == true then system.playHaptic("- . -") end
+
+				end
+			else
+				-- stop timer
+				rf2status.lfTimerStart = nil
+			end
+
+			-- LOW VOLTAGE ALERTS
+			-- big conditional to announcement rf2status.lvTimer if needed
+			if rf2status.linkUP ~= 0 then
+
+				if rf2status.idleupswitchParam ~= nil then
+					if rf2status.idleupswitchParam:state() then
+						if (rf2status.voltageIsLow and rf2status.alertonParam == 0) then
+							rf2status.lvTimer = true
+						elseif (rf2status.voltageIsLow and rf2status.alertonParam == 2) then
+							rf2status.lvTimer = true
+						else
+							rf2status.lvTimer = false
+						end
+					else
+						rf2status.lvTimer = false
+					end
+				else
+					rf2status.lvTimer = false
+				end
+			else
+				rf2status.lvTimer = false
+			end
+
+			if rf2status.lvTimer == true then
+				-- start timer
+				if rf2status.lvTimerStart == nil then rf2status.lvTimerStart = os.time() end
+			else
+				rf2status.lvTimerStart = nil
+			end
+
+			if rf2status.lvTimerStart ~= nil then
+				if (os.time() - rf2status.lvTimerStart >= rf2status.sagParam) then
+					-- only announcement if we have been on for 5 seconds or more
+					if (tonumber(os.clock()) - tonumber(rf2status.lvAudioAlertCounter)) >= rf2status.alertintParam then
+						rf2status.lvAudioAlertCounter = os.clock()
+
+						if rf2status.lvStickannouncement == false then -- do not play if sticks at high end points
+							system.playFile(widgetDir .. "sounds/alerts/lowvoltage.wav")
+							-- system.playNumber(rf2status.sensors.voltage / 100, 2, 2)
+							if alrthptParam == true then system.playHaptic("- . -") end
+						else
+							-- print("Alarm supressed due to stick positions")
+						end
+
+					end
+				end
+			else
+				-- stop timer
+				rf2status.lvTimerStart = nil
+			end			
+			---
 
         else
             rf2status.adjJUSTUP = true
