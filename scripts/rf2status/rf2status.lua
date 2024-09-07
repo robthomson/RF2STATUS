@@ -945,7 +945,7 @@ end
 
 function rf2status.getRSSI()
     if environment.simulation == true then return 100 end
-    if rf2status.rssiSensor ~= nil and rf2status.rssiSensor:state() then return rf2status.rssiSensor:value() end
+    if rf2status.rssiSensor ~= nil then return rf2status.rssiSensor:value() end
     return 0
 end
 
