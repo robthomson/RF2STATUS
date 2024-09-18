@@ -1246,7 +1246,7 @@ function rf2status.govColorFlag(flag)
     elseif flag == "RECOVERY" then
         return 2
     elseif flag == "SPOOLUP" then
-        return 0
+        return 2
     elseif flag == "IDLE" then
         return 0
     elseif flag == "OFF" then
