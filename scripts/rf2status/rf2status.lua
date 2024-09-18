@@ -782,6 +782,15 @@ function rf2status.configure(widget)
         rf2status.maxminParam = newValue
     end)
 
+    -- gov color
+    line = displaypanel:addLine(rf2status.i8n.statusColor)
+    form.addBooleanField(line, nil, function()
+        return rf2status.statusColorParam
+    end, function(newValue)
+        rf2status.statusColorParam = newValue
+    end)    
+
+
     advpanel = form.addExpansionPanel(rf2status.i8n.Advanced)
     advpanel:open(false)
 
@@ -929,14 +938,6 @@ function rf2status.configure(widget)
         rf2status.calcfuelParam = newValue
     end)
     
-    -- gov color
-    line = advpanel:addLine(rf2status.i8n.statusColor)
-    form.addBooleanField(line, nil, function()
-        return rf2status.statusColorParam
-    end, function(newValue)
-        rf2status.statusColorParam = newValue
-    end)    
-
     rf2status.resetALL()
 
     return widget
@@ -1218,6 +1219,43 @@ function rf2status.getThemeInfo()
     return ret
 end
 
+function rf2status.govColorFlag(flag)
+
+    -- 0 = default colour
+    -- 1 = red (alarm)
+    -- 2 = orange (warning)
+    -- 3 = green (ok)  
+    
+
+    if flag == "UNKNOWN" then
+        return 1
+    elseif flag == "DISARMED" then
+        return 0
+    elseif flag == "DISABLED" then
+        return 0
+    elseif flag == "BAILOUT" then
+        return 2
+    elseif flag == "AUTOROT" then
+        return 2
+    elseif flag == "LOST-HS" then
+        return 2
+    elseif flag == "THR-OFF" then
+        return 0
+    elseif flag == "ACTIVE" then
+        return 3
+    elseif flag == "RECOVERY" then
+        return 2
+    elseif flag == "SPOOLUP" then
+        return 0
+    elseif flag == "IDLE" then
+        return 0
+    elseif flag == "OFF" then
+        return 0
+    end
+
+    return 0
+end
+
 function rf2status.telemetryBox(x, y, w, h, title, value, unit, smallbox, alarm, minimum, maximum)
 
     rf2status.isVisible = lcd.isVisible()
@@ -1272,13 +1310,20 @@ function rf2status.telemetryBox(x, y, w, h, title, value, unit, smallbox, alarm,
         -- 0 = default colour
         -- 1 = red (alarm)
         -- 2 = orange (warning)
-        -- 3 = green (ok)        
-        if alarm == 1 then 
-            lcd.color(lcd.RGB(255, 0, 0, 1))   -- red
-        elseif alarm == 2 then 
-            lcd.color(lcd.RGB(255, 204, 0, 1)) -- orange
-        elseif alarm == 3 then 
-            lcd.color(lcd.RGB(0, 188, 4, 1))  -- green
+        -- 3 = green (ok)  
+        if rf2status.statusColorParam == true then
+            if alarm == 1 then 
+                lcd.color(lcd.RGB(255, 0, 0, 1))   -- red
+            elseif alarm == 2 then 
+                lcd.color(lcd.RGB(255, 204, 0, 1)) -- orange
+            elseif alarm == 3 then 
+                lcd.color(lcd.RGB(0, 188, 4, 1))  -- green
+            end
+        else
+            -- we only do red
+            if alarm ~= 0 then 
+                lcd.color(lcd.RGB(255, 0, 0, 1))   -- red
+            end
         end
 
         lcd.drawText(sx, sy, str)
@@ -2200,7 +2245,7 @@ function rf2status.paint(widget)
         rf2status.sensordisplay[sensorTGT] = {}
         rf2status.sensordisplay[sensorTGT]['title'] = sensorTITLE
         rf2status.sensordisplay[sensorTGT]['value'] = sensorVALUE
-        rf2status.sensordisplay[sensorTGT]['warn'] = sensorWARN
+        rf2status.sensordisplay[sensorTGT]['warn'] = rf2status.govColorFlag(sensorVALUE)
         rf2status.sensordisplay[sensorTGT]['min'] = sensorMIN
         rf2status.sensordisplay[sensorTGT]['max'] = sensorMAX
         rf2status.sensordisplay[sensorTGT]['unit'] = sensorUNIT

@@ -116,5 +116,5 @@ i8n['TIME'] = "TIME"
 i8n['AMPS'] = "AMPS"
 i8n['UNKNOWN'] = "UNKNOWN"
 i8n['DISPLAYSIZEINVALID'] = "DISPLAY SIZE INVALID"
-i8n['statusColor'] = "Use color to indicate alarm status"
+i8n['statusColor'] = "Use colors to indicate status"
 return i8n
