@@ -33,6 +33,7 @@ rf2status.lfAudioAlertCounter = 0
 rf2status.timeralarmVibrateParam = true
 rf2status.timeralarmParam = 210
 rf2status.timerAlarmPlay = true
+rf2status.statusColorParam = true
 rf2status.rpmtime = {}
 rf2status.rpmtime.rpmTimer = false
 rf2status.rpmtime.rpmTimerStart = nil
@@ -927,6 +928,14 @@ function rf2status.configure(widget)
     end, function(newValue)
         rf2status.calcfuelParam = newValue
     end)
+    
+    -- gov color
+    line = advpanel:addLine(rf2status.i8n.statusColor)
+    form.addBooleanField(line, nil, function()
+        return rf2status.statusColorParam
+    end, function(newValue)
+        rf2status.statusColorParam = newValue
+    end)    
 
     rf2status.resetALL()
 
@@ -1259,11 +1268,23 @@ function rf2status.telemetryBox(x, y, w, h, title, value, unit, smallbox, alarm,
             end
         end
 
-        if alarm == true then lcd.color(lcd.RGB(255, 0, 0, 1)) end
+        -- change text colour to suit alarm flag
+        -- 0 = default colour
+        -- 1 = red (alarm)
+        -- 2 = orange (warning)
+        -- 3 = green (ok)        
+        if alarm == 1 then 
+            lcd.color(lcd.RGB(255, 0, 0, 1))   -- red
+        elseif alarm == 2 then 
+            lcd.color(lcd.RGB(255, 204, 0, 1)) -- orange
+        elseif alarm == 3 then 
+            lcd.color(lcd.RGB(0, 188, 4, 1))  -- green
+        end
 
         lcd.drawText(sx, sy, str)
-
-        if alarm == true then
+ 
+        -- reset text back from red to ensure max/min stay right color 
+        if alarm ~= 0 then
             if rf2status.isDARKMODE then
                 lcd.color(lcd.RGB(255, 255, 255, 1))
             else
@@ -1792,7 +1813,7 @@ function rf2status.paint(widget)
         -- FUEL
         if rf2status.sensors.fuel ~= nil then
 
-            if rf2status.fuelIsLow then sensorWARN = true end
+            if rf2status.fuelIsLow then sensorWARN = 1 end
 
             sensorVALUE = rf2status.sensors.fuel
 
@@ -1855,7 +1876,7 @@ function rf2status.paint(widget)
             end
 
             sensorUNIT = "rpm"
-            sensorWARN = false
+            sensorWARN = 0
 
             local sensorTGT = 'rpm'
             rf2status.sensordisplay[sensorTGT] = {}
@@ -1871,7 +1892,7 @@ function rf2status.paint(widget)
         -- VOLTAGE
         if rf2status.sensors.voltage ~= nil then
 
-            if rf2status.voltageIsLow then sensorWARN = true end
+            if rf2status.voltageIsLow then sensorWARN = 1 end
 
             sensorVALUE = rf2status.sensors.voltage / 100
 
@@ -1959,7 +1980,7 @@ function rf2status.paint(widget)
             end
 
             sensorUNIT = "A"
-            sensorWARN = false
+            sensorWARN = 0
 
             local sensorTGT = 'current'
             rf2status.sensordisplay[sensorTGT] = {}
@@ -1998,7 +2019,7 @@ function rf2status.paint(widget)
             end
 
             sensorUNIT = "°"
-            sensorWARN = false
+            sensorWARN = 0
 
             local sensorTGT = 'temp_esc'
             rf2status.sensordisplay[sensorTGT] = {}
@@ -2037,7 +2058,7 @@ function rf2status.paint(widget)
             end
 
             sensorUNIT = "°"
-            sensorWARN = false
+            sensorWARN = 0
 
             local sensorTGT = 'temp_mcu'
             rf2status.sensordisplay[sensorTGT] = {}
@@ -2076,7 +2097,7 @@ function rf2status.paint(widget)
             end
 
             sensorUNIT = "%"
-            sensorWARN = false
+            sensorWARN = 0
 
             local sensorTGT = 'rssi'
             rf2status.sensordisplay[sensorTGT] = {}
@@ -2115,7 +2136,7 @@ function rf2status.paint(widget)
             end
 
             sensorUNIT = ""
-            sensorWARN = false
+            sensorWARN = 0
 
             local sensorTGT = 'mah'
             rf2status.sensordisplay[sensorTGT] = {}
@@ -2146,7 +2167,7 @@ function rf2status.paint(widget)
         sensorVALUE = str
 
         sensorUNIT = ""
-        sensorWARN = false
+        sensorWARN = 0
 
         local sensorTGT = 'timer'
         rf2status.sensordisplay[sensorTGT] = {}
@@ -2171,7 +2192,7 @@ function rf2status.paint(widget)
         if rf2status.titleParam ~= true then sensorTITLE = "" end
 
         sensorUNIT = ""
-        sensorWARN = false
+        sensorWARN = 0
         sensorMIN = nil
         sensorMAX = nil
 
@@ -2193,7 +2214,7 @@ function rf2status.paint(widget)
             sensorUNIT = nil
             sensorMIN = nil
             sensorMAX = nil
-            sensorWARN = nil
+            sensorWARN = 0
             sensorTITLE = nil
             sensorTGT = nil
             smallBOX = false
@@ -3669,7 +3690,7 @@ function rf2status.read()
     rf2status.announcementIntervalParam = storage.read("mem24")
     rf2status.lowVoltageGovernorParam = storage.read("mem25")
     rf2status.lowvoltagStickParam = storage.read("mem26")
-    rf2status.quadBoxParam = storage.read("mem27") -- spare  item removed
+    rf2status.quadBoxParam = storage.read("mem27") 
     rf2status.lowvoltagStickCutoffParam = storage.read("mem28")
     rf2status.governorUNKNOWNParam = storage.read("mem29")
     rf2status.governorDISARMEDParam = storage.read("mem30")
@@ -3708,6 +3729,7 @@ function rf2status.read()
     rf2status.layoutBox6Param = storage.read("mem63")
     rf2status.timeralarmVibrateParam = storage.read("mem64")
     rf2status.timeralarmParam = storage.read("mem65")
+    rf2status.statusColorParam = storage.read("mem66")
 
     if rf2status.layoutBox1Param == nil then rf2status.layoutBox1Param = 11 end
     if rf2status.layoutBox2Param == nil then rf2status.layoutBox2Param = 2 end
@@ -3747,7 +3769,7 @@ function rf2status.write()
     storage.write("mem24", rf2status.announcementIntervalParam)
     storage.write("mem25", rf2status.lowVoltageGovernorParam)
     storage.write("mem26", rf2status.lowvoltagStickParam)
-    storage.write("mem27", 0) -- spare  item removed
+    storage.write("mem27", rf2status.quadBoxParam) 
     storage.write("mem28", rf2status.lowvoltagStickCutoffParam)
     storage.write("mem29", rf2status.governorUNKNOWNParam)
     storage.write("mem30", rf2status.governorDISARMEDParam)
@@ -3786,6 +3808,7 @@ function rf2status.write()
     storage.write("mem63", rf2status.layoutBox6Param)
     storage.write("mem64", rf2status.timeralarmVibrateParam)
     storage.write("mem65", rf2status.timeralarmParam)
+    storage.write("mem66", rf2status.statusColorParam)
 
     rf2status.updateFILTERING()
 end
