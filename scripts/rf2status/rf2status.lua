@@ -161,7 +161,6 @@ rf2status.switchrescueoffParam = nil
 rf2status.switchbblonParam = nil
 rf2status.switchbbloffParam = nil
 rf2status.idleupswitchParam = nil
-rf2status.adjFunctionParam = false
 rf2status.timerWASActive = false
 rf2status.govWasActive = false
 rf2status.maxMinSaved = false
@@ -923,14 +922,6 @@ function rf2status.configure(widget)
         rf2status.announcementIntervalParam = newValue
     end)
 
-    if system.getSource("Rx RSSI1") == nil then -- currently only supported with fport
-        line = advpanel:addLine(rf2status.i8n.Adjustmentsensor)
-        form.addBooleanField(line, nil, function()
-            return rf2status.adjFunctionParam
-        end, function(newValue)
-            rf2status.adjFunctionParam = newValue
-        end)
-    end
 
     -- calcfuel
     line = advpanel:addLine(rf2status.i8n.Calcfuellocally)
@@ -957,7 +948,7 @@ end
 
 function rf2status.getRSSI()
     if environment.simulation == true then return 100 end
-    if rf2status.rssiSensor ~= nil then return rf2status.rssiSensor:value() end
+    if rf2status.rssiSensor ~= nil and rf2status.rssiSensor:state() then return rf2status.rssiSensor:value() end
     return 0
 end
 
@@ -1241,7 +1232,7 @@ function rf2status.govColorFlag(flag)
     elseif flag == "LOST-HS" then
         return 2
     elseif flag == "THR-OFF" then
-        return 0
+        return 2
     elseif flag == "ACTIVE" then
         return 3
     elseif flag == "RECOVERY" then
@@ -3747,7 +3738,7 @@ function rf2status.read()
     rf2status.govmodeParam = storage.read("mem10")
     rf2status.rpmAlertsParam = storage.read("mem11")
     rf2status.rpmAlertsPercentageParam = storage.read("mem12")
-    rf2status.adjFunctionParam = storage.read("mem13")
+    rf2status.adjFunctionParam = storage.read("mem13") -- spare
     rf2status.announcementRPMSwitchParam = storage.read("mem14")
     rf2status.announcementCurrentSwitchParam = storage.read("mem15")
     rf2status.announcementFuelSwitchParam = storage.read("mem16")
@@ -3826,7 +3817,7 @@ function rf2status.write()
     storage.write("mem10", rf2status.govmodeParam)
     storage.write("mem11", rf2status.rpmAlertsParam)
     storage.write("mem12", rf2status.rpmAlertsPercentageParam)
-    storage.write("mem13", rf2status.adjFunctionParam)
+    storage.write("mem13", rf2status.adjFunctionParam)  -- spare
     storage.write("mem14", rf2status.announcementRPMSwitchParam)
     storage.write("mem15", rf2status.announcementCurrentSwitchParam)
     storage.write("mem16", rf2status.announcementFuelSwitchParam)
@@ -4409,52 +4400,6 @@ function rf2status.playRPMDiff()
     end
 end
 
-function rf2status.playADJ()
-
-    if rf2status.adjFunctionParam == true then
-
-        if rf2status.sensors.adjsource ~= nil then rf2status.ADJSOURCE = math.floor(rf2status.sensors.adjsource) end
-        if rf2status.sensors.adjvalue ~ nil then rf2status.ADJVALUE = math.floor(rf2status.sensors.adjvalue) end
-
-        if rf2status.oldADJSOURCE ~= rf2status.ADJSOURCE then rf2status.adjfuncIdChanged = true end
-        if rf2status.oldADJVALUE ~= rf2status.ADJVALUE then rf2status.adjfuncValueChanged = true end
-
-        if rf2status.adjJUSTUP == true then
-            rf2status.adjJUSTUPCounter = rf2status.adjJUSTUPCounter + 1
-            rf2status.adjfuncIdChanged = false
-            rf2status.adjfuncValueChanged = false
-
-            if rf2status.adjJUSTUPCounter == 10 then rf2status.adjJUSTUP = false end
-
-        else
-            rf2status.adjJUSTUPCounter = 0
-            if (os.time() - rf2status.adjTimerStart >= 1) then
-                if rf2status.adjfuncIdChanged == true then
-                    -- play function that has changed
-                    adjfunction = rf2status.adjfunctions["id" .. ADJSOURCE]
-                    if adjfunction ~= nil then
-                        -- print("ADJfunc announcemented for: " .. "id".. ADJSOURCE)
-                        for wavi, wavv in ipairs(adjfunction.wavs) do system.playFile(widgetDir .. "sounds/adjfunc/" .. wavv .. ".wav") end
-                    end
-                    rf2status.adjfuncIdChanged = false
-                end
-                if rf2status.adjfuncValueChanged == true or rf2status.adjfuncIdChanged == true then
-                    showADJWAITINGAlert = true
-                    system.playNumber(ADJVALUE)
-
-                    rf2status.adjfuncValueChanged = false
-                    rf2status.adjTimerStart = os.time()
-
-                end
-            end
-        end
-
-        rf2status.oldADJSOURCE = rf2status.ADJSOURCE
-        rf2status.oldADJVALUE = rf2status.ADJVALUE
-
-    end
-
-end
 
 -- MAIN WAKEUP FUNCTION. THIS SIMPLY FARMS OUT AT DIFFERING SCHEDULES TO SUB FUNCTIONS
 function rf2status.wakeup(widget)
