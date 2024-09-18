@@ -4459,8 +4459,6 @@ function rf2status.wakeupUI(widget)
             -- timer alarm
             rf2status.playTIMERALARM(widget)
 
-            -- adjValues
-            rf2status.playADJ(widget)
 
             if ((tonumber(os.clock()) - tonumber(rf2status.linkUPTime)) >= 10) then
 
