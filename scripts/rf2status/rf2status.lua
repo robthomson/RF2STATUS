@@ -83,7 +83,9 @@ rf2status.isInConfiguration = false
 rf2status.stopTimer = true
 rf2status.startTimer = false
 rf2status.voltageIsLow = false
+rf2status.voltageIsGettingLow = false
 rf2status.fuelIsLow = false
+rf2status.fuelIsGettingLow = false
 rf2status.showLOGS = false
 rf2status.readLOGS = false
 rf2status.readLOGSlast = {}
@@ -782,7 +784,7 @@ function rf2status.configure(widget)
         rf2status.maxminParam = newValue
     end)
 
-    -- gov color
+    -- color mode
     line = displaypanel:addLine(rf2status.i8n.statusColor)
     form.addBooleanField(line, nil, function()
         return rf2status.statusColorParam
@@ -1226,7 +1228,6 @@ function rf2status.govColorFlag(flag)
     -- 2 = orange (warning)
     -- 3 = green (ok)  
     
-
     if flag == "UNKNOWN" then
         return 1
     elseif flag == "DISARMED" then
@@ -1321,7 +1322,7 @@ function rf2status.telemetryBox(x, y, w, h, title, value, unit, smallbox, alarm,
             end
         else
             -- we only do red
-            if alarm ~= 0 then 
+            if alarm == 1 then 
                 lcd.color(lcd.RGB(255, 0, 0, 1))   -- red
             end
         end
@@ -1612,7 +1613,6 @@ function rf2status.logsBOX()
 
     if history ~= nil then
         for index, value in ipairs(history) do
-            -- print("hear")
             if value ~= nil then
                 if value ~= "" and value ~= nil then
                     rowH = c * boxTh
@@ -1740,6 +1740,7 @@ function rf2status.paint(widget)
 
     rf2status.isInConfiguration = false
 
+    local cellVoltage
     -- voltage detection
     if rf2status.btypeParam ~= nil then
         if rf2status.btypeParam == 0 then
@@ -1771,13 +1772,21 @@ function rf2status.paint(widget)
             else
                 zippo = 0
             end
+            --low
             if rf2status.sensors.voltage / 100 < ((cellVoltage * rf2status.cellsParam) + zippo) then
                 rf2status.voltageIsLow = true
             else
                 rf2status.voltageIsLow = false
             end
+            --getting low
+            if rf2status.sensors.voltage / 100 < (((cellVoltage + 0.2) * rf2status.cellsParam) + zippo) then
+                rf2status.voltageIsGettingLow = true
+            else
+                rf2status.voltageIsGettingLow = false
+            end
         else
             rf2status.voltageIsLow = false
+            rf2status.voltageIsGettingLow = false
         end
     end
 
@@ -1790,6 +1799,18 @@ function rf2status.paint(widget)
         end
     else
         rf2status.fuelIsLow = false
+    end
+
+    -- fuel detection
+    if rf2status.sensors.voltage ~= nil then
+
+        if rf2status.sensors.fuel < (rf2status.lowfuelParam + (rf2status.lowfuelParam * 20)/100) then
+            rf2status.fuelIsGettingLow = true
+        else
+            rf2status.fuelIsGettingLow = false
+        end
+    else
+        rf2status.fuelIsGettingLow = false
     end
 
     -- -----------------------------------------------------------------------------------------------
@@ -1858,7 +1879,10 @@ function rf2status.paint(widget)
         -- FUEL
         if rf2status.sensors.fuel ~= nil then
 
+            sensorWARN = 3
+            if rf2status.fuelIsGettingLow then sensorWARN = 2 end
             if rf2status.fuelIsLow then sensorWARN = 1 end
+            
 
             sensorVALUE = rf2status.sensors.fuel
 
@@ -1937,6 +1961,8 @@ function rf2status.paint(widget)
         -- VOLTAGE
         if rf2status.sensors.voltage ~= nil then
 
+            sensorWARN = 3
+            if rf2status.voltageIsGettingLow then sensorWARN = 2 end
             if rf2status.voltageIsLow then sensorWARN = 1 end
 
             sensorVALUE = rf2status.sensors.voltage / 100
