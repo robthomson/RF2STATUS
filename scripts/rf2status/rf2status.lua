@@ -3092,11 +3092,11 @@ function rf2status.getSensors()
         if rf2status.btypeParam == 0 then
             -- LiPo
             maxCellVoltage = 4.2
-            minCellVoltage = 3.2
+            minCellVoltage = 3
         elseif rf2status.btypeParam == 1 then
             -- LiHv
             maxCellVoltage = 4.35
-            minCellVoltage = 3.4
+            minCellVoltage = 3.3
         elseif rf2status.btypeParam == 2 then
             -- Lion
             maxCellVoltage = 2.4
@@ -3107,19 +3107,24 @@ function rf2status.getSensors()
             minCellVoltage = 2.5
         elseif rf2status.btypeParam == 4 then
             -- NiMh
-            maxCellVoltage = 1.2
-            minCellVoltage = 0.9
+            maxCellVoltage = 1.4
+            minCellVoltage = 1
         else
             -- LiPo (default)
-            maxCellVoltage = 4.196
-            minCellVoltage = 3.2
+            maxCellVoltage = 4.2
+            minCellVoltage = 3
         end
 
-        -- maxCellVoltage = 4.196
-        -- minCellVoltage = 3.2
-        avgCellVoltage = (voltage / 100) / rf2status.cellsParam
-        batteryPercentage = 100 * (avgCellVoltage - minCellVoltage) / ((maxCellVoltage + (0.00000001 * rf2status.cellsParam)) - minCellVoltage)
-        fuel = batteryPercentage
+        local maxVoltage = maxCellVoltage * rf2status.cellsParam
+        local minVoltage = minCellVoltage * rf2status.cellsParam
+    
+        local xv = ((voltage/100) - minVoltage )
+        local yv = (maxVoltage - minVoltage)
+
+        batteryPercentage = (xv / yv) * 100
+        
+        
+        fuel = batteryPercentage 
         fuel = rf2status.round(fuel, 0)
 
         if fuel > 100 then fuel = 100 end
