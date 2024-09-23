@@ -1697,6 +1697,8 @@ function rf2status.paint(widget)
                 rf2status.voltageIsLow = false
                 rf2status.voltageIsLowAlert = false
             end
+            
+            
             --getting low
             if rf2status.sensors.voltage / 100 < (((cellVoltage + 0.2) * rf2status.cellsParam) + zippo) then
                 rf2status.voltageIsGettingLow = true
@@ -4562,11 +4564,12 @@ function rf2status.wakeupUI(widget)
                 if (tonumber(os.clock()) - tonumber(rf2status.lfAudioAlertCounter)) >= rf2status.alertintParam then
                     rf2status.lfAudioAlertCounter = os.clock()
 
-                    system.playFile(widgetDir .. "sounds/alerts/lowfuel.wav")
+                    if rf2status.sensors.fuel >= 10 then
+                        system.playFile(widgetDir .. "sounds/alerts/lowfuel.wav")
 
-                    -- system.playNumber(rf2status.sensors.voltage / 100, 2, 2)
-                    if alrthptParam == true then system.playHaptic("- . -") end
-
+                        -- system.playNumber(rf2status.sensors.voltage / 100, 2, 2)
+                        if alrthptParam == true then system.playHaptic("- . -") end
+                    end
                 end
             else
                 -- stop timer
