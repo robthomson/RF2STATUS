@@ -11,6 +11,13 @@ set crsf_gps_altitude_reuse = HEADSPEED
 set crsf_gps_ground_speed_reuse = ESC_TEMP
 set crsf_gps_sats_reuse = MCU_TEMP
 
+--------------------
+CRSF CUSTOM TELEMETRY (RF2.1)
+-------------------
+
+set crsf_telemetry_mode = CUSTOM
+set crsf_telemetry_sensors = 3,4,5,61,50,51,52,60,99,93,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+
 
 --------------------
 SPORT FPORT
