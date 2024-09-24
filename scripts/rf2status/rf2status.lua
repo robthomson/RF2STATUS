@@ -354,7 +354,7 @@ function rf2status.configure(widget)
 
     -- BATTERY CELLS
     line = batterypanel:addLine(rf2status.i8n.Cells)
-    field = form.addNumberField(line, nil, 0, 14, function()
+    field = form.addNumberField(line, nil, 1, 14, function()
         return rf2status.cellsParam
     end, function(value)
         rf2status.cellsParam = value
@@ -2623,7 +2623,7 @@ function rf2status.getSensors()
                 voltageSOURCE = system.getSource("Vbat")
                 rpmSOURCE = system.getSource("Hspd")
                 currentSOURCE = system.getSource("Curr")
-                temp_escSOURCE = system.getSource("EscT")
+                temp_escSOURCE = system.getSource("Tesc")
                 temp_mcuSOURCE = system.getSource("Tmcu")
                 fuelSOURCE = system.getSource("Bat%")
                 mahSOURCE = system.getSource("Capa")
@@ -3094,7 +3094,7 @@ function rf2status.getSensors()
         if rf2status.btypeParam == 0 then
             -- LiPo
             maxCellVoltage = 4.2
-            minCellVoltage = 3
+            minCellVoltage = 3.3
         elseif rf2status.btypeParam == 1 then
             -- LiHv
             maxCellVoltage = 4.35
@@ -3119,15 +3119,17 @@ function rf2status.getSensors()
 
         local maxVoltage = maxCellVoltage * rf2status.cellsParam
         local minVoltage = minCellVoltage * rf2status.cellsParam
-    
-        local xv = ((voltage/100) - minVoltage )
-        local yv = (maxVoltage - minVoltage)
 
-        batteryPercentage = (xv / yv) * 100
+
+        local cv = voltage/100
+        local maxv = maxCellVoltage * rf2status.cellsParam
+        local minv = minCellVoltage * rf2status.cellsParam
+       
+        local batteryPercentage =  ((cv - minv) / (maxv - minv)) * 100
         
-        
-        fuel = batteryPercentage 
-        fuel = rf2status.round(fuel, 0)
+
+        fuel = rf2status.round(batteryPercentage,0)
+
 
         if fuel > 100 then fuel = 100 end
 
