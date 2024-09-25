@@ -117,4 +117,8 @@ i8n['AMPS'] = "AMPS"
 i8n['UNKNOWN'] = "UNKNOWN"
 i8n['DISPLAYSIZEINVALID'] = "DISPLAY SIZE INVALID"
 i8n['statusColor'] = "Use colors to indicate status"
+i8n['maxCellVoltage'] = "Maximum cell voltage"
+i8n['fullCellVoltage'] = "Full cell voltage"
+i8n['minCellVoltage'] = "Minimum cell voltage"
+i8n['warnCellVoltage'] = "Warning cell voltage"
 return i8n

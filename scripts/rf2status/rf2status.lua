@@ -229,6 +229,11 @@ rf2status.layoutBox3Param = 3 -- FUEL
 rf2status.layoutBox4Param = 12 -- LQ,TIMER
 rf2status.layoutBox5Param = 4 -- CURRENT
 rf2status.layoutBox6Param = 5 -- RPM
+rf2status.maxCellVoltage = 430
+rf2status.fullCellVoltage = 410   
+rf2status.minCellVoltage = 330
+rf2status.warnCellVoltage = 350
+
 
 function rf2status.create(widget)
     rf2status.gfx_model = lcd.loadBitmap(model.bitmap())
@@ -344,13 +349,14 @@ function rf2status.configure(widget)
     batterypanel:open(false)
 
     -- CELLS
-
+    --[[
     line = batterypanel:addLine(rf2status.i8n.Type)
     form.addChoiceField(line, nil, {{rf2status.i8n.LiPo, 0}, {rf2status.i8n.LiHv, 1}, {rf2status.i8n.Lion, 2}, {rf2status.i8n.LiFe, 3}, {rf2status.i8n.NiMh, 4}}, function()
         return rf2status.btypeParam
     end, function(newValue)
         rf2status.btypeParam = newValue
     end)
+    ]]--
 
     -- BATTERY CELLS
     line = batterypanel:addLine(rf2status.i8n.Cells)
@@ -361,6 +367,50 @@ function rf2status.configure(widget)
     end)
     field:default(6)
 
+    -- BATTERY MAX
+    line = batterypanel:addLine(rf2status.i8n.maxCellVoltage)
+    field = form.addNumberField(line, nil, 0, 1000, function()
+        return rf2status.maxCellVoltage
+    end, function(value)
+        rf2status.maxCellVoltage = value
+    end)
+    field:default(430)
+    field:decimals(2)
+    field:suffix("V")
+    
+    -- BATTERY FULL
+    line = batterypanel:addLine(rf2status.i8n.fullCellVoltage)
+    field = form.addNumberField(line, nil, 0, 1000, function()
+        return rf2status.fullCellVoltage
+    end, function(value)
+        rf2status.maxCellVoltage = value
+    end)
+    field:default(410)
+    field:decimals(2)
+    field:suffix("V")
+    
+    -- BATTERY FULL
+    line = batterypanel:addLine(rf2status.i8n.minCellVoltage)
+    field = form.addNumberField(line, nil, 0, 1000, function()
+        return rf2status.minCellVoltage
+    end, function(value)
+        rf2status.minCellVoltage = value
+    end)
+    field:default(330)
+    field:decimals(2)
+    field:suffix("V")
+    
+    -- BATTERY WARN
+    line = batterypanel:addLine(rf2status.i8n.warnCellVoltage)
+    field = form.addNumberField(line, nil, 0, 50, function()
+        return rf2status.warnCellVoltage
+    end, function(value)
+        rf2status.warnCellVoltage = value
+    end)
+    field:default(350)
+    field:decimals(2)
+    field:suffix("V")
+    
     -- LOW FUEL announcement
     line = batterypanel:addLine(rf2status.i8n.Lowfuelpercentage)
     field = form.addNumberField(line, nil, 0, 50, function()
@@ -916,6 +966,46 @@ function rf2status.noTelem()
     boxW = math.floor(w / 2)
     boxH = 45
     tsizeW, tsizeH = lcd.getTextSize(str)
+
+    -- draw the backgrf2status.round
+    if rf2status.isDARKMODE then
+        lcd.color(lcd.RGB(40, 40, 40))
+    else
+        lcd.color(lcd.RGB(240, 240, 240))
+    end
+    lcd.drawFilledRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
+
+    -- draw the border
+    if rf2status.isDARKMODE then
+        -- dark theme
+        lcd.color(lcd.RGB(255, 255, 255, 1))
+    else
+        -- light theme
+        lcd.color(lcd.RGB(90, 90, 90))
+    end
+    lcd.drawRectangle(w / 2 - boxW / 2, h / 2 - boxH / 2, boxW, boxH)
+
+    if rf2status.isDARKMODE then
+        -- dark theme
+        lcd.color(lcd.RGB(255, 255, 255, 1))
+    else
+        -- light theme
+        lcd.color(lcd.RGB(90, 90, 90))
+    end
+    lcd.drawText((w / 2) - tsizeW / 2, (h / 2) - tsizeH / 2, str)
+    return
+end
+
+function rf2status.message(msg)
+
+    lcd.font(FONT_STD)
+
+
+    rf2status.theme = rf2status.getThemeInfo()
+    local w, h = lcd.getWindowSize()
+    boxW = math.floor(w / 2)
+    boxH = 45
+    tsizeW, tsizeH = lcd.getTextSize(msg)
 
     -- draw the backgrf2status.round
     if rf2status.isDARKMODE then
@@ -1651,65 +1741,44 @@ function rf2status.paint(widget)
 
     rf2status.isInConfiguration = false
 
-    local cellVoltage
-    -- voltage detection
-    if rf2status.btypeParam ~= nil then
-        if rf2status.btypeParam == 0 then
-            -- LiPo
-            cellVoltage = 3.6
-        elseif rf2status.btypeParam == 1 then
-            -- LiHv
-            cellVoltage = 3.6
-        elseif rf2status.btypeParam == 2 then
-            -- Lion
-            cellVoltage = 3
-        elseif rf2status.btypeParam == 3 then
-            -- LiFe
-            cellVoltage = 2.9
-        elseif rf2status.btypeParam == 4 then
-            -- NiMh
-            cellVoltage = 1.1
-        else
-            -- LiPo (default)
-            cellVoltage = 3.6
-        end
+    local cellVoltage = rf2status.warnCellVoltage / 100
 
-        if rf2status.sensors.voltage ~= nil then
-            -- we use rf2status.lowvoltagsenseParam is use to raise or lower sensitivity
-            if rf2status.lowvoltagsenseParam == 1 then
-                zippo = 0.2
-            elseif rf2status.lowvoltagsenseParam == 2 then
-                zippo = 0.1
+    if rf2status.sensors.voltage ~= nil then
+        -- we use rf2status.lowvoltagsenseParam is use to raise or lower sensitivity
+        if rf2status.lowvoltagsenseParam == 1 then
+            zippo = 0.2
+        elseif rf2status.lowvoltagsenseParam == 2 then
+            zippo = 0.1
+        else
+            zippo = 0
+        end
+        --low
+        if rf2status.sensors.voltage / 100 < ((cellVoltage * rf2status.cellsParam) + zippo) then
+            -- only do audio alert if between a range
+            if rf2status.sensors.voltage / 100 > ((cellVoltage * rf2status.cellsParam/2) + zippo) then
+                rf2status.voltageIsLowAlert = true
             else
-                zippo = 0
-            end
-            --low
-            if rf2status.sensors.voltage / 100 < ((cellVoltage * rf2status.cellsParam) + zippo) then
-                -- only do audio alert if between a range
-                if rf2status.sensors.voltage / 100 > ((cellVoltage * rf2status.cellsParam/2) + zippo) then
-                    rf2status.voltageIsLowAlert = true
-                else
-                    rf2status.voltageIsLowAlert = false
-                end
-                -- we are low.. but above determs if we play the alert
-                rf2status.voltageIsLow = true
-            else
-                rf2status.voltageIsLow = false
                 rf2status.voltageIsLowAlert = false
             end
-            
-            
-            --getting low
-            if rf2status.sensors.voltage / 100 < (((cellVoltage + 0.2) * rf2status.cellsParam) + zippo) then
-                rf2status.voltageIsGettingLow = true
-            else
-                rf2status.voltageIsGettingLow = false
-            end
+            -- we are low.. but above determs if we play the alert
+            rf2status.voltageIsLow = true
         else
             rf2status.voltageIsLow = false
+            rf2status.voltageIsLowAlert = false
+        end
+        
+        
+        --getting low
+        if rf2status.sensors.voltage / 100 < (((cellVoltage + 0.2) * rf2status.cellsParam) + zippo) then
+            rf2status.voltageIsGettingLow = true
+        else
             rf2status.voltageIsGettingLow = false
         end
+    else
+        rf2status.voltageIsLow = false
+        rf2status.voltageIsGettingLow = false
     end
+
 
     -- fuel detection
     if rf2status.sensors.voltage ~= nil and rf2status.lowfuelParam ~= nil then
@@ -3091,31 +3160,10 @@ function rf2status.getSensors()
     -- calc fuel percentage if needed
     if rf2status.calcfuelParam == true then
 
-        if rf2status.btypeParam == 0 then
-            -- LiPo
-            maxCellVoltage = 4.2
-            minCellVoltage = 3.3
-        elseif rf2status.btypeParam == 1 then
-            -- LiHv
-            maxCellVoltage = 4.35
-            minCellVoltage = 3.3
-        elseif rf2status.btypeParam == 2 then
-            -- Lion
-            maxCellVoltage = 2.4
-            minCellVoltage = 3
-        elseif rf2status.btypeParam == 3 then
-            -- LiFe
-            maxCellVoltage = 3.65
-            minCellVoltage = 2.5
-        elseif rf2status.btypeParam == 4 then
-            -- NiMh
-            maxCellVoltage = 1.4
-            minCellVoltage = 1
-        else
-            -- LiPo (default)
-            maxCellVoltage = 4.2
-            minCellVoltage = 3
-        end
+
+        local maxCellVoltage = rf2status.maxCellVoltage/100
+        local minCellVoltage = rf2status.minCellVoltage/100
+
 
         local maxVoltage = maxCellVoltage * rf2status.cellsParam
         local minVoltage = minCellVoltage * rf2status.cellsParam
@@ -3729,6 +3777,16 @@ function rf2status.read()
     rf2status.timeralarmVibrateParam = storage.read("mem64")
     rf2status.timeralarmParam = storage.read("mem65")
     rf2status.statusColorParam = storage.read("mem66")
+    rf2status.maxCellVoltage = storage.read("mem67")
+    rf2status.fullCellVoltage = storage.read("mem68")    
+    rf2status.minCellVoltage = storage.read("mem69")
+    rf2status.warnCellVoltage = storage.read("mem79")
+
+
+    if rf2status.maxCellVoltage == nil then rf2status.maxCellVoltage = 430 end 
+    if rf2status.fullCellVoltage == nil then rf2status.fullCellVoltage = 410 end 
+    if rf2status.minCellVoltage == nil then rf2status.minCellVoltage = 330 end 
+    if rf2status.warnCellVoltage == nil then rf2status.warnCellVoltage = 350 end
 
     if rf2status.layoutBox1Param == nil then rf2status.layoutBox1Param = 11 end
     if rf2status.layoutBox2Param == nil then rf2status.layoutBox2Param = 2 end
@@ -3808,6 +3866,12 @@ function rf2status.write()
     storage.write("mem64", rf2status.timeralarmVibrateParam)
     storage.write("mem65", rf2status.timeralarmParam)
     storage.write("mem66", rf2status.statusColorParam)
+    storage.write("mem67", rf2status.maxCellVoltage)
+    storage.write("mem68", rf2status.fullCellVoltage)
+    storage.write("mem69", rf2status.minCellVoltage)
+    storage.write("mem79", rf2status.warnCellVoltage)     
+
+
 
     rf2status.updateFILTERING()
 end
@@ -4526,7 +4590,9 @@ function rf2status.wakeupUI(widget)
                             timerNearlyActive = 0
                             startTIME = os.clock()
                         end
-                        if startTIME ~= nil then rf2status.theTIME = os.clock() - startTIME end
+                        if startTIME ~= nil then 
+                            rf2status.theTIME = os.clock() - startTIME 
+                        end
                     end
                 end
 
@@ -4537,6 +4603,7 @@ function rf2status.wakeupUI(widget)
             if rf2status.linkUP ~= 0 then
                 if rf2status.idleupswitchParam ~= nil then
                     if rf2status.idleupswitchParam:state() then
+                    
                         if (rf2status.sensors.fuel <= rf2status.lowfuelParam and rf2status.alertonParam == 1) then
                             rf2status.lfTimer = true
                         elseif (rf2status.sensors.fuel <= rf2status.lowfuelParam and rf2status.alertonParam == 2) then
@@ -4553,6 +4620,7 @@ function rf2status.wakeupUI(widget)
             else
                 rf2status.lfTimer = false
             end
+
 
             if rf2status.lfTimer == true then
                 -- start timer
