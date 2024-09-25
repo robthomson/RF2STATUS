@@ -402,7 +402,7 @@ function rf2status.configure(widget)
     
     -- BATTERY WARN
     line = batterypanel:addLine(rf2status.i8n.warnCellVoltage)
-    field = form.addNumberField(line, nil, 0, 50, function()
+    field = form.addNumberField(line, nil, 0, 1000, function()
         return rf2status.warnCellVoltage
     end, function(value)
         rf2status.warnCellVoltage = value
@@ -413,7 +413,7 @@ function rf2status.configure(widget)
     
     -- LOW FUEL announcement
     line = batterypanel:addLine(rf2status.i8n.Lowfuelpercentage)
-    field = form.addNumberField(line, nil, 0, 50, function()
+    field = form.addNumberField(line, nil, 0, 1000, function()
         return rf2status.lowfuelParam
     end, function(value)
         rf2status.lowfuelParam = value
