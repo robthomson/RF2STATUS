@@ -1,5 +1,13 @@
 **RF2STATUS**
 
+***
+
+> NOTE. This version of rf2status is no longer being developed.  All future dev is in the new [RFSUITE](https://github.com/robthomson/RFSUITE) product
+> 
+
+
+***
+
 <img src="https://github.com/robthomson/RF2STATUS/blob/main/git/rf2status-main.png?raw=true" width="800" alt="MAIN PAGE">
 
 RF2STATUS is a widget that has been designed to run on Frsky Radios; directly supporting and displaying all the key telemetry that is provided by Rotorflight.
